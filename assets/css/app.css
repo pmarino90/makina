@@ -1,0 +1,38 @@
+@import "../vendor/halfmoon/halfmoon.css";
+@import "../vendor/halfmoon/halfmoon.modern.css";
+
+.hidden {
+    display: none;
+}
+
+.phx-click-loading #block-add-loader {
+    display: block;
+}
+
+.phx-click-loading #block-add-info {
+    display: none;
+}
+
+.no-border {
+    border: none;
+}
+
+[data-bs-core=trvlr] {
+    --bs-primary: #E42C92;
+    --bs-primary-hsl: 327, 77%, 53%;
+    --bs-primary-hover-bg: var(--bs-darkgray-800);
+    --bs-content-border-color: black;
+    --bs-border-color: black;
+    
+    --bs-content-floating-box-shadow: 3px 3px 0px 0px rgba(0,0,0,1);
+
+    --bs-border-radius: 0;
+
+    .dropdown-item {
+        --bs-dropdown-item-border-radius: 0;
+    }
+    .card {
+        --bs-card-border-color: black;
+        --bs-card-border-radius: var(--bs-border-radius);
+    }
+}
