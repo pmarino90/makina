@@ -22,8 +22,7 @@ config :makina, MakinaWeb.Endpoint,
   debug_errors: true,
   secret_key_base: "aahcTEWOPNi9z7i/50zAySvbqF47Ibsr7WyK4wqYcP++Wa0qQBBFAfmyz0yAyejN",
   watchers: [
-    esbuild: {Esbuild, :install_and_run, [:makina, ~w(--sourcemap=inline --watch)]},
-    tailwind: {Tailwind, :install_and_run, [:makina, ~w(--watch)]}
+    esbuild: {Esbuild, :install_and_run, [:makina, ~w(--sourcemap=inline --watch)]}
   ]
 
 # ## SSL Support

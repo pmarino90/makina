@@ -18,8 +18,8 @@
 }
 
 [data-bs-core=trvlr] {
-    --bs-primary: #E42C92;
-    --bs-primary-hsl: 327, 77%, 53%;
+    --bs-primary: #21130d;
+    --bs-primary-hsl: 18, 43%, 9%;
     --bs-primary-hover-bg: var(--bs-darkgray-800);
     --bs-content-border-color: black;
     --bs-border-color: black;
