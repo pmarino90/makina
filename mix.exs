@@ -32,6 +32,7 @@ defmodule Makina.MixProject do
   # Type `mix help deps` for examples and options.
   defp deps do
     [
+      {:bcrypt_elixir, "~> 3.0"},
       {:phoenix, "~> 1.7.11"},
       {:phoenix_ecto, "~> 4.4"},
       {:ecto_sql, "~> 3.10"},
@@ -42,7 +43,6 @@ defmodule Makina.MixProject do
       {:floki, ">= 0.30.0", only: :test},
       {:phoenix_live_dashboard, "~> 0.8.3"},
       {:esbuild, "~> 0.8", runtime: Mix.env() == :dev},
-      {:tailwind, "~> 0.2", runtime: Mix.env() == :dev},
       {:heroicons,
        github: "tailwindlabs/heroicons",
        tag: "v2.1.1",
@@ -74,10 +74,9 @@ defmodule Makina.MixProject do
       "ecto.setup": ["ecto.create", "ecto.migrate", "run priv/repo/seeds.exs"],
       "ecto.reset": ["ecto.drop", "ecto.setup"],
       test: ["ecto.create --quiet", "ecto.migrate --quiet", "test"],
-      "assets.setup": ["tailwind.install --if-missing", "esbuild.install --if-missing"],
+      "assets.setup": ["esbuild.install --if-missing"],
       "assets.build": ["tailwind makina", "esbuild makina"],
       "assets.deploy": [
-        "tailwind makina --minify",
         "esbuild makina --minify",
         "phx.digest"
       ]

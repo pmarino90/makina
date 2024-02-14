@@ -599,9 +599,9 @@ defmodule MakinaWeb.CoreComponents do
     # with our gettext backend as first argument. Translations are
     # available in the errors.po file (as we use the "errors" domain).
     if count = opts[:count] do
-      Gettext.dngettext(TravellerWeb.Gettext, "errors", msg, msg, count, opts)
+      Gettext.dngettext(MakinaWeb.Gettext, "errors", msg, msg, count, opts)
     else
-      Gettext.dgettext(TravellerWeb.Gettext, "errors", msg, opts)
+      Gettext.dgettext(MakinaWeb.Gettext, "errors", msg, opts)
     end
   end
 
