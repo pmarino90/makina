@@ -11,12 +11,12 @@ defmodule Makina.Application do
       MakinaWeb.Telemetry,
       Makina.Repo,
       {Ecto.Migrator,
-        repos: Application.fetch_env!(:makina, :ecto_repos),
-        skip: skip_migrations?()},
+       repos: Application.fetch_env!(:makina, :ecto_repos), skip: skip_migrations?()},
       {DNSCluster, query: Application.get_env(:makina, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Makina.PubSub},
-      # Start the Finch HTTP client for sending emails
       {Finch, name: Makina.Finch},
+      # Start the Finch HTTP client for sending emails
+      Makina.Runtime,
       # Start a worker by calling: Makina.Worker.start_link(arg)
       # {Makina.Worker, arg},
       # Start to serve requests, typically the last entry

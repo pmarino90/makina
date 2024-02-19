@@ -29,6 +29,8 @@ defmodule MakinaWeb.Router do
 
     live_session :user, on_mount: [{MakinaWeb.UserAuth, :ensure_authenticated}] do
       live "/apps", AppsLive
+      live "/apps/create", CreateAppLive
+      live "/apps/:id", AppLive
     end
   end
 

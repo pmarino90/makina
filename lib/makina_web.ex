@@ -54,6 +54,9 @@ defmodule MakinaWeb do
       use Phoenix.LiveView,
         layout: {MakinaWeb.Layouts, :app}
 
+      def wrap_ok(socket), do: {:ok, socket}
+      def wrap_noreply(socket), do: {:noreply, socket}
+
       unquote(html_helpers())
     end
   end

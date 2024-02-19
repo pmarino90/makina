@@ -9,7 +9,6 @@ defmodule Makina.Apps.Application do
   schema "applications" do
     field :name, :string
     field :description, :string
-    field :state, Ecto.Enum, values: [:stopped, :running, :booting, :new], default: :new
 
     belongs_to :owner, User
     has_many :services, Service
@@ -19,8 +18,8 @@ defmodule Makina.Apps.Application do
 
   def changeset(changeset, attrs \\ %{}) do
     changeset
-    |> cast(attrs, [:name, :description, :state, :owner_id])
-    |> validate_required([:name, :state])
+    |> cast(attrs, [:name, :description, :owner_id])
+    |> validate_required([:name])
     |> cast_assoc(:services)
   end
 end

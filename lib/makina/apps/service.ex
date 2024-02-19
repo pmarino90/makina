@@ -5,15 +5,14 @@ defmodule Makina.Apps.Service do
 
   alias Makina.Apps.{Application, Instance}
 
-  @fields ~w[name image_name image_tag state environment_variables labels ports volumes]a
-  @required_fields ~w[name image_registry image_name image_tag state]a
+  @fields ~w[name image_name image_tag environment_variables labels ports volumes]a
+  @required_fields ~w[name image_registry image_name image_tag]a
 
   schema "services" do
     field :name, :string
     field :image_registry, :string, default: "hub.docker.com"
     field :image_name, :string
     field :image_tag, :string, default: "latest"
-    field :state, Ecto.Enum, values: [:stopped, :running, :booting], default: :stopped
     field :environment_variables, :map
     field :labels, :map
     field :ports, :map

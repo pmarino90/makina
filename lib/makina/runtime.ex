@@ -33,13 +33,21 @@ defmodule Makina.Runtime do
 
     children =
       for app <- apps do
-        %{start: {App, :start_link, [app_spec: app]}, id: "app_#{app.id}", restart: :transient}
+        build_app_child_spec(app)
       end
 
     Supervisor.init(children, strategy: :one_for_one, max_seconds: 30)
   end
 
+  def start_app(app) do
+    Supervisor.start_child(__MODULE__, build_app_child_spec(app))
+  end
+
   def stop_app(id), do: Supervisor.terminate_child(__MODULE__, "app_#{id}")
 
   def stop(), do: Supervisor.stop(__MODULE__)
+
+  defp build_app_child_spec(app) do
+    %{start: {App, :start_link, [app_spec: app]}, id: "app_#{app.id}", restart: :transient}
+  end
 end
