@@ -40,14 +40,21 @@ defmodule Makina.Runtime do
   end
 
   def start_app(app) do
-    Supervisor.start_child(__MODULE__, build_app_child_spec(app))
+    child_spec = build_app_child_spec(app)
+
+    case Supervisor.start_child(__MODULE__, child_spec) do
+      {:error, :already_present} -> Supervisor.restart_child(__MODULE__, app_id(app))
+    end
   end
 
-  def stop_app(id), do: Supervisor.terminate_child(__MODULE__, "app_#{id}")
+  def stop_app(id), do: Supervisor.terminate_child(__MODULE__, app_id(id))
 
   def stop(), do: Supervisor.stop(__MODULE__)
 
   defp build_app_child_spec(app) do
-    %{start: {App, :start_link, [app_spec: app]}, id: "app_#{app.id}", restart: :transient}
+    %{start: {App, :start_link, [app_spec: app]}, id: app_id(app), restart: :transient}
   end
+
+  defp app_id(id) when is_integer(id), do: "app_#{id}"
+  defp app_id(%Apps.Application{} = app), do: "app_#{app.id}"
 end
