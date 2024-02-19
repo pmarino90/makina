@@ -10,7 +10,7 @@ defmodule Makina.Docker do
   def list_containers(), do: client() |> Req.get!(url: "/containers/json")
 
   @doc """
-  Creates and runs a container
+  Creates a container
 
   `name`: the name to give to the container
   `params`: https://docs.docker.com/engine/api/v1.44/#tag/Container/operation/ContainerCreate
@@ -25,6 +25,43 @@ defmodule Makina.Docker do
     )
   end
 
+  def start_container(name_or_id),
+    do:
+      client()
+      |> Req.post!(url: "/v1.44/containers/#{name_or_id}/start")
+
+  def attach_container(name_or_id),
+    do:
+      client()
+      |> Req.post!(
+        url: "/v1.44/containers/#{name_or_id}/attach",
+        into: IO.stream(),
+        params: %{"stream" => true, "stdin" => true, "stdout" => true, "stderr" => true}
+      )
+
+  def stop_container(name_or_id),
+    do: client() |> Req.post!(url: "/v1.44/containers/#{name_or_id}/stop")
+
+  def monitor_container(name_or_id, params \\ []) do
+    on_event = Keyword.get(params, :on_event, nil)
+
+    client()
+    |> Req.Request.append_request_steps(
+      debug_url: fn request ->
+        IO.inspect(URI.to_string(request.url))
+        request
+      end
+    )
+    |> Req.get!(
+      url: "/v1.44/events",
+      params: [
+        filters:
+          Jason.encode!(%{"type" => %{"container" => true}, "container" => %{name_or_id => true}})
+      ],
+      into: on_event
+    )
+  end
+
   # Images related endpoints
 
   @doc """
@@ -35,13 +72,14 @@ defmodule Makina.Docker do
   """
   def pull_image(params) when is_list(params) do
     docker_params = Keyword.get(params, :docker)
-    on_progress = Keyword.get(params, :on_progress, fn -> nil end)
+    on_progress = Keyword.get(params, :on_progress, nil)
 
     client()
     |> Req.post!(
-      url: "/images/create",
+      url: "/v1.44/images/create",
       params: docker_params,
-      into: on_progress
+      into: on_progress,
+      raw: true
     )
   end
 
@@ -55,5 +93,5 @@ defmodule Makina.Docker do
   def ping(), do: client() |> Req.get!(url: "/_ping")
 
   defp client(),
-    do: Req.new(base_url: "http://localhost/v1.44/", unix_socket: @docker_socket_path)
+    do: Req.new(base_url: "http://localhost", unix_socket: @docker_socket_path)
 end
