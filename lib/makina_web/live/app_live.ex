@@ -42,12 +42,17 @@ defmodule MakinaWeb.AppLive do
         No services, create one
       </section>
 
-      <section :if={@app.services != []}>
-        <ul>
-          <li :for={service <- @app.services} class="card">
-            <%= service.name %>
-          </li>
-        </ul>
+      <section :if={@app.services != []} class="d-flex flex-row">
+        <article :for={service <- @app.services} class="card p-2">
+          <div class="card-body">
+            <h5 class="card-title"><%= service.name %></h5>
+            <div class="card-text">
+              <.link navigate={~p"/apps/#{@app.id}/services/#{service.id}"}>
+                Go to service
+              </.link>
+            </div>
+          </div>
+        </article>
       </section>
     </section>
     """

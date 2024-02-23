@@ -69,6 +69,7 @@
     .card {
         --bs-card-border-color: white;
         --bs-card-border-radius: var(--bs-border-radius);
+        --bs-card-bg: hsla(0, 0%, 0%, 1);
     }
 
     .modal {
