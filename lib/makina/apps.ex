@@ -24,6 +24,12 @@ defmodule Makina.Apps do
     |> Service.changeset(attrs)
   end
 
+  def create_service(attrs) do
+    %Service{}
+    |> Service.changeset(attrs)
+    |> Repo.insert()
+  end
+
   @doc """
   Returns a service given its id
   """
