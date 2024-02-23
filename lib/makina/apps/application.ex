@@ -19,7 +19,8 @@ defmodule Makina.Apps.Application do
   def changeset(changeset, attrs \\ %{}) do
     changeset
     |> cast(attrs, [:name, :description, :owner_id])
-    |> validate_required([:name])
+    |> validate_required([:name, :owner_id])
+    |> unsafe_validate_unique([:name], Makina.Repo)
     |> cast_assoc(:services)
   end
 end
