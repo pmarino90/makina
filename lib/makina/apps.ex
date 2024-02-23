@@ -3,10 +3,13 @@ defmodule Makina.Apps do
 
   import Ecto.Query
 
-  alias Makina.Apps.Service
-  alias Makina.Apps.Application
+  alias Makina.Apps.{Application, Service}
 
-  def list_applications(), do: Application |> preload(:services) |> Repo.all()
+  def list_applications() do
+    Application
+    |> preload(services: [:environment_variables])
+    |> Repo.all()
+  end
 
   def create_application(attrs) do
     %Application{}

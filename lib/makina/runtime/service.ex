@@ -16,9 +16,9 @@ defmodule Makina.Runtime.Service do
     Supervisor.start_link(__MODULE__, args)
   end
 
-  def init({_, service}) do
+  def init({app, service}) do
     children = [
-      {Instance, {self(), service}}
+      {Instance, {self(), app, service}}
     ]
 
     Supervisor.init(children, strategy: :one_for_one, max_seconds: 30)

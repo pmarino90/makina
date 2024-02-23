@@ -23,7 +23,7 @@ defmodule Makina.Runtime.App do
 
     children =
       for service <- app_spec.services do
-        %{start: {Service, :start_link, [service: service]}, id: "service_#{service.id}"}
+        %{start: {Service, :start_link, [{app_spec, service}]}, id: "service_#{service.id}"}
       end
 
     Supervisor.init(children, strategy: :one_for_one, max_seconds: 30)
