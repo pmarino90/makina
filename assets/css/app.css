@@ -5,6 +5,11 @@
     display: none;
 }
 
+.show,
+.show .modal-backdrop {
+    display: block;
+}
+
 .phx-click-loading #block-add-loader {
     display: block;
 }
@@ -17,22 +22,66 @@
     border: none;
 }
 
-[data-bs-core=trvlr] {
-    --bs-primary: #21130d;
-    --bs-primary-hsl: 18, 43%, 9%;
-    --bs-primary-hover-bg: var(--bs-darkgray-800);
-    --bs-content-border-color: black;
-    --bs-border-color: black;
-    
-    --bs-content-floating-box-shadow: 3px 3px 0px 0px rgba(0,0,0,1);
+.logo {
+    background: #1246ff;
+    background: linear-gradient(
+        to right,
+        #1246ff 0%,
+        #df2bff 50%,
+        #ff2d93 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: #ff2d93;
+    text-transform: capitalize;
+}
+
+.modal-open {
+    overflow: hidden;
+    /* padding-right: 15px; */
+}
+
+.modal-backdrop {
+    display: none;
+}
+
+[data-bs-core="trvlr"] {
+    --bs-body-bg: hsla(0, 0%, 0%, 1);
+    --bs-body-color-hsl: 360, 100%, 100%, 1;
+    --bs-primary: #ff2d93;
+    --bs-primary-hsl: 331, 100%, 59%, 1;
+    --bs-primary-hover-bg: #f50076;
+    --bs-content-border-color: white;
+    --bs-border-color: white;
+    --bs-content-floating-bg: hsla(0, 0%, 0%, 1);
+    --bs-form-color: hsla(0, 0%, 0%, 1);
+    --bs-font-size-base: 0.975rem;
+
+    --bs-content-floating-box-shadow: 3px 3px 0px 0px rgba(256, 256, 256, 1);
 
     --bs-border-radius: 0;
 
     .dropdown-item {
         --bs-dropdown-item-border-radius: 0;
+        --bs-dropdown-link-hover-bg: hsla(360, 100%, 100%, 1);
+        --bs-dropdown-link-hover-color: hsla(0, 0%, 0%, 1);
     }
     .card {
-        --bs-card-border-color: black;
+        --bs-card-border-color: white;
         --bs-card-border-radius: var(--bs-border-radius);
+    }
+
+    .modal {
+        --bs-modal-bg: hsla(0, 0%, 0%, 1);
+        --bs-modal-border-radius: var(--bs-border-radius);
+        --bs-modal-box-shadow: var(--bs-content-floating-box-shadow);
+    }
+
+    .modal-content {
+        border-color: #bababa;
+    }
+
+    .modal-backdrop {
+        --bs-backdrop-opacity: 0.8;
     }
 }

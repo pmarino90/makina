@@ -15,6 +15,7 @@ defmodule Makina.Runtime.Instance do
 
   # Client
 
+  @doc false
   def start_link(args), do: GenServer.start_link(__MODULE__, args)
 
   def bootstrap(pid), do: GenServer.cast(pid, :bootstrap)
@@ -25,7 +26,6 @@ defmodule Makina.Runtime.Instance do
     Logger.info("Starting Instance for service #{service.name}")
 
     Process.flag(:trap_exit, true)
-
     Process.monitor(parent)
 
     bootstrap(self())
@@ -33,12 +33,14 @@ defmodule Makina.Runtime.Instance do
     {:ok, %{service: service, state: :booting}}
   end
 
+  @doc false
   def terminate(_reason, state) do
     handle_shutdown(state.service)
 
     {:noreply, state}
   end
 
+  @doc false
   def handle_cast(:bootstrap, %{service: service, state: :booting} = state) do
     service
     |> pull_image()
@@ -48,12 +50,14 @@ defmodule Makina.Runtime.Instance do
     {:noreply, %{state | state: :started}}
   end
 
+  @doc false
   def handle_info({:DOWN, _ref, :process, _pid, _reason}, state) do
     handle_shutdown(state.service)
 
     {:noreply, state}
   end
 
+  @doc false
   def handle_info({:EXIT, _ref, :process, _pid, _reason}, state) do
     handle_shutdown(state.service)
 

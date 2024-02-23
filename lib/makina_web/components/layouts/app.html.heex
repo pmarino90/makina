@@ -6,7 +6,7 @@
     <div></div>
     <div data-controller="dropdown">
       <button
-        class="btn fs-3 text-primary"
+        class="btn fs-2 logo fw-bolder"
         data-controller="hotkey"
         data-hotkey="Shift+?"
         data-action="click->dropdown#toggle"
@@ -22,9 +22,13 @@
         </div>
       </div>
     </div>
-    <div data-controller="dropdown" class="px-2" data-dropdown-placement-value="bottom-end">
+    <div
+      data-controller="dropdown"
+      class="px-2 text-primary"
+      data-dropdown-placement-value="bottom-end"
+    >
       <button
-        class="btn btn-sm"
+        class="btn btn-sm text-primary"
         data-action="click->dropdown#toggle"
         data-dropdown-target="toggleButton"
       >
@@ -62,3 +66,5 @@
   <.flash_group :if={@flash != %{}} flash={@flash} />
   <%= @inner_content %>
 </main>
+
+<div id="backdrop" class="modal-backdrop fade"></div>

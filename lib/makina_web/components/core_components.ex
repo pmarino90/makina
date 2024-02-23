@@ -15,9 +15,59 @@ defmodule MakinaWeb.CoreComponents do
   Icons are provided by [heroicons](https://heroicons.com). See `icon/1` for usage.
   """
   use Phoenix.Component
+  use MakinaWeb, :verified_routes
 
   alias Phoenix.LiveView.JS
   import MakinaWeb.Gettext
+
+  attr :placement, :string, default: "bottom"
+  slot :toggle_content, required: true
+  slot :elements, required: true, doc: "Elements rendered in the open dropdown"
+
+  def dropdown(assigns) do
+    ~H"""
+    <div data-controller="dropdown">
+      <button
+        class="btn"
+        data-dropdown-target="toggleButton"
+        data-action="click->dropdown#toggle"
+        data-dropdown-placement-value={@placement}
+      >
+        <%= render_slot(@toggle_content) %>
+      </button>
+      <div class="dropdown-menu p-2" data-dropdown-target="menu">
+        <%= render_slot(@elements) %>
+      </div>
+    </div>
+    """
+  end
+
+  def dropdown_element(assigns) do
+    ~H"""
+    <div class="dropdown-item">
+      <%= render_slot(@inner_block) %>
+    </div>
+    """
+  end
+
+  def list_plus_icon(assigns) do
+    ~H"""
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      class="lucide lucide-list-plus"
+    >
+      <path d="M11 12H3" /><path d="M16 6H3" /><path d="M16 18H3" /><path d="M18 9v6" /><path d="M21 12h-6" />
+    </svg>
+    """
+  end
 
   def chevron_down(assigns) do
     ~H"""
@@ -85,6 +135,25 @@ defmodule MakinaWeb.CoreComponents do
     """
   end
 
+  def options_icon(assigns) do
+    ~H"""
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      class="lucide lucide-more-vertical"
+    >
+      <circle cx="12" cy="12" r="1" /><circle cx="12" cy="5" r="1" /><circle cx="12" cy="19" r="1" />
+    </svg>
+    """
+  end
+
   @doc """
   Renders a modal.
 
@@ -104,6 +173,7 @@ defmodule MakinaWeb.CoreComponents do
   """
   attr :id, :string, required: true
   attr :show, :boolean, default: false
+  attr :title, :string, default: nil
   attr :on_cancel, JS, default: %JS{}
   slot :inner_block, required: true
 
@@ -114,11 +184,40 @@ defmodule MakinaWeb.CoreComponents do
       phx-mounted={@show && show_modal(@id)}
       phx-remove={hide_modal(@id)}
       data-cancel={JS.exec(@on_cancel, "phx-remove")}
-      class="relative z-50 hidden"
+      class="modal fade"
     >
-      <div id={"#{@id}-bg"} class="bg-zinc-50/90 fixed inset-0 transition-opacity" aria-hidden="true" />
       <div
-        class="fixed inset-0 overflow-y-auto"
+        class="modal-dialog"
+        aria-labelledby={"#{@id}-title"}
+        aria-describedby={"#{@id}-description"}
+        role="dialog"
+        aria-modal="true"
+        tabindex="0"
+      >
+        <.focus_wrap
+          id={"#{@id}-container"}
+          phx-window-keydown={JS.exec("data-cancel", to: "##{@id}")}
+          phx-key="escape"
+          phx-click-away={JS.exec("data-cancel", to: "##{@id}")}
+          class="modal-content"
+        >
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="modal-title-1"><%= @title %></h1>
+            <button
+              type="button"
+              class="btn-close"
+              phx-click={JS.exec("data-cancel", to: "##{@id}")}
+              aria-label={gettext("close")}
+            >
+            </button>
+          </div>
+          <%= render_slot(@inner_block) %>
+        </.focus_wrap>
+      </div>
+
+      <%!-- <div id={"#{@id}-bg"} class="bg-zinc-50/90 fixed inset-0 transition-opacity" aria-hidden="true" />
+      <div
+        class="modal-dialog"
         aria-labelledby={"#{@id}-title"}
         aria-describedby={"#{@id}-description"}
         role="dialog"
@@ -150,7 +249,7 @@ defmodule MakinaWeb.CoreComponents do
             </.focus_wrap>
           </div>
         </div>
-      </div>
+      </div> --%>
     </div>
     """
   end
@@ -255,7 +354,7 @@ defmodule MakinaWeb.CoreComponents do
   def simple_form(assigns) do
     ~H"""
     <.form :let={f} for={@for} as={@as} {@rest}>
-      <div class="mt-10 space-y-8 bg-white">
+      <div class="mt-10 space-y-8">
         <%= render_slot(@inner_block, f) %>
         <div :for={action <- @actions} class="mt-2 flex items-center justify-between gap-6">
           <%= render_slot(action, f) %>
@@ -503,7 +602,7 @@ defmodule MakinaWeb.CoreComponents do
           <%= render_slot(@additional) %>
         </div>
       </div>
-      <div :if={@actions != []}>
+      <div :if={@actions != []} class="align-self-start">
         <%= render_slot(@actions) %>
       </div>
     </header>
@@ -562,25 +661,19 @@ defmodule MakinaWeb.CoreComponents do
 
   def show_modal(js \\ %JS{}, id) when is_binary(id) do
     js
-    |> JS.show(to: "##{id}")
-    |> JS.show(
-      to: "##{id}-bg",
-      transition: {"transition-all transform ease-out duration-300", "opacity-0", "opacity-100"}
-    )
-    |> show("##{id}-container")
-    |> JS.add_class("overflow-hidden", to: "body")
+    |> JS.add_class("show", to: "##{id}")
+    |> JS.show(to: "#backdrop")
+    |> JS.add_class("show", to: "#backdrop")
+    |> JS.add_class("modal-open", to: "body")
     |> JS.focus_first(to: "##{id}-content")
   end
 
   def hide_modal(js \\ %JS{}, id) do
     js
-    |> JS.hide(
-      to: "##{id}-bg",
-      transition: {"transition-all transform ease-in duration-200", "opacity-100", "opacity-0"}
-    )
-    |> hide("##{id}-container")
-    |> JS.hide(to: "##{id}", transition: {"block", "block", "hidden"})
-    |> JS.remove_class("overflow-hidden", to: "body")
+    |> JS.remove_class("show", to: "##{id}")
+    |> JS.remove_class("modal-open", to: "body")
+    |> JS.remove_class("show", to: "#backdrop")
+    |> JS.hide(to: "#backdrop")
     |> JS.pop_focus()
   end
 

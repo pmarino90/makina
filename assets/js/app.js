@@ -38,5 +38,4 @@ const Stimulus = Application.start();
 Stimulus.register("hotkey", HotkeyController);
 Stimulus.register("dropdown", DropdownController);
 Stimulus.register("sortable", SortableController);
-Stimulus.register("rich-text", RichTextController);
 Stimulus.register("toast", ToastController);
