@@ -15,6 +15,7 @@ defmodule Makina.Runtime do
   use Supervisor
   require Logger
 
+  alias Makina.Runtime.Instance
   alias Makina.Apps
   alias Makina.Runtime.App
 
@@ -34,12 +35,16 @@ defmodule Makina.Runtime do
 
     Logger.info("Starting Makina Runtime")
 
-    children =
+    children = [
+      {Registry, keys: :unique, name: Makina.Runtime.InstanceRegistry}
+    ]
+
+    child_apps =
       for app <- apps do
         build_app_child_spec(app)
       end
 
-    Supervisor.init(children, strategy: :one_for_one, max_seconds: 30)
+    Supervisor.init(children ++ child_apps, strategy: :one_for_one, max_seconds: 30)
   end
 
   @doc """
@@ -66,6 +71,39 @@ defmodule Makina.Runtime do
   > The app is not removed from the tree once stopped.
   """
   def stop_app(id), do: Supervisor.terminate_child(__MODULE__, app_id(id))
+
+  @doc """
+  Given a `service_id` it returns the current status of all the running instances.
+  If the consolidated state is needed see `Runtime.get_service_state/2`
+  """
+  def get_service_state(id) do
+    Registry.lookup(Makina.Runtime.InstanceRegistry, "service-#{id}")
+    |> Enum.map(fn {pid, _} -> Instance.get_current_state(pid) end)
+  end
+
+  @doc """
+  Given a `service_id` it returns the current status of all the running instances.
+
+  Accepts additional options:
+  * `:consolidated`, returns the consolidated state meaning that if all instances are running
+  the returned state is `:running` while if only part of them are the state is `:incosistant`
+  """
+  def get_service_state(id, opts) do
+    unless Keyword.get(opts, :consolidated),
+      do: raise("Invalid options provided, only `:consolidate` supported.")
+
+    states =
+      get_service_state(id)
+      |> Enum.uniq()
+
+    count = Enum.count(states)
+
+    cond do
+      count == 1 -> hd(states)
+      count > 1 -> :inconsistant
+      count < 1 -> :no_service
+    end
+  end
 
   @doc """
   Stops the runtime

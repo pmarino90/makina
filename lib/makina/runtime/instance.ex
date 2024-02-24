@@ -15,10 +15,26 @@ defmodule Makina.Runtime.Instance do
 
   # Client
 
-  @doc false
-  def start_link(args), do: GenServer.start_link(__MODULE__, args)
-
   def bootstrap(pid), do: GenServer.cast(pid, :bootstrap)
+
+  @doc """
+  Given an instance PID it returns it's current running state.
+  The state should reprensent what the current state is in the underlying runtime,
+  so `:running` means that the underlying container is up and running.
+
+  These are the possible states:
+  * `:booting`, instance is starting up
+  * `:running`, instance is running, meaning the underlying container is running.
+  * `:stopped`, instance has been gracefully stopped
+  """
+  def get_current_state(pid), do: GenServer.call(pid, :current_state)
+
+  @doc false
+  def start_link({_parent, _app_, service} = args),
+    do:
+      GenServer.start_link(__MODULE__, args,
+        name: {:via, Registry, {Makina.Runtime.InstanceRegistry, "service-#{service.id}"}}
+      )
 
   # Server
 
@@ -30,13 +46,15 @@ defmodule Makina.Runtime.Instance do
 
     bootstrap(self())
 
-    {:ok, %{app: app, service: service, instance_number: 1, state: :booting}}
+    {:ok, %{app: app, service: service, instance_number: 1, running_state: :booting}}
   end
 
   @doc false
   def terminate(_reason, state) do
     handle_shutdown(state)
   end
+
+  ## Cast
 
   @doc false
   def handle_cast(:bootstrap, state) do
@@ -45,8 +63,16 @@ defmodule Makina.Runtime.Instance do
     |> create_container()
     |> start_container()
 
-    {:noreply, %{state | state: :started}}
+    {:noreply, %{state | running_state: :running}}
   end
+
+  ## Calls
+
+  def handle_call(:current_state, _from, state) do
+    {:reply, state.running_state, state}
+  end
+
+  ## Other Messages
 
   @doc false
   def handle_info({:DOWN, _ref, :process, _pid, _reason}, state) do
@@ -62,7 +88,7 @@ defmodule Makina.Runtime.Instance do
     container_name(state)
     |> Docker.stop_container()
 
-    {:noreply, %{state | state: :stopped}}
+    {:noreply, %{state | running_state: :stopped}}
   end
 
   defp pull_image(%{service: service} = state) do

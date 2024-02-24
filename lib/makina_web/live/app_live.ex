@@ -1,5 +1,7 @@
 defmodule MakinaWeb.AppLive do
+  alias Phoenix.LiveView.AsyncResult
   alias Makina.Runtime
+
   use MakinaWeb, :live_view
 
   import MakinaWeb.CoreComponents
@@ -47,10 +49,19 @@ defmodule MakinaWeb.AppLive do
           <div class="card-body">
             <h5 class="card-title"><%= service.name %></h5>
             <div class="card-text">
-              <.link navigate={~p"/apps/#{@app.id}/services/#{service.id}"}>
-                Go to service
-              </.link>
+              <.async_result :let={status} assign={@services_state["service-#{service.id}"]}>
+                <:loading>
+                  <div class="spinner-border text-body-secondary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
+                </:loading>
+
+                <%= status %>
+              </.async_result>
             </div>
+            <.link navigate={~p"/apps/#{@app.id}/services/#{service.id}"}>
+              Go to service
+            </.link>
           </div>
         </article>
       </section>
@@ -65,6 +76,7 @@ defmodule MakinaWeb.AppLive do
     socket
     |> assign(app: app)
     |> assign(service_form: to_form(service_form))
+    |> fetch_and_assign_service_state()
     |> wrap_ok()
   end
 
@@ -82,5 +94,41 @@ defmodule MakinaWeb.AppLive do
     socket
     |> put_flash(:info, "Start signal sent to app")
     |> wrap_noreply()
+  end
+
+  def handle_async(:fetch_service_state, {:ok, {service, state}}, socket) do
+    services_state =
+      socket.assigns.services_state
+      |> Map.put("service-#{service.id}", AsyncResult.ok(state))
+
+    socket
+    |> assign(services_state: services_state)
+    |> wrap_noreply()
+  end
+
+  defp fetch_and_assign_service_state(socket) do
+    app = socket.assigns.app
+
+    socket
+    |> assign(services_state: loading_services_state(app.services))
+    |> multi_fetch_state()
+  end
+
+  defp multi_fetch_state(socket) do
+    services = socket.assigns.app.services
+
+    services
+    |> Enum.reduce(socket, fn service, sock ->
+      start_async(sock, :fetch_service_state, fn ->
+        {service, Runtime.get_service_state(service.id, consolidated: true)}
+      end)
+    end)
+  end
+
+  defp loading_services_state(services) do
+    services
+    |> Enum.reduce(%{}, fn service, acc ->
+      Map.put(acc, "service-#{service.id}", AsyncResult.loading())
+    end)
   end
 end
