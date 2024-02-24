@@ -45,6 +45,29 @@
     display: none;
 }
 
+.dot {
+    content: " ";
+    display: block;
+    background-color: gray;
+    border-radius: 9999999px;
+    height: 12px;
+    width: 12px;
+}
+
+.dot.danger {
+    background-color: var(--bs-danger);
+}
+
+.dot.success {
+    background-color: var(--bs-success);
+}
+
+.dot.small,
+.spinner-border.small {
+    height: 12px;
+    width: 12px;
+}
+
 [data-bs-core="trvlr"] {
     --bs-body-bg: hsla(0, 0%, 0%, 1);
     --bs-body-color-hsl: 360, 100%, 100%, 1;
@@ -66,6 +89,7 @@
         --bs-dropdown-link-hover-bg: hsla(360, 100%, 100%, 1);
         --bs-dropdown-link-hover-color: hsla(0, 0%, 0%, 1);
     }
+
     .card {
         --bs-card-border-color: white;
         --bs-card-border-radius: var(--bs-border-radius);

@@ -12,33 +12,47 @@ defmodule MakinaWeb.AppLive do
 
   def render(assigns) do
     ~H"""
-    <.header>
-      <%= @app.name %>
-      <:actions>
-        <.dropdown placement="bottom-end">
-          <:toggle_content>
-            <.options_icon />
-          </:toggle_content>
-          <:elements>
-            <.async_result :let={state} assign={@app_running_state}>
-              <:loading>
-                <div class="spinner-border text-body-secondary" role="status">
-                  <span class="visually-hidden">Loading...</span>
-                </div>
-              </:loading>
+    <div class="hstack justify-content-between gap-2 w-full">
+      <div class="align-self-start mt-3">
+        <.async_result :let={status} assign={@app_running_state}>
+          <:loading>
+            <div class="spinner-border small text-body-secondary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          </:loading>
 
-              <button :if={state == :running} class="btn dropdown-item" phx-click="stop_app">
-                Stop
-              </button>
-              <button :if={state == :stopped} class="btn dropdown-item" phx-click="start_app">
-                Start
-              </button>
-            </.async_result>
-          </:elements>
-        </.dropdown>
-      </:actions>
-      <:subtitle><%= @app.description %></:subtitle>
-    </.header>
+          <span :if={status == :running} class="dot success"></span>
+          <span :if={status != :running} class="dot danger"></span>
+        </.async_result>
+      </div>
+      <.header class="flex-fill">
+        <%= @app.name %>
+        <:actions>
+          <.dropdown placement="bottom-end">
+            <:toggle_content>
+              <.options_icon />
+            </:toggle_content>
+            <:elements>
+              <.async_result :let={state} assign={@app_running_state}>
+                <:loading>
+                  <div class="spinner-border text-body-secondary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                  </div>
+                </:loading>
+
+                <button :if={state == :running} class="btn dropdown-item" phx-click="stop_app">
+                  Stop
+                </button>
+                <button :if={state == :stopped} class="btn dropdown-item" phx-click="start_app">
+                  Start
+                </button>
+              </.async_result>
+            </:elements>
+          </.dropdown>
+        </:actions>
+        <:subtitle><%= @app.description %></:subtitle>
+      </.header>
+    </div>
 
     <section>
       <.header level="h2">
@@ -60,18 +74,22 @@ defmodule MakinaWeb.AppLive do
       <section :if={@app.services != []} class="d-flex flex-row">
         <article :for={service <- @app.services} class="card p-2">
           <div class="card-body">
-            <h5 class="card-title"><%= service.name %></h5>
-            <div class="card-text">
-              <.async_result :let={status} assign={@services_state["service-#{service.id}"]}>
-                <:loading>
-                  <div class="spinner-border text-body-secondary" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                  </div>
-                </:loading>
+            <div class="hstack gap-2">
+              <div class="mb-1">
+                <.async_result :let={status} assign={@services_state["service-#{service.id}"]}>
+                  <:loading>
+                    <div class="spinner-border small text-body-secondary" role="status">
+                      <span class="visually-hidden">Loading...</span>
+                    </div>
+                  </:loading>
 
-                <%= status %>
-              </.async_result>
+                  <span :if={status == :running} class="dot success"></span>
+                  <span :if={status != :running} class="dot danger"></span>
+                </.async_result>
+              </div>
+              <h5 class="card-title"><%= service.name %></h5>
             </div>
+            <div class="card-text"></div>
             <.link navigate={~p"/apps/#{@app.id}/services/#{service.id}"}>
               Go to service
             </.link>
