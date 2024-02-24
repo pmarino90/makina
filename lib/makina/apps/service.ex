@@ -3,7 +3,7 @@ defmodule Makina.Apps.Service do
 
   import Ecto.Changeset
 
-  alias Makina.Apps.{Application, Instance, EnvironmentVariable}
+  alias Makina.Apps.{Application, EnvironmentVariable}
 
   @fields ~w[name image_name image_tag application_id]a
   @required_fields ~w[name image_registry image_name image_tag application_id]a
@@ -17,7 +17,6 @@ defmodule Makina.Apps.Service do
     belongs_to :application, Application
 
     has_many :environment_variables, EnvironmentVariable, on_replace: :delete
-    has_many :instances, Instance
 
     timestamps()
   end
