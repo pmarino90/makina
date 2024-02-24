@@ -18,9 +18,12 @@ defmodule MakinaWeb.AppLive do
             <.options_icon />
           </:toggle_content>
           <:elements>
-            <.dropdown_element>
-              <button class="btn">Foo</button>
-            </.dropdown_element>
+            <button :if={app_running?(@app.id)} class="btn dropdown-item" phx-click="stop_app">
+              Stop
+            </button>
+            <button :if={!app_running?(@app.id)} class="btn dropdown-item" phx-click="start_app">
+              Start
+            </button>
           </:elements>
         </.dropdown>
       </:actions>
@@ -84,7 +87,6 @@ defmodule MakinaWeb.AppLive do
     Runtime.stop_app(socket.assigns.app.id)
 
     socket
-    |> put_flash(:info, "Stop signal sent to app")
     |> wrap_noreply()
   end
 
@@ -92,7 +94,6 @@ defmodule MakinaWeb.AppLive do
     Runtime.start_app(socket.assigns.app)
 
     socket
-    |> put_flash(:info, "Start signal sent to app")
     |> wrap_noreply()
   end
 
@@ -131,4 +132,6 @@ defmodule MakinaWeb.AppLive do
       Map.put(acc, "service-#{service.id}", AsyncResult.loading())
     end)
   end
+
+  defp app_running?(id), do: Runtime.app_running?(id)
 end

@@ -26,13 +26,8 @@ defmodule MakinaWeb.CoreComponents do
 
   def dropdown(assigns) do
     ~H"""
-    <div data-controller="dropdown">
-      <button
-        class="btn"
-        data-dropdown-target="toggleButton"
-        data-action="click->dropdown#toggle"
-        data-dropdown-placement-value={@placement}
-      >
+    <div data-controller="dropdown" data-dropdown-placement-value={@placement}>
+      <button class="btn" data-dropdown-target="toggleButton" data-action="click->dropdown#toggle">
         <%= render_slot(@toggle_content) %>
       </button>
       <div class="dropdown-menu p-2" data-dropdown-target="menu">
@@ -233,42 +228,6 @@ defmodule MakinaWeb.CoreComponents do
           <%= render_slot(@inner_block) %>
         </.focus_wrap>
       </div>
-
-      <%!-- <div id={"#{@id}-bg"} class="bg-zinc-50/90 fixed inset-0 transition-opacity" aria-hidden="true" />
-      <div
-        class="modal-dialog"
-        aria-labelledby={"#{@id}-title"}
-        aria-describedby={"#{@id}-description"}
-        role="dialog"
-        aria-modal="true"
-        tabindex="0"
-      >
-        <div class="flex min-h-full items-center justify-center">
-          <div class="w-full max-w-3xl p-4 sm:p-6 lg:py-8">
-            <.focus_wrap
-              id={"#{@id}-container"}
-              phx-window-keydown={JS.exec("data-cancel", to: "##{@id}")}
-              phx-key="escape"
-              phx-click-away={JS.exec("data-cancel", to: "##{@id}")}
-              class="shadow-zinc-700/10 ring-zinc-700/10 relative hidden rounded-2xl bg-white p-14 shadow-lg ring-1 transition"
-            >
-              <div class="absolute top-6 right-5">
-                <button
-                  phx-click={JS.exec("data-cancel", to: "##{@id}")}
-                  type="button"
-                  class="-m-3 flex-none p-3 opacity-20 hover:opacity-40"
-                  aria-label={gettext("close")}
-                >
-                  <.icon name="hero-x-mark-solid" class="h-5 w-5" />
-                </button>
-              </div>
-              <div id={"#{@id}-content"}>
-                <%= render_slot(@inner_block) %>
-              </div>
-            </.focus_wrap>
-          </div>
-        </div>
-      </div> --%>
     </div>
     """
   end

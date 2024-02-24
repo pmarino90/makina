@@ -33,7 +33,7 @@ defmodule Makina.Runtime.Instance do
   def start_link({_parent, _app_, service} = args),
     do:
       GenServer.start_link(__MODULE__, args,
-        name: {:via, Registry, {Makina.Runtime.InstanceRegistry, "service-#{service.id}"}}
+        name: {:via, Registry, {Makina.Runtime.Registry, "service-#{service.id}-instance-1"}}
       )
 
   # Server
@@ -87,6 +87,9 @@ defmodule Makina.Runtime.Instance do
   defp handle_shutdown(state) do
     container_name(state)
     |> Docker.stop_container()
+
+    container_name(state)
+    |> Docker.wait_for_container()
 
     {:noreply, %{state | running_state: :stopped}}
   end

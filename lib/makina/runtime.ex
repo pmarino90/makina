@@ -36,7 +36,7 @@ defmodule Makina.Runtime do
     Logger.info("Starting Makina Runtime")
 
     children = [
-      {Registry, keys: :unique, name: Makina.Runtime.InstanceRegistry}
+      {Registry, keys: :unique, name: Makina.Runtime.Registry}
     ]
 
     child_apps =
@@ -73,11 +73,23 @@ defmodule Makina.Runtime do
   def stop_app(id), do: Supervisor.terminate_child(__MODULE__, app_id(id))
 
   @doc """
+  Returns whether the app is running or not.
+
+  The state is determined by cheching whether the Application Supervisor is running for the
+  given app `id`
+  """
+  def app_running?(id) do
+    pid = app_pid(id)
+
+    if is_pid(pid), do: Process.alive?(pid), else: false
+  end
+
+  @doc """
   Given a `service_id` it returns the current status of all the running instances.
   If the consolidated state is needed see `Runtime.get_service_state/2`
   """
   def get_service_state(id) do
-    Registry.lookup(Makina.Runtime.InstanceRegistry, "service-#{id}")
+    Registry.lookup(Makina.Runtime.Registry, "service-#{id}-instance-1")
     |> Enum.map(fn {pid, _} -> Instance.get_current_state(pid) end)
   end
 
@@ -114,6 +126,13 @@ defmodule Makina.Runtime do
 
   defp build_app_child_spec(app) do
     %{start: {App, :start_link, [app_spec: app]}, id: app_id(app), restart: :transient}
+  end
+
+  defp app_pid(app_id) do
+    Supervisor.which_children(__MODULE__)
+    |> Enum.find_value(fn {id, pid, _, _} ->
+      if app_id(app_id) == id, do: pid, else: false
+    end)
   end
 
   defp app_id(id) when is_integer(id), do: "app_#{id}"

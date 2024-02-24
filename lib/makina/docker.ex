@@ -42,6 +42,12 @@ defmodule Makina.Docker do
   def stop_container(name_or_id),
     do: client() |> Req.post!(url: "/v1.44/containers/#{name_or_id}/stop")
 
+  def inspect_container(name_or_id),
+    do: client() |> Req.get!(url: "/v1.44/containers/#{name_or_id}/json")
+
+  def wait_for_container(name_or_id),
+    do: client() |> Req.post!(url: "/v1.44/containers/#{name_or_id}/wait")
+
   def monitor_container(name_or_id, params \\ []) do
     on_event = Keyword.get(params, :on_event, nil)
 

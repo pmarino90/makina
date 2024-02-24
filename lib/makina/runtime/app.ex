@@ -12,8 +12,10 @@ defmodule Makina.Runtime.App do
 
   alias Makina.Runtime.Service
 
-  def start_link(args) do
-    Supervisor.start_link(__MODULE__, args)
+  def start_link({_, app} = args) do
+    Supervisor.start_link(__MODULE__, args,
+      name: {:via, Registry, {Makina.Runtime.Registry, "app-#{app.id}"}}
+    )
   end
 
   def init({_, app_spec}) do

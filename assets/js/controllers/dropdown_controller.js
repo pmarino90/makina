@@ -50,7 +50,10 @@ export default class DropdownController extends Controller {
   }
 
   onClickOutside(e) {
-    if (!this.element.contains(e.target)) {
+    if (
+      !this.element.contains(e.target) ||
+      e.target.classList.contains("dropdown-item")
+    ) {
       this.close();
     }
   }
