@@ -15,6 +15,7 @@ defmodule Makina.Runtime do
   use Supervisor
   require Logger
 
+  alias Phoenix.PubSub
   alias Makina.Runtime.Instance
   alias Makina.Apps
   alias Makina.Runtime.App
@@ -61,6 +62,8 @@ defmodule Makina.Runtime do
       {:ok, _} ->
         :ok
     end
+
+    PubSub.broadcast(Makina.PubSub, "app::#{app.id}", {:app_update, :state, {:running}})
   end
 
   @doc """
@@ -70,7 +73,10 @@ defmodule Makina.Runtime do
   >
   > The app is not removed from the tree once stopped.
   """
-  def stop_app(id), do: Supervisor.terminate_child(__MODULE__, app_id(id))
+  def stop_app(id) do
+    Supervisor.terminate_child(__MODULE__, app_id(id))
+    PubSub.broadcast(Makina.PubSub, "app::#{id}", {:app_update, :state, {:stopped}})
+  end
 
   @doc """
   Returns whether the app is running or not.
@@ -82,6 +88,10 @@ defmodule Makina.Runtime do
     pid = app_pid(id)
 
     if is_pid(pid), do: Process.alive?(pid), else: false
+  end
+
+  def app_state(id) do
+    if app_running?(id), do: :running, else: :stopped
   end
 
   @doc """

@@ -11,6 +11,7 @@ defmodule Makina.Runtime.Instance do
 
   require Logger
 
+  alias Phoenix.PubSub
   alias Makina.Docker
 
   # Client
@@ -62,6 +63,7 @@ defmodule Makina.Runtime.Instance do
     |> pull_image()
     |> create_container()
     |> start_container()
+    |> notify_running_state(:running)
 
     {:noreply, %{state | running_state: :running}}
   end
@@ -90,6 +92,8 @@ defmodule Makina.Runtime.Instance do
 
     container_name(state)
     |> Docker.wait_for_container()
+
+    notify_running_state(state, :stopped)
 
     {:noreply, %{state | running_state: :stopped}}
   end
@@ -124,6 +128,14 @@ defmodule Makina.Runtime.Instance do
     |> Docker.start_container()
 
     state
+  end
+
+  defp notify_running_state(state, new_state) do
+    PubSub.broadcast(
+      Makina.PubSub,
+      "app::#{state.app.id}",
+      {:service_update, :state, {new_state, state.service}}
+    )
   end
 
   defp container_name(%{app: app, service: service, instance_number: number}),
