@@ -11,6 +11,7 @@ defmodule Makina.Runtime.Instance do
 
   require Logger
 
+  alias Makina.Apps.Service
   alias Phoenix.PubSub
   alias Makina.Docker
 
@@ -61,6 +62,7 @@ defmodule Makina.Runtime.Instance do
   def handle_cast(:bootstrap, state) do
     state
     |> pull_image()
+    |> create_volumes()
     |> create_container()
     |> start_container()
     |> notify_running_state(:running)
@@ -112,8 +114,31 @@ defmodule Makina.Runtime.Instance do
     container_name(state)
     |> Docker.create_container(%{
       "Image" => "#{service.image_name}:#{service.image_tag}",
-      "Env" => build_env_variables(service)
+      "Env" => build_env_variables(service),
+      "Volumes" => build_docker_volumes_map(service.volumes),
+      "HostConfig" => %{
+        "Bind" => build_docker_volumes_bind(service.volumes)
+      }
     })
+
+    state
+  end
+
+  defp start_container(state) do
+    container_name(state)
+    |> Docker.start_container()
+
+    state
+  end
+
+  defp create_volumes(state) do
+    volumes = state.service.volumes
+
+    if volumes != [] do
+      for volume <- volumes do
+        Docker.create_volume(volume.name)
+      end
+    end
 
     state
   end
@@ -123,11 +148,14 @@ defmodule Makina.Runtime.Instance do
     |> Enum.map(fn e -> "#{e.name}=#{e.value}" end)
   end
 
-  defp start_container(state) do
-    container_name(state)
-    |> Docker.start_container()
+  defp build_docker_volumes_bind(volumes) do
+    volumes
+    |> Enum.map(fn v -> "#{v.name}:#{v.mount_point}" end)
+  end
 
-    state
+  defp build_docker_volumes_map(volumes) do
+    volumes
+    |> Enum.reduce(%{}, fn v, map -> Map.put(map, v.mount_point, %{}) end)
   end
 
   defp notify_running_state(state, new_state) do

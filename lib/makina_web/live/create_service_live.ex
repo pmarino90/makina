@@ -60,6 +60,43 @@ defmodule MakinaWeb.CreateServiceLive do
             Add
           </button>
         </section>
+
+        <section>
+          <.header level="h3">
+            Volumes
+            <:subtitle>
+              You can define volumes that are going to be attached to the service once running.
+            </:subtitle>
+          </.header>
+          <.inputs_for :let={f_env} field={@form[:volumes]}>
+            <input type="hidden" class="hidden" name="service[volumes_sort][]" value={f_env.index} />
+            <div class="hstack gap-2">
+              <.input type="text" field={f_env[:name]} placeholder="name" />
+              <.input type="text" field={f_env[:mount_point]} placeholder="mount point" />
+              <button
+                name="service[volumes_drop][]"
+                type="button"
+                class="btn"
+                value={f_env.index}
+                phx-click={JS.dispatch("change")}
+              >
+                <.minus_icon />
+              </button>
+            </div>
+          </.inputs_for>
+
+          <input type="hidden" name="service[volumes_drop][]" />
+          <button
+            type="button"
+            class="btn btn-secondary"
+            name="service[volumes_sort][]"
+            value="new"
+            phx-click={JS.dispatch("change")}
+          >
+            Add
+          </button>
+        </section>
+
         <div class="hstack justify-content-end">
           <button class="btn btn-primary">Save</button>
         </div>

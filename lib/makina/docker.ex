@@ -19,7 +19,7 @@ defmodule Makina.Docker do
   def create_container(name, %{} = params) do
     client()
     |> Req.post!(
-      url: "/v1.44/containers/create",
+      url: "/containers/create",
       json: params,
       params: [name: name]
     )
@@ -28,25 +28,25 @@ defmodule Makina.Docker do
   def start_container(name_or_id),
     do:
       client()
-      |> Req.post!(url: "/v1.44/containers/#{name_or_id}/start")
+      |> Req.post!(url: "/containers/#{name_or_id}/start")
 
   def attach_container(name_or_id),
     do:
       client()
       |> Req.post!(
-        url: "/v1.44/containers/#{name_or_id}/attach",
+        url: "/containers/#{name_or_id}/attach",
         into: IO.stream(),
         params: %{"stream" => true, "stdin" => true, "stdout" => true, "stderr" => true}
       )
 
   def stop_container(name_or_id),
-    do: client() |> Req.post!(url: "/v1.44/containers/#{name_or_id}/stop")
+    do: client() |> Req.post!(url: "/containers/#{name_or_id}/stop")
 
   def inspect_container(name_or_id),
-    do: client() |> Req.get!(url: "/v1.44/containers/#{name_or_id}/json")
+    do: client() |> Req.get!(url: "/containers/#{name_or_id}/json")
 
   def wait_for_container(name_or_id),
-    do: client() |> Req.post!(url: "/v1.44/containers/#{name_or_id}/wait")
+    do: client() |> Req.post!(url: "/containers/#{name_or_id}/wait")
 
   def monitor_container(name_or_id, params \\ []) do
     on_event = Keyword.get(params, :on_event, nil)
@@ -59,7 +59,7 @@ defmodule Makina.Docker do
       end
     )
     |> Req.get!(
-      url: "/v1.44/events",
+      url: "/events",
       params: [
         filters:
           Jason.encode!(%{"type" => %{"container" => true}, "container" => %{name_or_id => true}})
@@ -82,7 +82,7 @@ defmodule Makina.Docker do
 
     client()
     |> Req.post!(
-      url: "/v1.44/images/create",
+      url: "/images/create",
       params: docker_params,
       into: on_progress,
       raw: true
@@ -90,6 +90,9 @@ defmodule Makina.Docker do
   end
 
   def list_images(), do: client() |> Req.get!(url: "/images/json", params: [all: true])
+
+  def create_volume(name),
+    do: client() |> Req.post!(url: "/volumes/create", json: %{"Name" => name})
 
   # Service endpoints
 
@@ -99,5 +102,5 @@ defmodule Makina.Docker do
   def ping(), do: client() |> Req.get!(url: "/_ping")
 
   defp client(),
-    do: Req.new(base_url: "http://localhost", unix_socket: @docker_socket_path)
+    do: Req.new(base_url: "http://localhost/v1.44/", unix_socket: @docker_socket_path)
 end

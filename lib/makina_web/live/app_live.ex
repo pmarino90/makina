@@ -1,14 +1,12 @@
 defmodule MakinaWeb.AppLive do
   use MakinaWeb, :live_view
 
+  import MakinaWeb.CoreComponents
+
   alias Phoenix.LiveView.AsyncResult
   alias Phoenix.PubSub
 
-  alias Makina.Runtime
-
-  import MakinaWeb.CoreComponents
-
-  alias Makina.Apps
+  alias Makina.{Apps, Runtime}
 
   def render(assigns) do
     ~H"""
