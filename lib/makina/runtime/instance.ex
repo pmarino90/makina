@@ -11,7 +11,6 @@ defmodule Makina.Runtime.Instance do
 
   require Logger
 
-  alias Makina.Apps.Service
   alias Phoenix.PubSub
   alias Makina.Docker
 
@@ -118,6 +117,10 @@ defmodule Makina.Runtime.Instance do
       "Volumes" => build_docker_volumes_map(service.volumes),
       "HostConfig" => %{
         "Bind" => build_docker_volumes_bind(service.volumes)
+      },
+      "Labels" => build_docker_labels(state),
+      "ExposedPorts" => %{
+        "80/http" => %{}
       }
     })
 
@@ -156,6 +159,25 @@ defmodule Makina.Runtime.Instance do
   defp build_docker_volumes_map(volumes) do
     volumes
     |> Enum.reduce(%{}, fn v, map -> Map.put(map, v.mount_point, %{}) end)
+  end
+
+  defp build_docker_labels(%{app: app, service: service}) do
+    domain = Map.get(hd(service.domains), :domain) || "example.com"
+
+    labels = %{
+      "com.makina.app" => app.name,
+      "com.makina.service" => service.name
+    }
+
+    if service.expose_service do
+      Map.put(
+        labels,
+        "traefik.http.routers.#{app.name}_#{service.name}.rule",
+        "Host(#{domain})"
+      )
+    else
+      labels
+    end
   end
 
   defp notify_running_state(state, new_state) do

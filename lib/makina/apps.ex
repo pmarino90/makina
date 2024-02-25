@@ -7,7 +7,7 @@ defmodule Makina.Apps do
 
   def list_applications() do
     Application
-    |> preload(services: [:environment_variables, :volumes])
+    |> preload(services: [:environment_variables, :volumes, :domains])
     |> Repo.all()
   end
 

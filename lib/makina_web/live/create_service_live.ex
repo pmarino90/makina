@@ -23,6 +23,7 @@ defmodule MakinaWeb.CreateServiceLive do
             <.input field={f[:image_registry]} label="Image Registry" value="hub.docker.com" />
             <.input field={f[:image_name]} label="Image Name" />
             <.input field={f[:image_tag]} label="Image Tag" />
+            <.input field={f[:expose_service]} type="checkbox" label="Expose Service" />
           </div>
         </section>
         <section>
@@ -90,6 +91,41 @@ defmodule MakinaWeb.CreateServiceLive do
             type="button"
             class="btn btn-secondary"
             name="service[volumes_sort][]"
+            value="new"
+            phx-click={JS.dispatch("change")}
+          >
+            Add
+          </button>
+        </section>
+
+        <section :if={@form[:expose_service].value == true}>
+          <.header level="h3">
+            Domains
+            <:subtitle>
+              Specify here the domains you want the given service to be exposed
+            </:subtitle>
+          </.header>
+          <.inputs_for :let={f_env} field={@form[:domains]}>
+            <input type="hidden" class="hidden" name="service[domains_sort][]" value={f_env.index} />
+            <div class="hstack gap-2">
+              <.input type="text" field={f_env[:domain]} placeholder="domain" />
+              <button
+                name="service[domains_drop][]"
+                type="button"
+                class="btn"
+                value={f_env.index}
+                phx-click={JS.dispatch("change")}
+              >
+                <.minus_icon />
+              </button>
+            </div>
+          </.inputs_for>
+
+          <input type="hidden" name="service[domains_drop][]" />
+          <button
+            type="button"
+            class="btn btn-secondary"
+            name="service[domains_sort][]"
             value="new"
             phx-click={JS.dispatch("change")}
           >
