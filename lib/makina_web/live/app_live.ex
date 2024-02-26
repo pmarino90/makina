@@ -69,7 +69,7 @@ defmodule MakinaWeb.AppLive do
         No services, create one
       </section>
 
-      <section :if={@app.services != []} class="d-flex flex-row">
+      <section :if={@app.services != []} class="d-flex gap-2 flex-row">
         <article :for={service <- @app.services} class="card p-2">
           <div class="card-body">
             <div class="hstack gap-2">
@@ -128,10 +128,10 @@ defmodule MakinaWeb.AppLive do
     |> wrap_noreply()
   end
 
-  def handle_async(:fetch_service_state, {:ok, {service, state}}, socket) do
+  def handle_async({:fetch_service_state, service_id}, {:ok, state}, socket) do
     services_state =
       socket.assigns.services_state
-      |> Map.put("service-#{service.id}", AsyncResult.ok(state))
+      |> Map.put("service-#{service_id}", AsyncResult.ok(state))
 
     socket
     |> assign(services_state: services_state)
@@ -167,8 +167,8 @@ defmodule MakinaWeb.AppLive do
 
     services
     |> Enum.reduce(socket, fn service, sock ->
-      start_async(sock, :fetch_service_state, fn ->
-        {service, Runtime.get_service_state(service.id, consolidated: true)}
+      start_async(sock, {:fetch_service_state, service.id}, fn ->
+        Runtime.get_service_state(service.id, consolidated: true)
       end)
     end)
   end
