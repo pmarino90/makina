@@ -70,7 +70,9 @@ defmodule Makina.Runtime.Instance do
     state
     |> pull_image()
     |> create_volumes()
+    |> create_app_network()
     |> create_container()
+    |> connect_to_web_network()
     |> start_container()
     |> notify_running_state(:running)
 
@@ -124,7 +126,7 @@ defmodule Makina.Runtime.Instance do
     state
   end
 
-  defp create_container(%{service: service} = state) do
+  defp create_container(%{app: app, service: service} = state) do
     Logger.info("Creating container #{full_instance_name(state)}")
 
     full_instance_name(state)
@@ -134,7 +136,7 @@ defmodule Makina.Runtime.Instance do
       "Volumes" => build_docker_volumes_map(service.volumes),
       "HostConfig" => %{
         "Bind" => build_docker_volumes_bind(service.volumes),
-        "NetworkMode" => "makina_makina-net"
+        "NetworkMode" => "#{app.slug}-network"
       },
       "Labels" => build_docker_labels(state)
     })
@@ -163,6 +165,28 @@ defmodule Makina.Runtime.Instance do
     end
 
     state
+  end
+
+  defp create_app_network(%{app: app} = state) do
+    network_name = "#{app.slug}-network"
+
+    res = Docker.inspect_network(network_name)
+
+    if res.status == 200 do
+      state
+    else
+      Docker.create_network(network_name)
+      state
+    end
+  end
+
+  defp connect_to_web_network(%{service: service} = state) do
+    if service.expose_service do
+      Docker.connect_network(full_instance_name(state), "makina_web-net")
+      state
+    else
+      state
+    end
   end
 
   defp build_env_variables(%{service: service, running_port: port}) do
@@ -199,6 +223,7 @@ defmodule Makina.Runtime.Instance do
       Map.merge(
         labels,
         %{
+          "traefik.enable" => "true",
           "traefik.http.routers.#{full_service_name(state)}.rule" => "Host(`#{domain}`)",
           "traefik.http.services.#{full_service_name(state)}.loadBalancer.server.port" =>
             "#{port}"

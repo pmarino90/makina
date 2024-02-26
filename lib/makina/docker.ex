@@ -95,6 +95,21 @@ defmodule Makina.Docker do
   def create_volume(name),
     do: client() |> Req.post!(url: "/volumes/create", json: %{"Name" => name})
 
+  def create_network(name),
+    do:
+      client()
+      |> Req.post!(
+        url: "/networks/create",
+        json: %{"Name" => name, "Driver" => "bridge", "Attachable" => true, "Internal" => true}
+      )
+
+  def inspect_network(name), do: client() |> Req.get!(url: "/networks/#{name}")
+
+  def connect_network(container, network),
+    do:
+      client()
+      |> Req.post!(url: "/networks/#{network}/connect", json: %{"Container" => container})
+
   # Service endpoints
 
   @doc """
