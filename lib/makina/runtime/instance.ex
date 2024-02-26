@@ -88,10 +88,10 @@ defmodule Makina.Runtime.Instance do
   end
 
   defp handle_shutdown(state) do
-    container_name(state)
+    full_instance_name(state)
     |> Docker.stop_container()
 
-    container_name(state)
+    full_instance_name(state)
     |> Docker.wait_for_container()
 
     notify_running_state(state, :stopped)
@@ -100,11 +100,9 @@ defmodule Makina.Runtime.Instance do
   end
 
   defp pull_image(%{service: service} = state) do
-    dbg("#{service.image_registry}#{service.image_name}:#{service.image_tag}")
-
     Docker.pull_image(
       docker: %{
-        "fromImage" => "#{service.image_registry}#{service.image_name}:#{service.image_tag}"
+        "fromImage" => full_image_reference(service)
       },
       headers: [x_registry_auth: build_auth_header(service)]
     )
@@ -113,9 +111,11 @@ defmodule Makina.Runtime.Instance do
   end
 
   defp create_container(%{service: service} = state) do
-    container_name(state)
+    Logger.info("Creating container #{full_instance_name(state)}")
+
+    full_instance_name(state)
     |> Docker.create_container(%{
-      "Image" => "#{service.image_registry}#{service.image_name}:#{service.image_tag}",
+      "Image" => full_image_reference(service),
       "Env" => build_env_variables(service),
       "Volumes" => build_docker_volumes_map(service.volumes),
       "HostConfig" => %{
@@ -129,13 +129,17 @@ defmodule Makina.Runtime.Instance do
   end
 
   defp start_container(state) do
-    container_name(state)
+    Logger.info("Starting container #{full_instance_name(state)}")
+
+    full_instance_name(state)
     |> Docker.start_container()
 
     state
   end
 
   defp create_volumes(state) do
+    Logger.info("Creating volumes for #{full_instance_name(state)}")
+
     volumes = state.service.volumes
 
     if volumes != [] do
@@ -162,20 +166,20 @@ defmodule Makina.Runtime.Instance do
     |> Enum.reduce(%{}, fn v, map -> Map.put(map, v.mount_point, %{}) end)
   end
 
-  defp build_docker_labels(%{app: app, service: service}) do
+  defp build_docker_labels(%{app: app, service: service} = state) do
     domain = Map.get(hd(service.domains), :domain) || "example.com"
 
     labels = %{
-      "com.makina.app" => app.name,
-      "com.makina.service" => service.name
+      "com.makina.app" => app.slug,
+      "com.makina.service" => service.slug
     }
 
     if service.expose_service do
       Map.merge(
         labels,
         %{
-          "traefik.http.routers.#{app.name}_#{service.name}.rule" => "Host(`#{domain}`)",
-          "traefik.http.services.#{app.name}_#{service.name}.loadBalancer.server.port" => "4000"
+          "traefik.http.routers.#{full_service_name(state)}.rule" => "Host(`#{domain}`)",
+          "traefik.http.services.#{full_service_name(state)}.loadBalancer.server.port" => "4000"
         }
       )
     else
@@ -191,8 +195,13 @@ defmodule Makina.Runtime.Instance do
     )
   end
 
-  defp container_name(%{app: app, service: service, instance_number: number}),
-    do: "#{app.name}-#{service.name}_#{number}"
+  defp full_image_reference(service),
+    do: "#{service.image_registry}/#{service.image_name}:#{service.image_tag}"
+
+  defp full_service_name(%{app: app, service: service}), do: "#{app.slug}-#{service.slug}"
+
+  defp full_instance_name(%{instance_number: number} = state),
+    do: "#{full_service_name(state)}-#{number}"
 
   defp build_auth_header(service) do
     auth_obj = %{
