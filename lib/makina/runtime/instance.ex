@@ -41,13 +41,21 @@ defmodule Makina.Runtime.Instance do
 
   def init({parent, app, service}) do
     Logger.info("Starting Instance for service #{service.name}")
+    port_number = Enum.random(1024..65535)
 
     Process.flag(:trap_exit, true)
     Process.monitor(parent)
 
     bootstrap(self())
 
-    {:ok, %{app: app, service: service, instance_number: 1, running_state: :booting}}
+    {:ok,
+     %{
+       app: app,
+       service: service,
+       instance_number: 1,
+       running_port: port_number,
+       running_state: :booting
+     }}
   end
 
   @doc false
@@ -122,7 +130,7 @@ defmodule Makina.Runtime.Instance do
     full_instance_name(state)
     |> Docker.create_container(%{
       "Image" => full_image_reference(service),
-      "Env" => build_env_variables(service),
+      "Env" => build_env_variables(state),
       "Volumes" => build_docker_volumes_map(service.volumes),
       "HostConfig" => %{
         "Bind" => build_docker_volumes_bind(service.volumes),
@@ -157,9 +165,16 @@ defmodule Makina.Runtime.Instance do
     state
   end
 
-  defp build_env_variables(service) do
-    service.environment_variables
-    |> Enum.map(fn e -> "#{e.name}=#{e.value}" end)
+  defp build_env_variables(%{service: service, running_port: port}) do
+    vars =
+      service.environment_variables
+      |> Enum.map(fn e -> "#{e.name}=#{e.value}" end)
+
+    if service.expose_service do
+      ["PORT=#{port}"] ++ vars
+    else
+      vars
+    end
   end
 
   defp build_docker_volumes_bind(volumes) do
@@ -172,7 +187,7 @@ defmodule Makina.Runtime.Instance do
     |> Enum.reduce(%{}, fn v, map -> Map.put(map, v.mount_point, %{}) end)
   end
 
-  defp build_docker_labels(%{app: app, service: service} = state) do
+  defp build_docker_labels(%{app: app, service: service, running_port: port} = state) do
     labels = %{
       "com.makina.app" => app.slug,
       "com.makina.service" => service.slug
@@ -185,7 +200,8 @@ defmodule Makina.Runtime.Instance do
         labels,
         %{
           "traefik.http.routers.#{full_service_name(state)}.rule" => "Host(`#{domain}`)",
-          "traefik.http.services.#{full_service_name(state)}.loadBalancer.server.port" => "4000"
+          "traefik.http.services.#{full_service_name(state)}.loadBalancer.server.port" =>
+            "#{port}"
         }
       )
     else
