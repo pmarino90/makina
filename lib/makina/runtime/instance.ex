@@ -100,12 +100,18 @@ defmodule Makina.Runtime.Instance do
   end
 
   defp pull_image(%{service: service} = state) do
-    Docker.pull_image(
+    params = [
       docker: %{
         "fromImage" => full_image_reference(service)
-      },
-      headers: [x_registry_auth: build_auth_header(service)]
-    )
+      }
+    ]
+
+    params =
+      if service.image_registry_user,
+        do: Keyword.put(params, :headers, x_registry_auth: build_auth_header(service)),
+        else: params
+
+    Docker.pull_image(params)
 
     state
   end
@@ -167,14 +173,14 @@ defmodule Makina.Runtime.Instance do
   end
 
   defp build_docker_labels(%{app: app, service: service} = state) do
-    domain = Map.get(hd(service.domains), :domain) || "example.com"
-
     labels = %{
       "com.makina.app" => app.slug,
       "com.makina.service" => service.slug
     }
 
     if service.expose_service do
+      domain = Map.get(hd(service.domains), :domain)
+
       Map.merge(
         labels,
         %{
@@ -195,8 +201,12 @@ defmodule Makina.Runtime.Instance do
     )
   end
 
-  defp full_image_reference(service),
-    do: "#{service.image_registry}/#{service.image_name}:#{service.image_tag}"
+  defp full_image_reference(service) do
+    registry_host =
+      if service.image_registry == "hub.docker.com", do: "", else: "#{service.image_registry}/"
+
+    "#{registry_host}#{service.image_name}:#{service.image_tag}"
+  end
 
   defp full_service_name(%{app: app, service: service}), do: "#{app.slug}-#{service.slug}"
 

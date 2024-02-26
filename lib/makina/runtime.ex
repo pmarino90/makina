@@ -75,6 +75,7 @@ defmodule Makina.Runtime do
   """
   def stop_app(id) do
     Supervisor.terminate_child(__MODULE__, app_id(id))
+    Supervisor.delete_child(__MODULE__, app_id(id))
     PubSub.broadcast(Makina.PubSub, "app::#{id}", {:app_update, :state, {:stopped}})
   end
 
