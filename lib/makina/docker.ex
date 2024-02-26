@@ -83,6 +83,7 @@ defmodule Makina.Docker do
     client()
     |> Req.post!(
       url: "/images/create",
+      headers: params[:headers],
       params: docker_params,
       into: on_progress,
       raw: true

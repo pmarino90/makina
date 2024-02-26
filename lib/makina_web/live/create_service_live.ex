@@ -20,7 +20,21 @@ defmodule MakinaWeb.CreateServiceLive do
           <.header level="h3">General Information</.header>
           <div class="vstack gap-2">
             <.input field={f[:name]} label="Name" autocomplete="false" />
-            <.input field={f[:image_registry]} label="Image Registry" value="hub.docker.com" />
+            <.input field={f[:image_registry]} label="Image Registry" placeholder="hub.docker.com" />
+            <.input field={f[:is_private_registry]} label="Private registry?" type="checkbox" />
+
+            <.input
+              :if={normalize_checbox(@form[:is_private_registry].value)}
+              field={f[:image_registry_user]}
+              label="Registry User"
+            />
+            <.input
+              :if={normalize_checbox(@form[:is_private_registry].value)}
+              field={f[:image_registry_unsafe_password]}
+              label="Registry Password"
+              type="password"
+            />
+
             <.input field={f[:image_name]} label="Image Name" />
             <.input field={f[:image_tag]} label="Image Tag" />
             <.input field={f[:expose_service]} type="checkbox" label="Expose Service" />
@@ -98,7 +112,7 @@ defmodule MakinaWeb.CreateServiceLive do
           </button>
         </section>
 
-        <section :if={@form[:expose_service].value == true}>
+        <section :if={normalize_checbox(@form[:expose_service].value) == true}>
           <.header level="h3">
             Domains
             <:subtitle>
@@ -170,10 +184,14 @@ defmodule MakinaWeb.CreateServiceLive do
         |> wrap_noreply()
 
       {:error, changeset} ->
+        dbg(changeset)
+
         socket
         |> put_flash(:error, "Could not create the service")
         |> assign(form: to_form(changeset))
         |> wrap_noreply()
     end
   end
+
+  defp normalize_checbox(value), do: Phoenix.HTML.Form.normalize_value("checkbox", value)
 end

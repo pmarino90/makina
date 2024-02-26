@@ -5,9 +5,11 @@ defmodule Makina.Apps do
 
   alias Makina.Apps.{Application, Service}
 
+  @app_preloads [services: [:environment_variables, :volumes, :domains]]
+
   def list_applications() do
     Application
-    |> preload(services: [:environment_variables, :volumes, :domains])
+    |> preload(^@app_preloads)
     |> Repo.all()
   end
 
@@ -38,5 +40,5 @@ defmodule Makina.Apps do
   """
   def get_service!(id), do: Service |> Repo.get!(id)
 
-  def get_app!(id), do: Application |> preload(:services) |> Repo.get!(id)
+  def get_app!(id), do: Application |> preload(^@app_preloads) |> Repo.get!(id)
 end

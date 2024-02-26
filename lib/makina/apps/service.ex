@@ -5,12 +5,15 @@ defmodule Makina.Apps.Service do
 
   alias Makina.Apps.{Application, EnvironmentVariable, Volume, Domain}
 
-  @fields ~w[name image_name image_tag expose_service application_id]a
+  @fields ~w[name image_registry image_registry_user image_registry_unsafe_password image_name image_tag expose_service application_id]a
   @required_fields ~w[name image_registry image_name image_tag application_id]a
 
   schema "services" do
     field :name, :string
     field :image_registry, :string, default: "hub.docker.com"
+    field :is_private_registry, :boolean, default: false, virtual: true
+    field :image_registry_user, :string
+    field :image_registry_unsafe_password, :string
     field :image_name, :string
     field :image_tag, :string, default: "latest"
     field :expose_service, :boolean, default: false

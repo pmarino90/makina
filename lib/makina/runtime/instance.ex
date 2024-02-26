@@ -100,10 +100,13 @@ defmodule Makina.Runtime.Instance do
   end
 
   defp pull_image(%{service: service} = state) do
+    dbg("#{service.image_registry}#{service.image_name}:#{service.image_tag}")
+
     Docker.pull_image(
       docker: %{
-        "fromImage" => "#{service.image_name}:#{service.image_tag}"
-      }
+        "fromImage" => "#{service.image_registry}#{service.image_name}:#{service.image_tag}"
+      },
+      headers: [x_registry_auth: build_auth_header(service)]
     )
 
     state
@@ -112,16 +115,14 @@ defmodule Makina.Runtime.Instance do
   defp create_container(%{service: service} = state) do
     container_name(state)
     |> Docker.create_container(%{
-      "Image" => "#{service.image_name}:#{service.image_tag}",
+      "Image" => "#{service.image_registry}#{service.image_name}:#{service.image_tag}",
       "Env" => build_env_variables(service),
       "Volumes" => build_docker_volumes_map(service.volumes),
       "HostConfig" => %{
-        "Bind" => build_docker_volumes_bind(service.volumes)
+        "Bind" => build_docker_volumes_bind(service.volumes),
+        "NetworkMode" => "makina_makina-net"
       },
-      "Labels" => build_docker_labels(state),
-      "ExposedPorts" => %{
-        "80/http" => %{}
-      }
+      "Labels" => build_docker_labels(state)
     })
 
     state
@@ -170,10 +171,12 @@ defmodule Makina.Runtime.Instance do
     }
 
     if service.expose_service do
-      Map.put(
+      Map.merge(
         labels,
-        "traefik.http.routers.#{app.name}_#{service.name}.rule",
-        "Host(#{domain})"
+        %{
+          "traefik.http.routers.#{app.name}_#{service.name}.rule" => "Host(`#{domain}`)",
+          "traefik.http.services.#{app.name}_#{service.name}.loadBalancer.server.port" => "4000"
+        }
       )
     else
       labels
@@ -190,4 +193,14 @@ defmodule Makina.Runtime.Instance do
 
   defp container_name(%{app: app, service: service, instance_number: number}),
     do: "#{app.name}-#{service.name}_#{number}"
+
+  defp build_auth_header(service) do
+    auth_obj = %{
+      "username" => service.image_registry_user,
+      "password" => service.image_registry_unsafe_password,
+      "serveraddress" => "https://#{service.image_registry}"
+    }
+
+    Base.encode64(Jason.encode!(auth_obj))
+  end
 end
