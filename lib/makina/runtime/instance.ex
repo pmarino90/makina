@@ -69,7 +69,6 @@ defmodule Makina.Runtime.Instance do
   def handle_cast(:bootstrap, state) do
     state
     |> pull_image()
-    |> create_volumes()
     |> create_app_network()
     |> create_container()
     |> connect_to_web_network()
@@ -133,9 +132,8 @@ defmodule Makina.Runtime.Instance do
     |> Docker.create_container(%{
       "Image" => full_image_reference(service),
       "Env" => build_env_variables(state),
-      "Volumes" => build_docker_volumes_map(service.volumes),
       "HostConfig" => %{
-        "Bind" => build_docker_volumes_bind(service.volumes),
+        "Mounts" => build_docker_volumes_mount(service.volumes),
         "NetworkMode" => "#{app.slug}-network"
       },
       "Labels" => build_docker_labels(state)
@@ -149,20 +147,6 @@ defmodule Makina.Runtime.Instance do
 
     full_instance_name(state)
     |> Docker.start_container()
-
-    state
-  end
-
-  defp create_volumes(state) do
-    Logger.info("Creating volumes for #{full_instance_name(state)}")
-
-    volumes = state.service.volumes
-
-    if volumes != [] do
-      for volume <- volumes do
-        Docker.create_volume(volume.name)
-      end
-    end
 
     state
   end
@@ -201,14 +185,11 @@ defmodule Makina.Runtime.Instance do
     end
   end
 
-  defp build_docker_volumes_bind(volumes) do
+  defp build_docker_volumes_mount(volumes) do
     volumes
-    |> Enum.map(fn v -> "#{v.name}:#{v.mount_point}" end)
-  end
-
-  defp build_docker_volumes_map(volumes) do
-    volumes
-    |> Enum.reduce(%{}, fn v, map -> Map.put(map, v.mount_point, %{}) end)
+    |> Enum.map(fn v ->
+      %{"Target" => v.mount_point, "Source" => v.name, "Type" => "volume", "ReadOnly" => false}
+    end)
   end
 
   defp build_docker_labels(%{app: app, service: service, running_port: port} = state) do
