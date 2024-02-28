@@ -11,7 +11,7 @@ defmodule MakinaWeb.AppLive do
   def render(assigns) do
     ~H"""
     <div class="hstack justify-content-between gap-2 w-full">
-      <div class="align-self-start mt-3">
+      <div class="align-self-start">
         <.async_result :let={status} assign={@app_running_state}>
           <:loading>
             <div class="spinner-border small text-body-secondary" role="status">

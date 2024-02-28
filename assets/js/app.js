@@ -1,17 +1,12 @@
-import "../css/app.css";
+//import "../css/app.css";
 
 import "phoenix_html";
 
 import { Socket } from "phoenix";
 import { LiveSocket } from "phoenix_live_view";
-import { Application } from "@hotwired/stimulus";
 
 import topbar from "../vendor/topbar";
 
-import HotkeyController from "./controllers/hotkey_controller";
-import DropdownController from "./controllers/dropdown_controller";
-import SortableController from "./controllers/sortable_controller";
-import ToastController from "./controllers/toast_controller";
 import GlobalSocketHook from "./hooks/global_socket_hook";
 
 let csrfToken = document
@@ -32,10 +27,3 @@ window.addEventListener("phx:page-loading-stop", (_info) => topbar.hide());
 
 // connect if there are any LiveViews on the page
 liveSocket.connect();
-
-const Stimulus = Application.start();
-
-Stimulus.register("hotkey", HotkeyController);
-Stimulus.register("dropdown", DropdownController);
-Stimulus.register("sortable", SortableController);
-Stimulus.register("toast", ToastController);

@@ -1,25 +1,9 @@
-@import "../vendor/halfmoon/halfmoon.css";
-@import "../vendor/halfmoon/halfmoon.modern.css";
-
-.hidden {
-    display: none;
-}
-
-.show,
-.show .modal-backdrop {
-    display: block;
-}
-
-.phx-click-loading #block-add-loader {
-    display: block;
-}
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
 
 .phx-click-loading #block-add-info {
     display: none;
-}
-
-.no-border {
-    border: none;
 }
 
 .logo {
@@ -36,15 +20,6 @@
     text-transform: capitalize;
 }
 
-.modal-open {
-    overflow: hidden;
-    /* padding-right: 15px; */
-}
-
-.modal-backdrop {
-    display: none;
-}
-
 .dot {
     content: " ";
     display: block;
@@ -54,59 +29,8 @@
     width: 12px;
 }
 
-.dot.danger {
-    background-color: var(--bs-danger);
-}
-
-.dot.success {
-    background-color: var(--bs-success);
-}
-
 .dot.small,
 .spinner-border.small {
     height: 12px;
     width: 12px;
-}
-
-[data-bs-core="trvlr"] {
-    --bs-body-bg: hsla(0, 0%, 0%, 1);
-    --bs-body-color-hsl: 360, 100%, 100%, 1;
-    --bs-primary: #ff2d93;
-    --bs-primary-hsl: 331, 100%, 59%, 1;
-    --bs-primary-hover-bg: #f50076;
-    --bs-content-border-color: white;
-    --bs-border-color: white;
-    --bs-content-floating-bg: hsla(0, 0%, 0%, 1);
-    --bs-form-color: hsla(0, 0%, 0%, 1);
-    --bs-font-size-base: 0.975rem;
-
-    --bs-content-floating-box-shadow: 3px 3px 0px 0px rgba(256, 256, 256, 1);
-
-    --bs-border-radius: 0;
-
-    .dropdown-item {
-        --bs-dropdown-item-border-radius: 0;
-        --bs-dropdown-link-hover-bg: hsla(360, 100%, 100%, 1);
-        --bs-dropdown-link-hover-color: hsla(0, 0%, 0%, 1);
-    }
-
-    .card {
-        --bs-card-border-color: white;
-        --bs-card-border-radius: var(--bs-border-radius);
-        --bs-card-bg: hsla(0, 0%, 0%, 1);
-    }
-
-    .modal {
-        --bs-modal-bg: hsla(0, 0%, 0%, 1);
-        --bs-modal-border-radius: var(--bs-border-radius);
-        --bs-modal-box-shadow: var(--bs-content-floating-box-shadow);
-    }
-
-    .modal-content {
-        border-color: #bababa;
-    }
-
-    .modal-backdrop {
-        --bs-backdrop-opacity: 0.8;
-    }
 }

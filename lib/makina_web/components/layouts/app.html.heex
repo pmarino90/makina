@@ -1,70 +1,20 @@
-<header>
-  <nav
-    class="navbar navbar-expand-lg hstack justify-content-between"
-    style="border-bottom: var(--bs-border-width) solid var(--bs-content-border-color);"
-  >
-    <div></div>
-    <div data-controller="dropdown">
-      <button
-        class="btn fs-2 logo fw-bolder"
-        data-controller="hotkey"
-        data-hotkey="Shift+?"
-        data-action="click->dropdown#toggle"
-        data-dropdown-target="toggleButton"
-      >
-        Makina <.chevron_down />
-      </button>
-      <div class="dropdown-menu p-2" data-dropdown-target="menu">
-        <div class="container">
-          <div class="row">
-            <.link class="dropdown-item" navigate={~p"/apps"}>Apps</.link>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div
-      data-controller="dropdown"
-      class="px-2 text-primary"
-      data-dropdown-placement-value="bottom-end"
-    >
-      <button
-        class="btn btn-sm text-primary"
-        data-action="click->dropdown#toggle"
-        data-dropdown-target="toggleButton"
-      >
-        <.user_settings_icon />
-      </button>
+<aside class="bg-white w-48 h-screen border-r fixed">
+  <header class="logo p-2">
+    <h1 class="text-4xl font-bold">makina</h1>
+  </header>
+  <section class="px-2 text-slate-700 text-sm">
+    <ul>
+      <li class="rounded border border-transparent hover:bg-slate-50 hover:border-slate-300">
+        <.link navigate="/" class="p-2 w-full h-full block">Home</.link>
+      </li>
+      <li class="rounded border border-transparent hover:bg-slate-50 hover:border-slate-300">
+        <.link navigate={~p"/apps"} class="p-2 w-full h-full block">Apps</.link>
+      </li>
+    </ul>
+  </section>
+</aside>
 
-      <ul :if={@current_user} class="dropdown-menu font-monospace p-2" data-dropdown-target="menu">
-        <li>
-          <span><%= @current_user.email %></span>
-        </li>
-        <li><hr class="dropdown-divider" /></li>
-        <li>
-          <.link href={~p"/users/settings"} class="dropdown-item">
-            Settings
-          </.link>
-        </li>
-        <li>
-          <.link href={~p"/users/log_out"} method="delete" class="dropdown-item">
-            Log out
-          </.link>
-        </li>
-      </ul>
-      <ul :if={!@current_user} class="dropdown-menu font-monospace" data-dropdown-target="menu">
-        <li>
-          <.link href={~p"/users/log_in"} class="dropdown-item">
-            Log in
-          </.link>
-        </li>
-      </ul>
-    </div>
-  </nav>
-</header>
-
-<main class="container w-lg-75 w-sm-100">
+<main class="px-2 ml-48">
   <.flash_group :if={@flash != %{}} flash={@flash} />
   <%= @inner_content %>
 </main>
-
-<div id="backdrop" class="modal-backdrop fade"></div>
