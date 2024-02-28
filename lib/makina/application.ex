@@ -7,6 +7,8 @@ defmodule Makina.Application do
 
   @impl true
   def start(_type, _args) do
+    Makina.Release.migrate()
+
     children = [
       MakinaWeb.Telemetry,
       Makina.Repo,
