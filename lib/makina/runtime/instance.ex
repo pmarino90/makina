@@ -218,6 +218,7 @@ defmodule Makina.Runtime.Instance do
           labels,
           %{
             "traefik.enable" => "true",
+            "traefik.http.middlewares.#{full_service_name(state)}.compress" => "true",
             "traefik.http.routers.#{full_service_name(state)}.rule" => "Host(#{domains})",
             "traefik.http.services.#{full_service_name(state)}.loadBalancer.server.port" =>
               "#{state.running_port}"
