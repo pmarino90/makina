@@ -568,9 +568,9 @@ defmodule MakinaWeb.CoreComponents do
 
   def header(assigns) do
     ~H"""
-    <header class={[@actions != [] && "hstack justify-content-between", @class]}>
+    <header class={[@actions != [] && "flex justify-between", @class]}>
       <div>
-        <.dynamic_tag name={@level} id={@heading_id} phx-click={@on_click}>
+        <.dynamic_tag name={@level} id={@heading_id} phx-click={@on_click} class="font-semibold">
           <%= render_slot(@inner_block) %>
         </.dynamic_tag>
         <p :if={@subtitle != []}>
