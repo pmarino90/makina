@@ -78,6 +78,7 @@ defmodule Makina.MixProject do
       "assets.setup": ["esbuild.install --if-missing"],
       "assets.build": ["tailwind makina", "esbuild makina"],
       "assets.deploy": [
+        "cmd npm install --prefix assets",
         "esbuild makina --minify",
         "phx.digest"
       ]
