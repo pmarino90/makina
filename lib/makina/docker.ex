@@ -3,8 +3,6 @@ defmodule Makina.Docker do
   Simple wrapper around Docker Engine API
   """
 
-  @docker_socket_path "/Users/paolomarino/.orbstack/run/docker.sock"
-
   # Container related endpoints
 
   def list_containers(), do: client() |> Req.get!(url: "/containers/json")
@@ -117,6 +115,12 @@ defmodule Makina.Docker do
   """
   def ping(), do: client() |> Req.get!(url: "/_ping")
 
-  defp client(),
-    do: Req.new(base_url: "http://localhost/v1.44/", unix_socket: @docker_socket_path)
+  defp client() do
+    config = Application.get_env(:makina, Makina.Docker, [])
+
+    Req.new(
+      base_url: "http://localhost/v1.44/",
+      unix_socket: Keyword.get(config, :socket_path, "/var/run/docker.sock")
+    )
+  end
 end
