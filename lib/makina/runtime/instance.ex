@@ -192,26 +192,59 @@ defmodule Makina.Runtime.Instance do
     end)
   end
 
-  defp build_docker_labels(%{app: app, service: service, running_port: port} = state) do
+  defp build_docker_labels(%{app: app, service: service} = state) do
     labels = %{
       "com.makina.app" => app.slug,
       "com.makina.service" => service.slug
     }
 
-    if service.expose_service do
-      domain = Map.get(hd(service.domains), :domain)
+    {labels, state}
+    |> maybe_put_traefik_basic_labels()
+    |> maybe_put_https_labels()
+    |> elem(0)
+  end
 
-      Map.merge(
-        labels,
-        %{
-          "traefik.enable" => "true",
-          "traefik.http.routers.#{full_service_name(state)}.rule" => "Host(`#{domain}`)",
-          "traefik.http.services.#{full_service_name(state)}.loadBalancer.server.port" =>
-            "#{port}"
-        }
-      )
+  defp maybe_put_traefik_basic_labels({labels, state}) do
+    service = state.service
+
+    if service.expose_service do
+      domains =
+        service.domains
+        |> Enum.map(fn d -> "`#{d.domain}`" end)
+        |> Enum.join(",")
+
+      labels =
+        Map.merge(
+          labels,
+          %{
+            "traefik.enable" => "true",
+            "traefik.http.routers.#{full_service_name(state)}.rule" => "Host(#{domains})",
+            "traefik.http.services.#{full_service_name(state)}.loadBalancer.server.port" =>
+              "#{state.running_port}"
+          }
+        )
+
+      {labels, state}
     else
-      labels
+      {labels, state}
+    end
+  end
+
+  defp maybe_put_https_labels({labels, state}) do
+    service = state.service
+    config = Application.get_env(:makina, Makina.Runtime)
+
+    if service.expose_service and Keyword.get(config, :enable_https, false) do
+      labels =
+        Map.put(
+          labels,
+          "traefik.http.routers.#{full_service_name(state)}.tls.certresolver",
+          "letsencrypt"
+        )
+
+      {labels, state}
+    else
+      {labels, state}
     end
   end
 

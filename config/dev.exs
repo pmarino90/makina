@@ -9,6 +9,8 @@ config :makina, Makina.Repo,
 
 config :makina, Makina.Docker, socket_path: "/Users/paolomarino/.orbstack/run/docker.sock"
 
+config :makina, Makina.Runtime, enable_https: false
+
 # For development, we disable any cache and enable
 # debugging and code reloading.
 #
