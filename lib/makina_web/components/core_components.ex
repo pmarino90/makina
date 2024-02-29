@@ -26,11 +26,18 @@ defmodule MakinaWeb.CoreComponents do
 
   def dropdown(assigns) do
     ~H"""
-    <div data-controller="dropdown" data-dropdown-placement-value={@placement}>
-      <button class="btn" data-dropdown-target="toggleButton" data-action="click->dropdown#toggle">
+    <div class="hs-dropdown relative inline-flex">
+      <button
+        id="hs-dropdown-default"
+        class="hs-dropdown-toggle flex justify-center items-center size-9 text-sm font-semibold rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-white dark:hover:bg-gray-800 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+      >
         <%= render_slot(@toggle_content) %>
       </button>
-      <div class="dropdown-menu p-2" data-dropdown-target="menu">
+
+      <div
+        class="hs-dropdown-menu transition-[opacity,margin] duration hs-dropdown-open:opacity-100 opacity-0 hidden min-w-60 bg-white shadow-md rounded-lg p-2 mt-2 dark:bg-gray-800 dark:border dark:border-gray-700"
+        aria-labelledby="hs-dropdown-custom-icon-trigger"
+      >
         <%= render_slot(@elements) %>
       </div>
     </div>
@@ -39,7 +46,7 @@ defmodule MakinaWeb.CoreComponents do
 
   def dropdown_element(assigns) do
     ~H"""
-    <div class="dropdown-item">
+    <div class="flex gap-x-3.5 rounded-lg text-sm text-gray-800 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300 dark:focus:bg-gray-700">
       <%= render_slot(@inner_block) %>
     </div>
     """
@@ -152,6 +159,7 @@ defmodule MakinaWeb.CoreComponents do
   def options_icon(assigns) do
     ~H"""
     <svg
+      class="flex-none size-4 text-gray-600"
       xmlns="http://www.w3.org/2000/svg"
       width="24"
       height="24"
@@ -161,7 +169,6 @@ defmodule MakinaWeb.CoreComponents do
       stroke-width="2"
       stroke-linecap="round"
       stroke-linejoin="round"
-      class="lucide lucide-more-vertical"
     >
       <circle cx="12" cy="12" r="1" /><circle cx="12" cy="5" r="1" /><circle cx="12" cy="19" r="1" />
     </svg>
@@ -565,15 +572,22 @@ defmodule MakinaWeb.CoreComponents do
   slot :subtitle
   slot :actions
   slot :additional
+  slot :status_indicator
 
   def header(assigns) do
     ~H"""
     <header class={[@actions != [] && "flex justify-between", @class]}>
       <div>
-        <.dynamic_tag name={@level} id={@heading_id} phx-click={@on_click} class="font-semibold">
-          <%= render_slot(@inner_block) %>
-        </.dynamic_tag>
-        <p :if={@subtitle != []}>
+        <div class="flex items-baseline space-x-2">
+          <.dynamic_tag name={@level} id={@heading_id} phx-click={@on_click} class="font-semibold">
+            <%= render_slot(@inner_block) %>
+          </.dynamic_tag>
+
+          <div :if={@status_indicator != []}>
+            <%= render_slot(@status_indicator) %>
+          </div>
+        </div>
+        <p :if={@subtitle != []} class="text-base text-slate-700 font-light">
           <%= render_slot(@subtitle) %>
         </p>
         <div :if={@additional != []}>
@@ -584,6 +598,80 @@ defmodule MakinaWeb.CoreComponents do
         <%= render_slot(@actions) %>
       </div>
     </header>
+    """
+  end
+
+  attr :status, :string, required: true, values: ~w[stopped loading running]
+
+  def status_indicator(%{status: "loading"} = assigns) do
+    ~H"""
+    <span class="relative flex h-3 w-3" role="status">
+      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-gray-400 opacity-75">
+      </span>
+      <span class="relative inline-flex rounded-full h-3 w-3 bg-gray-500"></span>
+    </span>
+    """
+  end
+
+  def status_indicator(%{status: "running"} = assigns) do
+    ~H"""
+    <span class="relative flex h-3 w-3" role="status">
+      <span class="absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+      <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
+    </span>
+    """
+  end
+
+  def status_indicator(%{status: "stopped"} = assigns) do
+    ~H"""
+    <span class="relative flex h-3 w-3" role="status">
+      <span class="absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+      <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+    </span>
+    """
+  end
+
+  attr :title, :string, required: true
+  attr :cta_text, :string, required: true
+  attr :cta_url, :string, required: true
+  attr :description, :string, default: nil
+
+  slot :status_indicator
+
+  def card(assigns) do
+    ~H"""
+    <section class="flex flex-col bg-white border border-gray-200 shadow-sm rounded-xl p-4 md:p-5 dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400">
+      <.header level="h4">
+        <%= @title %>
+        <:status_indicator>
+          <%= render_slot(@status_indicator) %>
+        </:status_indicator>
+      </.header>
+      <p :if={@description} class="mt-2 text-gray-500 dark:text-gray-400">
+        <%= @description %>
+      </p>
+
+      <.link
+        navigate={@cta_url}
+        class="mt-3 inline-flex items-center gap-x-1 text-sm font-semibold rounded-lg border border-transparent text-blue-600 hover:text-blue-800 disabled:opacity-50 disabled:pointer-events-none dark:text-blue-500 dark:hover:text-blue-400 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+      >
+        <%= @cta_text %>
+        <svg
+          class="flex-shrink-0 size-4"
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="m9 18 6-6-6-6" />
+        </svg>
+      </.link>
+    </section>
     """
   end
 

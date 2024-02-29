@@ -10,89 +10,86 @@ defmodule MakinaWeb.AppLive do
 
   def render(assigns) do
     ~H"""
-    <div class="hstack justify-content-between gap-2 w-full">
-      <div class="align-self-start">
-        <.async_result :let={status} assign={@app_running_state}>
-          <:loading>
-            <div class="spinner-border small text-body-secondary" role="status">
-              <span class="visually-hidden">Loading...</span>
-            </div>
-          </:loading>
+    <section class="flex flex-col space-y-4">
+      <header>
+        <.header level="h2" class="text-2xl">
+          <%= @app.name %>
+          <:status_indicator>
+            <.async_result :let={status} assign={@app_running_state}>
+              <:loading>
+                <.status_indicator status="loading" />
+              </:loading>
 
-          <span :if={status == :running} class="dot success"></span>
-          <span :if={status != :running} class="dot danger"></span>
-        </.async_result>
-      </div>
-      <.header class="flex-fill">
-        <%= @app.name %>
-        <:actions>
-          <.dropdown placement="bottom-end">
-            <:toggle_content>
-              <.options_icon />
-            </:toggle_content>
-            <:elements>
-              <.async_result :let={state} assign={@app_running_state}>
-                <:loading>
-                  <div class="spinner-border text-body-secondary" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                  </div>
-                </:loading>
-
-                <button :if={state == :running} class="btn dropdown-item" phx-click="stop_app">
-                  Stop
-                </button>
-                <button :if={state == :stopped} class="btn dropdown-item" phx-click="start_app">
-                  Start
-                </button>
-              </.async_result>
-            </:elements>
-          </.dropdown>
-        </:actions>
-        <:subtitle><%= @app.description %></:subtitle>
-      </.header>
-    </div>
-
-    <section>
-      <.header level="h2">
-        Services
-        <:subtitle>
-          Add services that compose your application (webapp, database, background job, ...)
-        </:subtitle>
-        <:actions>
-          <.link class="btn" navigate={~p"/apps/#{@app.id}/services/create"}>
-            <.list_plus_icon />
-          </.link>
-        </:actions>
-      </.header>
-
-      <section :if={@app.services == []}>
-        No services, create one
-      </section>
-
-      <section :if={@app.services != []} class="d-flex gap-2 flex-row">
-        <article :for={service <- @app.services} class="card p-2">
-          <div class="card-body">
-            <div class="hstack gap-2">
-              <div class="mb-1">
-                <.async_result :let={status} assign={@services_state["service-#{service.id}"]}>
+              <.status_indicator :if={status == :running} status="running" />
+              <.status_indicator :if={status != :running} status="stopped" />
+            </.async_result>
+          </:status_indicator>
+          <:subtitle><%= @app.description %></:subtitle>
+          <:actions>
+            <.dropdown>
+              <:toggle_content>
+                <.options_icon />
+              </:toggle_content>
+              <:elements>
+                <.async_result :let={state} assign={@app_running_state}>
                   <:loading>
-                    <div class="spinner-border small text-body-secondary" role="status">
+                    <div class="spinner-border text-body-secondary" role="status">
                       <span class="visually-hidden">Loading...</span>
                     </div>
                   </:loading>
-
-                  <span :if={status == :running} class="dot success"></span>
-                  <span :if={status != :running} class="dot danger"></span>
+                  <.dropdown_element :if={state == :running}>
+                    <button phx-click="stop_app" class="py-2 px-3 w-full text-left">
+                      Stop
+                    </button>
+                  </.dropdown_element>
+                  <.dropdown_element :if={state == :stopped}>
+                    <button phx-click="start_app" class="py-2 px-3 w-full text-left">
+                      Start
+                    </button>
+                  </.dropdown_element>
                 </.async_result>
-              </div>
-              <h5 class="card-title"><%= service.name %></h5>
-            </div>
-            <div class="card-text"></div>
-            <.link navigate={~p"/apps/#{@app.id}/services/#{service.id}"}>
-              Go to service
+              </:elements>
+            </.dropdown>
+          </:actions>
+        </.header>
+      </header>
+
+      <section>
+        <.header level="h2">
+          Services
+          <:subtitle>
+            Add services that compose your application (webapp, database, background job, ...)
+          </:subtitle>
+          <:actions>
+            <.link class="btn" navigate={~p"/apps/#{@app.id}/services/create"}>
+              <.list_plus_icon />
             </.link>
-          </div>
-        </article>
+          </:actions>
+        </.header>
+
+        <section :if={@app.services == []}>
+          No services, create one
+        </section>
+
+        <section :if={@app.services != []} class="grid grid-cols-4 gap-4 pt-5">
+          <.card
+            :for={service <- @app.services}
+            title={service.name}
+            cta_text="Go to service"
+            cta_url={~p"/apps/#{@app.id}/services/#{service.id}"}
+          >
+            <:status_indicator>
+              <.async_result :let={status} assign={@services_state["service-#{service.id}"]}>
+                <:loading>
+                  <.status_indicator status="loading" />
+                </:loading>
+
+                <.status_indicator :if={status == :running} status="running" />
+                <.status_indicator :if={status != :running} status="stopped" />
+              </.async_result>
+            </:status_indicator>
+          </.card>
+        </section>
       </section>
     </section>
     """
