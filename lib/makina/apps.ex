@@ -1,4 +1,5 @@
 defmodule Makina.Apps do
+  alias Phoenix.PubSub
   alias Makina.Repo
 
   import Ecto.Query
@@ -38,6 +39,7 @@ defmodule Makina.Apps do
     service
     |> change_service_domains(attrs)
     |> Repo.update()
+    |> notify_config_change(:domains)
   end
 
   def change_service_environment_variables(service \\ %Service{}, attrs \\ %{}) do
@@ -49,6 +51,7 @@ defmodule Makina.Apps do
     service
     |> change_service_environment_variables(attrs)
     |> Repo.update()
+    |> notify_config_change(:environment_variables)
   end
 
   def change_service_volumes(service \\ %Service{}, attrs \\ %{}) do
@@ -60,6 +63,7 @@ defmodule Makina.Apps do
     service
     |> change_service_volumes(attrs)
     |> Repo.update()
+    |> notify_config_change(:volumes)
   end
 
   def create_service(attrs) do
@@ -75,4 +79,16 @@ defmodule Makina.Apps do
     do: Service |> preload([:domains, :environment_variables, :volumes]) |> Repo.get!(id)
 
   def get_app!(id), do: Application |> preload(^@app_preloads) |> Repo.get!(id)
+
+  defp notify_config_change({:ok, service} = res, section) do
+    PubSub.broadcast(
+      Makina.PubSub,
+      "system::service::#{service.id}",
+      {:config_update, section, service}
+    )
+
+    res
+  end
+
+  defp notify_config_change({:error, _} = res, _), do: res
 end

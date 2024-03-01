@@ -13,10 +13,15 @@ defmodule Makina.Runtime.Instance do
 
   alias Phoenix.PubSub
   alias Makina.Docker
+  alias Makina.Apps
 
   # Client
 
+  def prepare(pid), do: GenServer.cast(pid, :prepare)
+
   def bootstrap(pid), do: GenServer.cast(pid, :bootstrap)
+
+  def redeploy(pid), do: GenServer.cast(pid, :redeploy)
 
   @doc """
   Given an instance PID it returns it's current running state.
@@ -31,22 +36,28 @@ defmodule Makina.Runtime.Instance do
   def get_current_state(pid), do: GenServer.call(pid, :current_state)
 
   @doc false
-  def start_link({_parent, _app_, service} = args),
+  def start_link({_parent, _app_, service_id, _opts} = args),
     do:
       GenServer.start_link(__MODULE__, args,
-        name: {:via, Registry, {Makina.Runtime.Registry, "service-#{service.id}-instance-1"}}
+        name: {:via, Registry, {Makina.Runtime.Registry, "service-#{service_id}-instance-1"}}
       )
 
   # Server
 
-  def init({parent, app, service}) do
-    Logger.info("Starting Instance for service #{service.name}")
+  def init({parent, app_id, service_id, opts}) do
+    app = Apps.get_app!(app_id)
+    service = Apps.get_service!(service_id)
     port_number = Enum.random(1024..65535)
+    auto_boot = Keyword.get(opts, :auto_boot, true)
 
     Process.flag(:trap_exit, true)
     Process.monitor(parent)
 
-    bootstrap(self())
+    PubSub.subscribe(Makina.PubSub, "system::service::#{service.id}")
+
+    Logger.info("Starting Instance for service #{service.name}")
+
+    prepare(self())
 
     {:ok,
      %{
@@ -54,7 +65,9 @@ defmodule Makina.Runtime.Instance do
        service: service,
        instance_number: 1,
        running_port: port_number,
-       running_state: :booting
+       running_state: :preparing,
+       auto_boot: auto_boot,
+       container_name: "#{full_service_name(%{app: app, service: service})}-1"
      }}
   end
 
@@ -65,17 +78,35 @@ defmodule Makina.Runtime.Instance do
 
   ## Cast
 
-  @doc false
-  def handle_cast(:bootstrap, state) do
+  def handle_cast(:prepare, state) do
     state
     |> pull_image()
     |> create_app_network()
     |> create_container()
     |> connect_to_web_network()
+
+    if state.auto_boot, do: bootstrap(self())
+
+    {:noreply, %{state | running_state: :prepared}}
+  end
+
+  @doc false
+  def handle_cast(:bootstrap, state) do
+    state
     |> start_container()
     |> notify_running_state(:running)
 
     {:noreply, %{state | running_state: :running}}
+  end
+
+  def handle_cast(:redeploy, state) do
+    state =
+      state
+      |> mark_container_as_stale()
+
+    Process.exit(self(), :redeploy)
+
+    {:noreply, %{state | running_state: :shutting_down}}
   end
 
   ## Calls
@@ -96,12 +127,25 @@ defmodule Makina.Runtime.Instance do
     handle_shutdown(state)
   end
 
-  defp handle_shutdown(state) do
-    full_instance_name(state)
-    |> Docker.stop_container()
+  @doc false
+  def handle_info({:EXIT, _ref, :redeploy}, state) do
+    handle_shutdown(state)
 
-    full_instance_name(state)
-    |> Docker.wait_for_container()
+    raise "Redeploy."
+  end
+
+  def handle_info({:config_update, _section, _service}, state) do
+    Logger.info("Config update detected. Restarting service.")
+
+    redeploy(self())
+
+    {:noreply, state}
+  end
+
+  defp handle_shutdown(state) do
+    Docker.stop_container(state.container_name)
+    Docker.wait_for_container(state.container_name)
+    Docker.remove_container(state.container_name)
 
     notify_running_state(state, :stopped)
 
@@ -126,9 +170,9 @@ defmodule Makina.Runtime.Instance do
   end
 
   defp create_container(%{app: app, service: service} = state) do
-    Logger.info("Creating container #{full_instance_name(state)}")
+    Logger.info("Creating container #{state.container_name}")
 
-    full_instance_name(state)
+    state.container_name
     |> Docker.create_container(%{
       "Image" => full_image_reference(service),
       "Env" => build_env_variables(state),
@@ -143,12 +187,22 @@ defmodule Makina.Runtime.Instance do
   end
 
   defp start_container(state) do
-    Logger.info("Starting container #{full_instance_name(state)}")
+    Logger.info("Starting container #{state.container_name}")
 
-    full_instance_name(state)
+    state.container_name
     |> Docker.start_container()
 
     state
+  end
+
+  defp mark_container_as_stale(state) do
+    name = state.container_name
+    stale_name = "#{name}_stale"
+
+    name
+    |> Docker.rename_container(stale_name)
+
+    %{state | container_name: stale_name}
   end
 
   defp create_app_network(%{app: app} = state) do
@@ -166,7 +220,7 @@ defmodule Makina.Runtime.Instance do
 
   defp connect_to_web_network(%{service: service} = state) do
     if service.expose_service do
-      Docker.connect_network(full_instance_name(state), "makina_web-net")
+      Docker.connect_network(state.container_name, "makina_web-net")
       state
     else
       state
@@ -265,9 +319,6 @@ defmodule Makina.Runtime.Instance do
   end
 
   defp full_service_name(%{app: app, service: service}), do: "#{app.slug}-#{service.slug}"
-
-  defp full_instance_name(%{instance_number: number} = state),
-    do: "#{full_service_name(state)}-#{number}"
 
   defp build_auth_header(service) do
     auth_obj = %{

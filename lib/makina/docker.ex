@@ -40,6 +40,16 @@ defmodule Makina.Docker do
   def stop_container(name_or_id),
     do: client() |> Req.post!(url: "/containers/#{name_or_id}/stop")
 
+  def rename_container(name_or_id, new_name),
+    do:
+      client()
+      |> Req.post!(url: "/containers/#{name_or_id}/rename", params: %{"name" => new_name})
+
+  def remove_container(name_or_id),
+    do:
+      client()
+      |> Req.delete!(url: "/containers/#{name_or_id}", params: %{"v" => true})
+
   def inspect_container(name_or_id),
     do: client() |> Req.get!(url: "/containers/#{name_or_id}/json")
 
