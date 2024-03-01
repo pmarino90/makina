@@ -38,7 +38,8 @@ defmodule Makina.Apps do
   @doc """
   Returns a service given its id
   """
-  def get_service!(id), do: Service |> Repo.get!(id)
+  def get_service!(id),
+    do: Service |> preload([:domains, :environment_variables, :volumes]) |> Repo.get!(id)
 
   def get_app!(id), do: Application |> preload(^@app_preloads) |> Repo.get!(id)
 end

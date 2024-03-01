@@ -452,15 +452,15 @@ defmodule MakinaWeb.CoreComponents do
 
     ~H"""
     <div phx-feedback-for={@name}>
-      <label class="flex items-center gap-4 text-sm leading-6 text-zinc-600">
-        <input type="hidden" name={@name} value="false" />
+      <label class="text-sm text-gray-500 ms-3 dark:text-gray-400">
+        <input type="hidden" name={@name} value="false" class="hidden" />
         <input
           type="checkbox"
           id={@id}
           name={@name}
           value="true"
           checked={@checked}
-          class="rounded border-zinc-300 text-zinc-900 focus:ring-0"
+          class="shrink-0 mt-0.5 border-gray-200 rounded text-blue-600 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-gray-800 dark:border-gray-700 dark:checked:bg-blue-500 dark:checked:border-blue-500 dark:focus:ring-offset-gray-800"
           {@rest}
         />
         <%= @label %>
@@ -513,17 +513,20 @@ defmodule MakinaWeb.CoreComponents do
   def input(assigns) do
     ~H"""
     <div phx-feedback-for={@name}>
-      <.label :if={@label != nil} for={@id}><%= @label %></.label>
+      <.label :if={@label != nil} for={@id}>
+        <%= @label %>
+      </.label>
       <input
         type={@type}
         name={@name}
         id={@id}
         value={Phoenix.HTML.Form.normalize_value(@type, @value)}
         class={[
-          "form-control",
+          "py-3 px-4 block w-full border-gray-200 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400 dark:focus:ring-gray-600",
           @class,
           @errors == [] && "border-zinc-300 focus:border-zinc-400",
-          @errors != [] && "border-rose-400 focus:border-rose-400"
+          @errors != [] &&
+            "py-3 px-4 block w-full border-red-500 rounded-lg text-sm focus:border-red-500 focus:ring-red-500 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400"
         ]}
         {@rest}
       />
@@ -540,7 +543,7 @@ defmodule MakinaWeb.CoreComponents do
 
   def label(assigns) do
     ~H"""
-    <label for={@for} class="block text-sm font-semibold leading-6 text-zinc-800">
+    <label for={@for} class="block text-sm font-medium mb-2 dark:text-white">
       <%= render_slot(@inner_block) %>
     </label>
     """
@@ -553,7 +556,7 @@ defmodule MakinaWeb.CoreComponents do
 
   def error(assigns) do
     ~H"""
-    <p class="mt-3 flex gap-3 text-sm leading-6 text-rose-600 phx-no-feedback:hidden">
+    <p class="text-sm text-red-600 mt-2">
       <.icon name="hero-exclamation-circle-mini" class="mt-0.5 h-5 w-5 flex-none" />
       <%= render_slot(@inner_block) %>
     </p>
@@ -565,6 +568,7 @@ defmodule MakinaWeb.CoreComponents do
   """
   attr :class, :string, default: nil
   attr :level, :string, default: "h1", values: ~w[h1 h2 h3 h4 h5 h6]
+  attr :text_class, :string, default: nil
   attr :on_click, JS, default: %JS{}
   attr :heading_id, :string, default: nil
 
@@ -579,7 +583,12 @@ defmodule MakinaWeb.CoreComponents do
     <header class={[@actions != [] && "flex justify-between", @class]}>
       <div>
         <div class="flex items-baseline space-x-2">
-          <.dynamic_tag name={@level} id={@heading_id} phx-click={@on_click} class="font-semibold">
+          <.dynamic_tag
+            name={@level}
+            id={@heading_id}
+            phx-click={@on_click}
+            class={["font-semibold", @text_class]}
+          >
             <%= render_slot(@inner_block) %>
           </.dynamic_tag>
 
@@ -628,6 +637,48 @@ defmodule MakinaWeb.CoreComponents do
       <span class="absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
       <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
     </span>
+    """
+  end
+
+  slot :crumb do
+    attr :current, :boolean
+    attr :navigate, :string
+  end
+
+  def breadcrumb(assigns) do
+    ~H"""
+    <ol class="flex items-center whitespace-nowrap" aria-label="Breadcrumb">
+      <%= for c <- @crumb do %>
+        <%= if Map.get(c, :current, false) do %>
+          <li
+            class="inline-flex items-center text-sm font-semibold text-gray-800 truncate dark:text-gray-200"
+            aria-current="page"
+          >
+            <%= render_slot(c) %>
+          </li>
+        <% else %>
+          <li class="inline-flex items-center">
+            <.link
+              class="flex items-center text-sm text-gray-500 hover:text-blue-600 focus:outline-none focus:text-blue-600 dark:focus:text-blue-500"
+              navigate={c.navigate}
+            >
+              <%= render_slot(c) %>
+            </.link>
+            <svg
+              class="flex-shrink-0 size-5 text-gray-400 dark:text-gray-600 mx-2"
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <path d="M6 13L10 3" stroke="currentColor" stroke-linecap="round" />
+            </svg>
+          </li>
+        <% end %>
+      <% end %>
+    </ol>
     """
   end
 

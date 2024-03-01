@@ -4,21 +4,29 @@ defmodule MakinaWeb.CreateServiceLive do
 
   def render(assigns) do
     ~H"""
-    <.header>
-      <%= "#{@app.name} > Create Service" %>
+    <.header class="mb-5" text_class="text-xl">
+      Create a new service
+      <:subtitle>
+        Add a new service to <span class="font-semibold"><%= @app.name %></span>
+      </:subtitle>
     </.header>
 
-    <section>
+    <section class="bg-white border shadow-sm rounded-xl dark:bg-slate-900 dark:border-gray-700 dark:shadow-slate-700/[.7]">
       <.form
         :let={f}
         for={@form}
-        class="vstack gap-3"
+        class="flex flex-col space-y-4 px-3 py-5"
         phx-change="validate_service"
         phx-submit="create_service"
       >
-        <section>
-          <.header level="h3">General Information</.header>
-          <div class="vstack gap-2">
+        <section class="flex flex-col space-y-4">
+          <.header level="h3" text_class="text-lg">
+            Container
+            <:subtitle>
+              Deployed container's info
+            </:subtitle>
+          </.header>
+          <div class="flex flex-col space-y-2">
             <.input field={f[:name]} label="Name" autocomplete="false" />
             <.input field={f[:image_registry]} label="Image Registry" placeholder="hub.docker.com" />
             <.input field={f[:is_private_registry]} label="Private registry?" type="checkbox" />
@@ -40,8 +48,9 @@ defmodule MakinaWeb.CreateServiceLive do
             <.input field={f[:expose_service]} type="checkbox" label="Expose Service" />
           </div>
         </section>
-        <section>
-          <.header level="h3">
+
+        <section class="flex flex-col space-y-4">
+          <.header level="h3" text_class="text-lg">
             Environment Variables
             <:subtitle>
               You can add environment variables for the service here. Note: all values are plaintext.
@@ -49,17 +58,17 @@ defmodule MakinaWeb.CreateServiceLive do
           </.header>
           <.inputs_for :let={f_env} field={@form[:environment_variables]}>
             <input type="hidden" class="hidden" name="service[envs_sort][]" value={f_env.index} />
-            <div class="hstack gap-2">
+            <div class="flex space-x-2">
               <.input type="text" field={f_env[:name]} placeholder="name" />
               <.input type="text" field={f_env[:value]} placeholder="value" />
               <button
                 name="service[envs_drop][]"
                 type="button"
-                class="btn"
+                class="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent text-gray-500 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-gray-400 dark:hover:bg-gray-800 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
                 value={f_env.index}
                 phx-click={JS.dispatch("change")}
               >
-                <.minus_icon />
+                <.icon name="hero-minus" />
               </button>
             </div>
           </.inputs_for>
@@ -67,16 +76,16 @@ defmodule MakinaWeb.CreateServiceLive do
           <input type="hidden" name="service[envs_drop][]" />
           <button
             type="button"
-            class="btn btn-secondary"
+            class="w-max py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-white dark:hover:bg-gray-800 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
             name="service[envs_sort][]"
             value="new"
             phx-click={JS.dispatch("change")}
           >
-            Add
+            <.icon name="hero-plus" />
           </button>
         </section>
 
-        <section>
+        <section class="flex flex-col space-y-4">
           <.header level="h3">
             Volumes
             <:subtitle>
@@ -85,34 +94,38 @@ defmodule MakinaWeb.CreateServiceLive do
           </.header>
           <.inputs_for :let={f_env} field={@form[:volumes]}>
             <input type="hidden" class="hidden" name="service[volumes_sort][]" value={f_env.index} />
-            <div class="hstack gap-2">
+            <div class="flex space-x-2">
               <.input type="text" field={f_env[:name]} placeholder="name" />
               <.input type="text" field={f_env[:mount_point]} placeholder="mount point" />
               <button
                 name="service[volumes_drop][]"
                 type="button"
-                class="btn"
+                class="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent text-gray-500 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-gray-400 dark:hover:bg-gray-800 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
                 value={f_env.index}
                 phx-click={JS.dispatch("change")}
               >
-                <.minus_icon />
+                <.icon name="hero-minus" />
               </button>
             </div>
           </.inputs_for>
 
           <input type="hidden" name="service[volumes_drop][]" />
+
           <button
             type="button"
-            class="btn btn-secondary"
+            class="w-max py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-white dark:hover:bg-gray-800 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
             name="service[volumes_sort][]"
             value="new"
             phx-click={JS.dispatch("change")}
           >
-            Add
+            <.icon name="hero-plus" />
           </button>
         </section>
 
-        <section :if={normalize_checbox(@form[:expose_service].value) == true}>
+        <section
+          :if={normalize_checbox(@form[:expose_service].value) == true}
+          class="flex flex-col space-y-4"
+        >
           <.header level="h3">
             Domains
             <:subtitle>
@@ -121,16 +134,16 @@ defmodule MakinaWeb.CreateServiceLive do
           </.header>
           <.inputs_for :let={f_env} field={@form[:domains]}>
             <input type="hidden" class="hidden" name="service[domains_sort][]" value={f_env.index} />
-            <div class="hstack gap-2">
+            <div class="flex space-x-2">
               <.input type="text" field={f_env[:domain]} placeholder="domain" />
               <button
                 name="service[domains_drop][]"
                 type="button"
-                class="btn"
+                class="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent text-gray-500 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-gray-400 dark:hover:bg-gray-800 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
                 value={f_env.index}
                 phx-click={JS.dispatch("change")}
               >
-                <.minus_icon />
+                <.icon name="hero-minus" />
               </button>
             </div>
           </.inputs_for>
@@ -138,17 +151,25 @@ defmodule MakinaWeb.CreateServiceLive do
           <input type="hidden" name="service[domains_drop][]" />
           <button
             type="button"
-            class="btn btn-secondary"
+            class="w-max py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-white dark:hover:bg-gray-800 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
             name="service[domains_sort][]"
             value="new"
             phx-click={JS.dispatch("change")}
           >
-            Add
+            <.icon name="hero-plus" />
           </button>
         </section>
 
-        <div class="hstack justify-content-end">
-          <button class="btn btn-primary">Save</button>
+        <div class="flex justify-between">
+          <.link
+            navigate={~p"/apps/#{@app.id}"}
+            class="inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg text-gray-800 hover:text-blue-600 disabled:opacity-50 disabled:pointer-events-none dark:text-white dark:hover:text-white/70 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+          >
+            <.icon name="hero-arrow-left" /><span>Go Back</span>
+          </.link>
+          <button class="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent bg-gray-800 text-white hover:bg-gray-900 disabled:opacity-50 disabled:pointer-events-none dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600 dark:bg-white dark:text-gray-800">
+            Save
+          </button>
         </div>
       </.form>
     </section>

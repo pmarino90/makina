@@ -1,15 +1,205 @@
 defmodule MakinaWeb.ServiceLive do
+  alias Makina.Runtime
   use MakinaWeb, :live_view
 
   import MakinaWeb.CoreComponents
 
+  alias Phoenix.PubSub
+  alias Phoenix.LiveView.AsyncResult
   alias Makina.Apps
 
   def render(assigns) do
     ~H"""
-    <.header>
-      <%= "#{@app.name} > #{@service.name}" %>
-    </.header>
+    <div class="flex flex-col space-y-5">
+      <.breadcrumb>
+        <:crumb navigate={~p"/apps"}>
+          Apps
+        </:crumb>
+        <:crumb navigate={~p"/apps/#{@app.id}"}>
+          <%= @app.name %>
+        </:crumb>
+        <:crumb current>
+          <%= @service.name %>
+        </:crumb>
+      </.breadcrumb>
+
+      <section class="flex flex-col bg-white border shadow-sm rounded-xl dark:bg-slate-900 dark:border-gray-700 dark:shadow-slate-700/[.7]">
+        <div class="p-4 md:p-10">
+          <.header level="h3" text_class="text-lg font-bold text-gray-800 dark:text-white">
+            <%= @service.name %>
+            <:status_indicator>
+              <.async_result :let={status} assign={@service_running_state}>
+                <:loading>
+                  <.status_indicator status="loading" />
+                </:loading>
+
+                <.status_indicator :if={status == :running} status="running" />
+                <.status_indicator :if={status != :running} status="stopped" />
+              </.async_result>
+            </:status_indicator>
+          </.header>
+        </div>
+      </section>
+
+      <div class="flex">
+        <div class="flex bg-gray-100 hover:bg-gray-200 rounded-lg transition p-1 dark:bg-gray-700 dark:hover:bg-gray-600">
+          <nav class="flex space-x-2" aria-label="Tabs" role="tablist">
+            <button
+              type="button"
+              class="hs-tab-active:bg-white hs-tab-active:text-gray-700 hs-tab-active:dark:bg-gray-800 hs-tab-active:dark:text-gray-400 dark:hs-tab-active:bg-gray-800 py-3 px-4 inline-flex items-center gap-x-2 bg-transparent text-sm text-gray-500 hover:text-gray-700 font-medium rounded-lg hover:hover:text-blue-600 disabled:opacity-50 disabled:pointer-events-none dark:text-gray-400 dark:hover:text-white active"
+              id="segment-item-1"
+              data-hs-tab="#segment-1"
+              aria-controls="segment-1"
+              role="tab"
+            >
+              Settings
+            </button>
+            <button
+              type="button"
+              class="hs-tab-active:bg-white hs-tab-active:text-gray-700 hs-tab-active:dark:bg-gray-800 hs-tab-active:dark:text-gray-400 dark:hs-tab-active:bg-gray-800 py-3 px-4 inline-flex items-center gap-x-2 bg-transparent text-sm text-gray-500 hover:text-gray-700 font-medium rounded-lg hover:hover:text-blue-600 disabled:opacity-50 disabled:pointer-events-none dark:text-gray-400 dark:hover:text-white"
+              id="segment-item-2"
+              data-hs-tab="#segment-2"
+              aria-controls="segment-2"
+              role="tab"
+            >
+              Logs
+            </button>
+          </nav>
+        </div>
+      </div>
+
+      <div class="mt-3">
+        <div id="segment-1" role="tabpanel" aria-labelledby="segment-item-1">
+          <section class="flex flex-col space-y-4">
+            <section class="text-sm">
+              <.header level="h4" text_class="text-lg">
+                Container
+                <:subtitle>
+                  Deployed container's info
+                </:subtitle>
+                <:actions>
+                  <button
+                    type="button"
+                    class="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-white dark:hover:bg-gray-800 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+                  >
+                    Edit
+                  </button>
+                </:actions>
+              </.header>
+
+              <ul class="flex flex-col divide-y divide-gray-200 dark:divide-gray-700">
+                <li class="inline-flex items-center gap-x-2 py-3 px-4 text-sm font-medium text-gray-800 dark:text-white">
+                  <span class="font-semibold">Registry </span><%= @service.image_registry %>
+                </li>
+                <li class="inline-flex items-center gap-x-2 py-3 px-4 text-sm font-medium text-gray-800 dark:text-white">
+                  <span class="font-semibold">Image and tag </span><%= "#{@service.image_name}:#{@service.image_tag}" %>
+                </li>
+                <li
+                  :if={@service.image_registry_user}
+                  class="inline-flex items-center gap-x-2 py-3 px-4 text-sm font-medium text-gray-800 dark:text-white"
+                >
+                  <span class="font-semibold">Registry User </span><%= @service.image_registry_user %>
+                </li>
+              </ul>
+            </section>
+
+            <section>
+              <.header level="h4" text_class="text-lg">
+                Domains
+                <:subtitle>
+                  Domains to which the service can be reached at if exposed to the web (HTTPS only)
+                </:subtitle>
+                <:actions>
+                  <button
+                    type="button"
+                    class="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-white dark:hover:bg-gray-800 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+                  >
+                    Edit
+                  </button>
+                </:actions>
+              </.header>
+              <ul
+                :if={@service.expose_service}
+                class="flex flex-col divide-y divide-gray-200 dark:divide-gray-700 font-mono"
+              >
+                <li
+                  :for={domain <- @service.domains}
+                  class="inline-flex items-center gap-x-2 py-3 px-4 text-sm font-medium text-gray-800 dark:text-white"
+                >
+                  <%= domain.domain %>
+                </li>
+              </ul>
+              <p :if={@service.expose_service == false}>
+                This service is not exposed to the web. Enable it.
+              </p>
+            </section>
+
+            <section>
+              <.header level="h4" text_class="text-lg">
+                Environment variables
+                <:subtitle>
+                  Environment variables exposed to the service (plain text only).
+                </:subtitle>
+                <:actions>
+                  <button
+                    type="button"
+                    class="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-white dark:hover:bg-gray-800 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+                  >
+                    Edit
+                  </button>
+                </:actions>
+              </.header>
+
+              <ul
+                :if={@service.environment_variables != []}
+                class="flex flex-col divide-y divide-gray-200 dark:divide-gray-700 font-mono"
+              >
+                <li
+                  :for={var <- @service.environment_variables}
+                  class="inline-flex items-center gap-x-2 py-3 px-4 text-sm font-medium text-gray-800 dark:text-white"
+                >
+                  <%= "#{var.name} = #{var.value}" %>
+                </li>
+              </ul>
+            </section>
+
+            <section>
+              <.header level="h4" text_class="text-lg">
+                Volumes
+                <:subtitle>
+                  Volumes mounted to the container to provide persistant storage
+                </:subtitle>
+                <:actions>
+                  <button
+                    type="button"
+                    class="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-white dark:hover:bg-gray-800 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+                  >
+                    Edit
+                  </button>
+                </:actions>
+              </.header>
+
+              <ul
+                :if={@service.volumes != []}
+                class="flex flex-col divide-y divide-gray-200 dark:divide-gray-700 font-mono"
+              >
+                <li
+                  :for={vol <- @service.volumes}
+                  class="inline-flex items-center gap-x-2 py-3 px-4 text-sm font-medium text-gray-800 dark:text-white"
+                >
+                  <%= "#{vol.name} = #{vol.mount_point}" %>
+                </li>
+              </ul>
+            </section>
+          </section>
+        </div>
+        <div id="segment-2" class="hidden" role="tabpanel" aria-labelledby="segment-item-2">
+          <p class="text-gray-500 dark:text-gray-400">
+            logs
+          </p>
+        </div>
+      </div>
+    </div>
     """
   end
 
@@ -17,9 +207,33 @@ defmodule MakinaWeb.ServiceLive do
     app = Apps.get_app!(String.to_integer(app_id))
     service = Apps.get_service!(String.to_integer(service_id))
 
+    if connected?(socket), do: PubSub.subscribe(Makina.PubSub, "app::#{app.id}")
+
     socket
     |> assign(app: app)
     |> assign(service: service)
+    |> assign_async(
+      :service_running_state,
+      fn ->
+        {:ok, %{service_running_state: Runtime.get_service_state(service.id, consolidated: true)}}
+      end
+    )
     |> wrap_ok()
+  end
+
+  def handle_info({:service_update, :state, {state, service}}, socket) do
+    if service.id == socket.assigns.service.id do
+      socket
+      |> assign(service_running_state: AsyncResult.ok(state))
+      |> wrap_noreply()
+    else
+      socket
+      |> wrap_noreply()
+    end
+  end
+
+  def handle_info({:app_update, :state, {_state}}, socket) do
+    socket
+    |> wrap_noreply()
   end
 end
