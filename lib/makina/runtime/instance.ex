@@ -177,7 +177,7 @@ defmodule Makina.Runtime.Instance do
       "Image" => full_image_reference(service),
       "Env" => build_env_variables(state),
       "HostConfig" => %{
-        "Mounts" => build_docker_volumes_mount(service.volumes),
+        "Mounts" => build_docker_volumes_mount(state),
         "NetworkMode" => "#{app.slug}-network"
       },
       "Labels" => build_docker_labels(state)
@@ -239,10 +239,18 @@ defmodule Makina.Runtime.Instance do
     end
   end
 
-  defp build_docker_volumes_mount(volumes) do
-    volumes
+  defp build_docker_volumes_mount(state) do
+    app = state.app
+    service = state.service
+
+    service.volumes
     |> Enum.map(fn v ->
-      %{"Target" => v.mount_point, "Source" => v.name, "Type" => "volume", "ReadOnly" => false}
+      %{
+        "Target" => v.mount_point,
+        "Source" => "#{app.slug}-#{service.slug}-#{v.name}",
+        "Type" => "volume",
+        "ReadOnly" => false
+      }
     end)
   end
 
