@@ -29,6 +29,36 @@ defmodule Makina.Apps.Service do
     timestamps()
   end
 
+  def domains_changeset(changeset, attrs \\ %{}) do
+    changeset
+    |> cast(attrs, [])
+    |> cast_assoc(:domains,
+      with: &Domain.changeset/2,
+      sort_param: :domains_sort,
+      drop_param: :domains_drop
+    )
+  end
+
+  def environment_variables_changeset(changeset, attrs \\ %{}) do
+    changeset
+    |> cast(attrs, [])
+    |> cast_assoc(:environment_variables,
+      with: &EnvironmentVariable.changeset/2,
+      sort_param: :envs_sort,
+      drop_param: :envs_drop
+    )
+  end
+
+  def volumes_changeset(changeset, attrs \\ %{}) do
+    changeset
+    |> cast(attrs, [])
+    |> cast_assoc(:volumes,
+      with: &Volume.changeset/2,
+      sort_param: :volumes_sort,
+      drop_param: :volumes_drop
+    )
+  end
+
   def changeset(changeset, attrs \\ %{}) do
     changeset
     |> cast(attrs, @fields)

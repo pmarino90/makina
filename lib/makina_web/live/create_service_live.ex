@@ -130,8 +130,6 @@ defmodule MakinaWeb.CreateServiceLive do
         |> wrap_noreply()
 
       {:error, changeset} ->
-        dbg(changeset)
-
         socket
         |> put_flash(:error, "Could not create the service")
         |> assign(form: to_form(changeset))

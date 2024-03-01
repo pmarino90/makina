@@ -29,6 +29,39 @@ defmodule Makina.Apps do
     |> Service.changeset(attrs)
   end
 
+  def change_service_domains(service \\ %Service{}, attrs \\ %{}) do
+    service
+    |> Service.domains_changeset(attrs)
+  end
+
+  def update_service_domains(service, attrs) do
+    service
+    |> change_service_domains(attrs)
+    |> Repo.update()
+  end
+
+  def change_service_environment_variables(service \\ %Service{}, attrs \\ %{}) do
+    service
+    |> Service.environment_variables_changeset(attrs)
+  end
+
+  def update_service_environment_variables(service, attrs) do
+    service
+    |> change_service_environment_variables(attrs)
+    |> Repo.update()
+  end
+
+  def change_service_volumes(service \\ %Service{}, attrs \\ %{}) do
+    service
+    |> Service.volumes_changeset(attrs)
+  end
+
+  def update_service_volumes(service, attrs) do
+    service
+    |> change_service_volumes(attrs)
+    |> Repo.update()
+  end
+
   def create_service(attrs) do
     %Service{}
     |> Service.changeset(attrs)

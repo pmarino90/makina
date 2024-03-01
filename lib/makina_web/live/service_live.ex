@@ -1,12 +1,14 @@
 defmodule MakinaWeb.ServiceLive do
-  alias Makina.Runtime
   use MakinaWeb, :live_view
 
   import MakinaWeb.CoreComponents
 
   alias Phoenix.PubSub
   alias Phoenix.LiveView.AsyncResult
+  alias Makina.Runtime
   alias Makina.Apps
+  alias Makina.Apps.Service
+  alias MakinaWeb.ServiceComponents
 
   def render(assigns) do
     ~H"""
@@ -77,14 +79,6 @@ defmodule MakinaWeb.ServiceLive do
                 <:subtitle>
                   Deployed container's info
                 </:subtitle>
-                <:actions>
-                  <button
-                    type="button"
-                    class="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-white dark:hover:bg-gray-800 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
-                  >
-                    Edit
-                  </button>
-                </:actions>
               </.header>
 
               <ul class="flex flex-col divide-y divide-gray-200 dark:divide-gray-700">
@@ -103,23 +97,31 @@ defmodule MakinaWeb.ServiceLive do
               </ul>
             </section>
 
-            <section>
+            <section class={[
+              not is_nil(@edit_mode) and @edit_mode != :domains && "opacity-50"
+            ]}>
               <.header level="h4" text_class="text-lg">
                 Domains
                 <:subtitle>
                   Domains to which the service can be reached at if exposed to the web (HTTPS only)
                 </:subtitle>
                 <:actions>
-                  <button
-                    type="button"
-                    class="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-white dark:hover:bg-gray-800 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
-                  >
-                    Edit
-                  </button>
+                  <ServiceComponents.section_edit_actions edit_mode={@edit_mode} section={:domains} />
                 </:actions>
               </.header>
+
+              <.form
+                :if={@edit_mode == :domains}
+                id="domains-update-form"
+                for={@form}
+                phx-change="validate_domains"
+                phx-submit="update_domains"
+              >
+                <ServiceComponents.domains_form form={@form[:domains]} />
+              </.form>
+
               <ul
-                :if={@service.expose_service}
+                :if={@service.expose_service and @edit_mode != :domains}
                 class="flex flex-col divide-y divide-gray-200 dark:divide-gray-700 font-mono"
               >
                 <li
@@ -134,62 +136,83 @@ defmodule MakinaWeb.ServiceLive do
               </p>
             </section>
 
-            <section>
+            <section class={[
+              not is_nil(@edit_mode) and @edit_mode != :environment_variables && "opacity-50"
+            ]}>
               <.header level="h4" text_class="text-lg">
                 Environment variables
                 <:subtitle>
                   Environment variables exposed to the service (plain text only).
                 </:subtitle>
                 <:actions>
-                  <button
-                    type="button"
-                    class="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-white dark:hover:bg-gray-800 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
-                  >
-                    Edit
-                  </button>
+                  <ServiceComponents.section_edit_actions
+                    edit_mode={@edit_mode}
+                    section={:environment_variables}
+                  />
                 </:actions>
               </.header>
 
-              <ul
-                :if={@service.environment_variables != []}
-                class="flex flex-col divide-y divide-gray-200 dark:divide-gray-700 font-mono"
+              <.form
+                :if={@edit_mode == :environment_variables}
+                id="environment_variables-update-form"
+                for={@form}
+                phx-change="validate_environment_variables"
+                phx-submit="update_environment_variables"
               >
-                <li
-                  :for={var <- @service.environment_variables}
-                  class="inline-flex items-center gap-x-2 py-3 px-4 text-sm font-medium text-gray-800 dark:text-white"
+                <ServiceComponents.environment_form form={@form[:environment_variables]} />
+              </.form>
+
+              <div :if={@edit_mode != :environment_variables}>
+                <ul
+                  :if={@service.environment_variables != []}
+                  class="flex flex-col divide-y divide-gray-200 dark:divide-gray-700 font-mono"
                 >
-                  <%= "#{var.name} = #{var.value}" %>
-                </li>
-              </ul>
+                  <li
+                    :for={var <- @service.environment_variables}
+                    class="inline-flex items-center gap-x-2 py-3 px-4 text-sm font-medium text-gray-800 dark:text-white"
+                  >
+                    <%= "#{var.name} = #{var.value}" %>
+                  </li>
+                </ul>
+              </div>
             </section>
 
-            <section>
+            <section class={[
+              not is_nil(@edit_mode) and @edit_mode != :volumes && "opacity-50"
+            ]}>
               <.header level="h4" text_class="text-lg">
                 Volumes
                 <:subtitle>
                   Volumes mounted to the container to provide persistant storage
                 </:subtitle>
                 <:actions>
-                  <button
-                    type="button"
-                    class="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-white dark:hover:bg-gray-800 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
-                  >
-                    Edit
-                  </button>
+                  <ServiceComponents.section_edit_actions edit_mode={@edit_mode} section={:volumes} />
                 </:actions>
               </.header>
 
-              <ul
-                :if={@service.volumes != []}
-                class="flex flex-col divide-y divide-gray-200 dark:divide-gray-700 font-mono"
+              <.form
+                :if={@edit_mode == :volumes}
+                id="volumes-update-form"
+                for={@form}
+                phx-change="validate_volumes"
+                phx-submit="update_volumes"
               >
-                <li
-                  :for={vol <- @service.volumes}
-                  class="inline-flex items-center gap-x-2 py-3 px-4 text-sm font-medium text-gray-800 dark:text-white"
+                <ServiceComponents.volumes_form form={@form[:volumes]} />
+              </.form>
+
+              <div :if={@edit_mode != :volumes}>
+                <ul
+                  :if={@service.volumes != []}
+                  class="flex flex-col divide-y divide-gray-200 dark:divide-gray-700 font-mono"
                 >
-                  <%= "#{vol.name} = #{vol.mount_point}" %>
-                </li>
-              </ul>
+                  <li
+                    :for={vol <- @service.volumes}
+                    class="inline-flex items-center gap-x-2 py-3 px-4 text-sm font-medium text-gray-800 dark:text-white"
+                  >
+                    <%= "#{vol.name} = #{vol.mount_point}" %>
+                  </li>
+                </ul>
+              </div>
             </section>
           </section>
         </div>
@@ -211,6 +234,8 @@ defmodule MakinaWeb.ServiceLive do
 
     socket
     |> assign(app: app)
+    |> assign(edit_mode: nil)
+    |> assign(form: nil)
     |> assign(service: service)
     |> assign_async(
       :service_running_state,
@@ -219,6 +244,118 @@ defmodule MakinaWeb.ServiceLive do
       end
     )
     |> wrap_ok()
+  end
+
+  def handle_event("validate_domains", %{"service" => data}, socket) do
+    changeset = Apps.change_service_domains(%Service{}, data)
+
+    socket
+    |> assign(form: to_form(changeset))
+    |> wrap_noreply()
+  end
+
+  def handle_event("update_domains", %{"service" => data}, socket) do
+    service = socket.assigns.service
+
+    case Apps.update_service_domains(service, data) do
+      {:ok, service} ->
+        socket
+        |> assign(service: service)
+        |> assign(form: nil)
+        |> assign(edit_mode: nil)
+        |> wrap_noreply()
+
+      {:error, changeset} ->
+        socket
+        |> assign(form: to_form(changeset))
+        |> wrap_noreply()
+    end
+  end
+
+  def handle_event("validate_environment_variables", %{"service" => data}, socket) do
+    changeset = Apps.change_service_environment_variables(%Service{}, data)
+
+    socket
+    |> assign(form: to_form(changeset))
+    |> wrap_noreply()
+  end
+
+  def handle_event("update_environment_variables", %{"service" => data}, socket) do
+    service = socket.assigns.service
+
+    case Apps.update_service_environment_variables(service, data) do
+      {:ok, service} ->
+        socket
+        |> assign(service: service)
+        |> assign(form: nil)
+        |> assign(edit_mode: nil)
+        |> wrap_noreply()
+
+      {:error, changeset} ->
+        socket
+        |> assign(form: to_form(changeset))
+        |> wrap_noreply()
+    end
+  end
+
+  def handle_event("validate_volumes", %{"service" => data}, socket) do
+    changeset = Apps.change_service_volumes(%Service{}, data)
+
+    socket
+    |> assign(form: to_form(changeset))
+    |> wrap_noreply()
+  end
+
+  def handle_event("update_volumes", %{"service" => data}, socket) do
+    service = socket.assigns.service
+
+    case Apps.update_service_volumes(service, data) do
+      {:ok, service} ->
+        socket
+        |> assign(service: service)
+        |> assign(form: nil)
+        |> assign(edit_mode: nil)
+        |> wrap_noreply()
+
+      {:error, changeset} ->
+        socket
+        |> assign(form: to_form(changeset))
+        |> wrap_noreply()
+    end
+  end
+
+  def handle_event("set_edit_mode", %{"value" => "domains"}, socket) do
+    changeset = Apps.change_service_domains(socket.assigns.service)
+
+    socket
+    |> assign(edit_mode: :domains)
+    |> assign(form: to_form(changeset))
+    |> wrap_noreply()
+  end
+
+  def handle_event("set_edit_mode", %{"value" => "environment_variables"}, socket) do
+    changeset = Apps.change_service_environment_variables(socket.assigns.service)
+
+    socket
+    |> assign(edit_mode: :environment_variables)
+    |> assign(form: to_form(changeset))
+    |> wrap_noreply()
+  end
+
+  def handle_event("set_edit_mode", %{"value" => "volumes"}, socket) do
+    changeset = Apps.change_service_volumes(socket.assigns.service)
+
+    socket
+    |> assign(edit_mode: :volumes)
+    |> assign(form: to_form(changeset))
+    |> wrap_noreply()
+  end
+
+  def handle_event("cancel_edit", _data, socket) do
+    socket
+    |> assign(form: nil)
+    |> assign(edit_mode: nil)
+    |> wrap_noreply()
   end
 
   def handle_info({:service_update, :state, {state, service}}, socket) do

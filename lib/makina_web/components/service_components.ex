@@ -107,4 +107,37 @@ defmodule MakinaWeb.ServiceComponents do
     </button>
     """
   end
+
+  attr :section, :atom, required: true
+  attr :edit_mode, :atom
+
+  def section_edit_actions(assigns) do
+    ~H"""
+    <.button
+      :if={@edit_mode != @section}
+      type="button"
+      level="secondary"
+      value={Atom.to_string(@section)}
+      disabled={not is_nil(@edit_mode)}
+      phx-click="set_edit_mode"
+      phx-disable-with="loading..."
+    >
+      Edit
+    </.button>
+
+    <.button :if={@edit_mode == @section} type="button" level="secondary" phx-click="cancel_edit">
+      Cancel
+    </.button>
+
+    <.button
+      :if={@edit_mode == @section}
+      type="button"
+      value="domains"
+      phx-click={JS.dispatch("submit", to: "##{@section}-update-form")}
+      phx-disable-with="Saving..."
+    >
+      Save
+    </.button>
+    """
+  end
 end
