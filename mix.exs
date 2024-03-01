@@ -80,7 +80,7 @@ defmodule Makina.MixProject do
       "assets.build": ["tailwind makina", "esbuild makina"],
       "assets.deploy": [
         "cmd npm install --prefix assets",
-        "tailwind default --minify",
+        "tailwind makina --minify",
         "esbuild makina --minify",
         "phx.digest"
       ]
