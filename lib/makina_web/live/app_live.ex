@@ -55,7 +55,7 @@ defmodule MakinaWeb.AppLive do
       </header>
 
       <section>
-        <.header level="h2">
+        <.header level="h2" text_class="text-lg">
           Services
           <:subtitle>
             Add services that compose your application (webapp, database, background job, ...)
@@ -91,19 +91,76 @@ defmodule MakinaWeb.AppLive do
           </.card>
         </section>
       </section>
+
+      <.header level="h2" text_class="text-lg">
+        API tokens
+        <:subtitle>
+          You can create and use API tokens to trigger service update and redeploy from other systems (GitHub, ...)
+        </:subtitle>
+        <:actions>
+          <.button level="secondary" phx-click="create_api_token">
+            <.icon name="hero-plus" />
+          </.button>
+        </:actions>
+      </.header>
+
+      <section>
+        <section
+          :if={@visible_token}
+          class="text-sm flex flex-col bg-white border border-gray-200 shadow-sm rounded-xl p-4 md:p-5 dark:bg-slate-900 dark:border-gray-700 dark:text-gray-400"
+        >
+          <p>
+            Your token has been created!
+          </p>
+          <p>
+            You can use it to make requests at
+            <span class="font-mono bg-slate-100 text-slate-700 text-sm p-1 border">/api/</span>
+            by providing it as
+            <span class="font-mono bg-slate-100 text-slate-700 text-sm p-1 border">
+              Authorization
+            </span>
+            header.
+          </p>
+
+          <p>
+            Example: <br />
+            <span class="font-mono bg-slate-100 text-slate-700 text-sm p-1 border my-2 block">
+              curl -H "Authorization: Bearer <%= @visible_token %>" https://instance.com/api/ping
+            </span>
+          </p>
+          <p>
+            You will be able to see and copy your token only once so save it somewhere safe (password manager or secret vault).
+          </p>
+          <input
+            value={@visible_token}
+            class="my-3 py-3 px-4 block w-full border rounded-lg text-sm placeholder:text-gray-400 focus:border-blue-500 focus:ring-blue-500 dark:bg-gray-900 dark:border-gray-700 dark:text-gray-400 dark:placeholder:text-gray-500 dark:focus:ring-gray-600"
+          />
+        </section>
+
+        <ul
+          :if={@app.tokens != []}
+          class="flex flex-col divide-y divide-gray-200 dark:divide-gray-700"
+        >
+          <li
+            :for={token <- @app.tokens}
+            class="inline-flex items-center gap-x-2 py-3 px-4 text-sm font-medium text-gray-800 dark:text-white"
+          >
+            <span>************</span> created at <span><%= token.inserted_at %></span>
+          </li>
+        </ul>
+      </section>
     </section>
     """
   end
 
   def mount(%{"id" => id}, _session, socket) do
     app = Apps.get_app!(String.to_integer(id))
-    service_form = Apps.change_service()
 
     if connected?(socket), do: PubSub.subscribe(Makina.PubSub, "app::#{app.id}")
 
     socket
     |> assign(app: app)
-    |> assign(service_form: to_form(service_form))
+    |> assign(visible_token: nil)
     |> assign_async(:app_running_state, fn ->
       {:ok, %{app_running_state: Runtime.app_state(app.id)}}
     end)
@@ -122,6 +179,14 @@ defmodule MakinaWeb.AppLive do
     Runtime.start_app(socket.assigns.app)
 
     socket
+    |> wrap_noreply()
+  end
+
+  def handle_event("create_api_token", _data, socket) do
+    token = Apps.create_api_token("api-token", socket.assigns.app)
+
+    socket
+    |> assign(visible_token: token)
     |> wrap_noreply()
   end
 

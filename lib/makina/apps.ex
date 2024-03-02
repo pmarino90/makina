@@ -4,9 +4,9 @@ defmodule Makina.Apps do
 
   import Ecto.Query
 
-  alias Makina.Apps.{Application, Service}
+  alias Makina.Apps.{Application, Service, ApiToken}
 
-  @app_preloads [services: [:environment_variables, :volumes, :domains]]
+  @app_preloads [:tokens, services: [:environment_variables, :volumes, :domains]]
 
   def list_applications() do
     Application
@@ -70,6 +70,14 @@ defmodule Makina.Apps do
     %Service{}
     |> Service.changeset(attrs)
     |> Repo.insert()
+  end
+
+  def create_api_token(name, application) do
+    {token, struct} = ApiToken.build_api_token(name, application)
+
+    Repo.insert(struct)
+
+    token
   end
 
   @doc """

@@ -4,7 +4,7 @@ defmodule Makina.Apps.Application do
   import Ecto.Changeset
   import Slugy
 
-  alias Makina.Apps.Service
+  alias Makina.Apps.{Service, ApiToken}
   alias Makina.Accounts.User
 
   schema "applications" do
@@ -14,6 +14,7 @@ defmodule Makina.Apps.Application do
 
     belongs_to :owner, User
     has_many :services, Service
+    has_many :tokens, ApiToken
 
     timestamps()
   end
