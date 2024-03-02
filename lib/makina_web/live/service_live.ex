@@ -45,15 +45,15 @@ defmodule MakinaWeb.ServiceLive do
 
       <div class="flex">
         <div class="flex bg-gray-100 hover:bg-gray-200 rounded-lg transition p-1 dark:bg-gray-700 dark:hover:bg-gray-600">
-          <nav class="flex space-x-2" aria-label="Tabs" role="tablist">
+          <nav class="flex space-x-2" aria-label="Tabs">
             <.link
               class={[
                 @current_tab == :settings &&
                   "bg-white text-gray-700 dark:text-gray-400 dark:bg-gray-800",
                 "py-3 px-4 inline-flex items-center gap-x-2 bg-transparent text-sm text-gray-500 hover:text-gray-700 font-medium rounded-lg hover:hover:text-blue-600 disabled:opacity-50 disabled:pointer-events-none dark:text-gray-400 dark:hover:text-white active"
               ]}
-              id="segment-item-1"
-              aria-controls="segment-1"
+              id="tab-settings"
+              aria-controls="settings"
               role="tab"
               patch={~p"/apps/#{@app.id}/services/#{@service.id}/"}
             >
@@ -66,8 +66,8 @@ defmodule MakinaWeb.ServiceLive do
                   "bg-white text-gray-700 dark:text-gray-400 dark:bg-gray-800",
                 "py-3 px-4 inline-flex items-center gap-x-2 bg-transparent text-sm text-gray-500 hover:text-gray-700 font-medium rounded-lg hover:hover:text-blue-600 disabled:opacity-50 disabled:pointer-events-none dark:text-gray-400 dark:hover:text-white"
               ]}
-              id="segment-item-2"
-              aria-controls="segment-2"
+              id="tab-logs"
+              aria-controls="logs"
               role="tab"
               patch={~p"/apps/#{@app.id}/services/#{@service.id}/logs"}
             >
@@ -78,12 +78,7 @@ defmodule MakinaWeb.ServiceLive do
       </div>
 
       <div class="mt-3">
-        <div
-          :if={@current_tab == :settings}
-          id="segment-1"
-          role="tabpanel"
-          aria-labelledby="segment-item-1"
-        >
+        <div :if={@current_tab == :settings} role="tabpanel" aria-labelledby="tab-settings">
           <section class="flex flex-col space-y-4">
             <section class="text-sm">
               <.header level="h4" text_class="text-lg">
@@ -228,21 +223,8 @@ defmodule MakinaWeb.ServiceLive do
             </section>
           </section>
         </div>
-        <div
-          :if={@current_tab == :logs}
-          id="segment-2"
-          role="tabpanel"
-          aria-labelledby="segment-item-2"
-        >
-          <ol
-            id="logs"
-            phx-update="stream"
-            class="font-mono text-white bg-black h-80 overflow-scroll p-2"
-          >
-            <li :for={{id, entry} <- @streams.logs} id={id}>
-              <%= entry.value %>
-            </li>
-          </ol>
+        <div :if={@current_tab == :logs} role="tabpanel" aria-labelledby="tab-logs">
+          <div id="logs" phx-update="ignore" class="p-2 bg-black" data-controller="xterm"></div>
         </div>
       </div>
     </div>
@@ -419,10 +401,7 @@ defmodule MakinaWeb.ServiceLive do
 
   def handle_info({:log_entry, entry}, socket) do
     socket
-    |> stream_insert(:logs, %{
-      id: "log-entry-#{:os.system_time(:millisecond)}",
-      value: Enum.join(for <<c::utf8 <- entry>>, do: <<c::utf8>>)
-    })
+    |> push_event("log_update", %{entry: Enum.join(for <<c::utf16 <- entry>>, do: <<c::utf16>>)})
     |> wrap_noreply()
   end
 end

@@ -5,10 +5,12 @@ import "preline";
 
 import { Socket } from "phoenix";
 import { LiveSocket } from "phoenix_live_view";
+import { Application } from "@hotwired/stimulus";
 
 import topbar from "../vendor/topbar";
 
 import GlobalSocketHook from "./hooks/global_socket_hook";
+import XtermController from "./controllers/xterm_controller";
 
 let csrfToken = document
   .querySelector("meta[name='csrf-token']")
@@ -25,6 +27,14 @@ let liveSocket = new LiveSocket("/live", Socket, {
 topbar.config({ barColors: { 0: "#29d" }, shadowColor: "rgba(0, 0, 0, .3)" });
 window.addEventListener("phx:page-loading-start", (_info) => topbar.show(300));
 window.addEventListener("phx:page-loading-stop", (_info) => topbar.hide());
+
+window.addEventListener("phx:page-loading-stop", (_info) =>
+  window.HSStaticMethods.autoInit(),
+);
+
+const Stimulus = Application.start();
+
+Stimulus.register("xterm", XtermController);
 
 // connect if there are any LiveViews on the page
 liveSocket.connect();

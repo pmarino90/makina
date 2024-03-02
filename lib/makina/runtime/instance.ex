@@ -177,6 +177,7 @@ defmodule Makina.Runtime.Instance do
     |> Docker.create_container(%{
       "Image" => full_image_reference(service),
       "Env" => build_env_variables(state),
+      "Tty" => true,
       "HostConfig" => %{
         "Mounts" => build_docker_volumes_mount(state),
         "NetworkMode" => "#{app.slug}-network"
