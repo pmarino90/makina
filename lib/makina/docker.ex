@@ -56,6 +56,15 @@ defmodule Makina.Docker do
   def wait_for_container(name_or_id),
     do: client() |> Req.post!(url: "/containers/#{name_or_id}/wait")
 
+  def logs_for_container(name_or_id, into \\ nil),
+    do:
+      client()
+      |> Req.get!(
+        url: "/containers/#{name_or_id}/logs",
+        params: %{"follow" => true, "stderr" => true, "stdout" => true},
+        into: into
+      )
+
   def monitor_container(name_or_id, params \\ []) do
     on_event = Keyword.get(params, :on_event, nil)
 
@@ -130,7 +139,8 @@ defmodule Makina.Docker do
 
     Req.new(
       base_url: "http://localhost/v1.44/",
-      unix_socket: Keyword.get(config, :socket_path, "/var/run/docker.sock")
+      unix_socket: Keyword.get(config, :socket_path, "/var/run/docker.sock"),
+      receive_timeout: :infinity
     )
   end
 end

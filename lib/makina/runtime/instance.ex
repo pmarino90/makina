@@ -94,6 +94,7 @@ defmodule Makina.Runtime.Instance do
   def handle_cast(:bootstrap, state) do
     state
     |> start_container()
+    |> collect_logs()
     |> notify_running_state(:running)
 
     {:noreply, %{state | running_state: :running}}
@@ -336,5 +337,23 @@ defmodule Makina.Runtime.Instance do
     }
 
     Base.encode64(Jason.encode!(auth_obj))
+  end
+
+  defp collect_logs(state) do
+    entry_collector = fn {:data, data}, {req, res} ->
+      PubSub.broadcast(
+        Makina.PubSub,
+        "system::service::#{state.service.id}::logs",
+        {:log_entry, data}
+      )
+
+      {:cont, {req, res}}
+    end
+
+    Task.Supervisor.start_child(Makina.Runtime.TaskSupervisor, fn ->
+      Docker.logs_for_container(state.container_name, entry_collector)
+    end)
+
+    state
   end
 end

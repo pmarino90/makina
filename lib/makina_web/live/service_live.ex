@@ -46,32 +46,44 @@ defmodule MakinaWeb.ServiceLive do
       <div class="flex">
         <div class="flex bg-gray-100 hover:bg-gray-200 rounded-lg transition p-1 dark:bg-gray-700 dark:hover:bg-gray-600">
           <nav class="flex space-x-2" aria-label="Tabs" role="tablist">
-            <button
-              type="button"
-              class="hs-tab-active:bg-white hs-tab-active:text-gray-700 hs-tab-active:dark:bg-gray-800 hs-tab-active:dark:text-gray-400 dark:hs-tab-active:bg-gray-800 py-3 px-4 inline-flex items-center gap-x-2 bg-transparent text-sm text-gray-500 hover:text-gray-700 font-medium rounded-lg hover:hover:text-blue-600 disabled:opacity-50 disabled:pointer-events-none dark:text-gray-400 dark:hover:text-white active"
+            <.link
+              class={[
+                @current_tab == :settings &&
+                  "bg-white text-gray-700 dark:text-gray-400 dark:bg-gray-800",
+                "py-3 px-4 inline-flex items-center gap-x-2 bg-transparent text-sm text-gray-500 hover:text-gray-700 font-medium rounded-lg hover:hover:text-blue-600 disabled:opacity-50 disabled:pointer-events-none dark:text-gray-400 dark:hover:text-white active"
+              ]}
               id="segment-item-1"
-              data-hs-tab="#segment-1"
               aria-controls="segment-1"
               role="tab"
+              patch={~p"/apps/#{@app.id}/services/#{@service.id}/"}
             >
               Settings
-            </button>
-            <button
+            </.link>
+            <.link
               type="button"
-              class="hs-tab-active:bg-white hs-tab-active:text-gray-700 hs-tab-active:dark:bg-gray-800 hs-tab-active:dark:text-gray-400 dark:hs-tab-active:bg-gray-800 py-3 px-4 inline-flex items-center gap-x-2 bg-transparent text-sm text-gray-500 hover:text-gray-700 font-medium rounded-lg hover:hover:text-blue-600 disabled:opacity-50 disabled:pointer-events-none dark:text-gray-400 dark:hover:text-white"
+              class={[
+                @current_tab == :logs &&
+                  "bg-white text-gray-700 dark:text-gray-400 dark:bg-gray-800",
+                "py-3 px-4 inline-flex items-center gap-x-2 bg-transparent text-sm text-gray-500 hover:text-gray-700 font-medium rounded-lg hover:hover:text-blue-600 disabled:opacity-50 disabled:pointer-events-none dark:text-gray-400 dark:hover:text-white"
+              ]}
               id="segment-item-2"
-              data-hs-tab="#segment-2"
               aria-controls="segment-2"
               role="tab"
+              patch={~p"/apps/#{@app.id}/services/#{@service.id}/logs"}
             >
               Logs
-            </button>
+            </.link>
           </nav>
         </div>
       </div>
 
       <div class="mt-3">
-        <div id="segment-1" role="tabpanel" aria-labelledby="segment-item-1">
+        <div
+          :if={@current_tab == :settings}
+          id="segment-1"
+          role="tabpanel"
+          aria-labelledby="segment-item-1"
+        >
           <section class="flex flex-col space-y-4">
             <section class="text-sm">
               <.header level="h4" text_class="text-lg">
@@ -216,10 +228,21 @@ defmodule MakinaWeb.ServiceLive do
             </section>
           </section>
         </div>
-        <div id="segment-2" class="hidden" role="tabpanel" aria-labelledby="segment-item-2">
-          <p class="text-gray-500 dark:text-gray-400">
-            logs
-          </p>
+        <div
+          :if={@current_tab == :logs}
+          id="segment-2"
+          role="tabpanel"
+          aria-labelledby="segment-item-2"
+        >
+          <ol
+            id="logs"
+            phx-update="stream"
+            class="font-mono text-white bg-black h-80 overflow-scroll p-2"
+          >
+            <li :for={{id, entry} <- @streams.logs} id={id}>
+              <%= entry.value %>
+            </li>
+          </ol>
         </div>
       </div>
     </div>
@@ -237,6 +260,7 @@ defmodule MakinaWeb.ServiceLive do
     |> assign(edit_mode: nil)
     |> assign(form: nil)
     |> assign(service: service)
+    |> assign(current_tab: :settings)
     |> assign_async(
       :service_running_state,
       fn ->
@@ -244,6 +268,25 @@ defmodule MakinaWeb.ServiceLive do
       end
     )
     |> wrap_ok()
+  end
+
+  def handle_params(_params, uri, socket) do
+    service = socket.assigns.service
+
+    if String.ends_with?(uri, "/logs") do
+      PubSub.subscribe(Makina.PubSub, "system::service::#{service.id}::logs")
+
+      socket
+      |> assign(current_tab: :logs)
+      |> stream(:logs, [])
+      |> wrap_noreply()
+    else
+      PubSub.unsubscribe(Makina.PubSub, "system::service::#{service.id}::logs")
+
+      socket
+      |> assign(current_tab: :settings)
+      |> wrap_noreply()
+    end
   end
 
   def handle_event("validate_domains", %{"service" => data}, socket) do
@@ -371,6 +414,15 @@ defmodule MakinaWeb.ServiceLive do
 
   def handle_info({:app_update, :state, {_state}}, socket) do
     socket
+    |> wrap_noreply()
+  end
+
+  def handle_info({:log_entry, entry}, socket) do
+    socket
+    |> stream_insert(:logs, %{
+      id: "log-entry-#{:os.system_time(:millisecond)}",
+      value: entry
+    })
     |> wrap_noreply()
   end
 end

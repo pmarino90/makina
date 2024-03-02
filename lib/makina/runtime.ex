@@ -37,7 +37,8 @@ defmodule Makina.Runtime do
     Logger.info("Starting Makina Runtime")
 
     children = [
-      {Registry, keys: :unique, name: Makina.Runtime.Registry}
+      {Registry, keys: :unique, name: Makina.Runtime.Registry},
+      {Task.Supervisor, name: Makina.Runtime.TaskSupervisor}
     ]
 
     child_apps =

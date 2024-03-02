@@ -33,6 +33,7 @@ defmodule MakinaWeb.Router do
       live "/apps/:id", AppLive
       live "/apps/:app_id/services/create", CreateServiceLive
       live "/apps/:app_id/services/:service_id", ServiceLive
+      live "/apps/:app_id/services/:service_id/logs", ServiceLive
     end
   end
 
