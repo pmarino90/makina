@@ -401,7 +401,7 @@ defmodule MakinaWeb.ServiceLive do
 
   def handle_info({:log_entry, entry}, socket) do
     socket
-    |> push_event("log_update", %{entry: Enum.join(for <<c::utf16 <- entry>>, do: <<c::utf16>>)})
+    |> push_event("log_update", %{entry: entry})
     |> wrap_noreply()
   end
 end

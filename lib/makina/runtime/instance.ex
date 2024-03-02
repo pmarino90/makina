@@ -345,7 +345,7 @@ defmodule Makina.Runtime.Instance do
       PubSub.broadcast(
         Makina.PubSub,
         "system::service::#{state.service.id}::logs",
-        {:log_entry, data}
+        {:log_entry, Enum.join(for <<c::utf16 <- data>>, do: <<c::utf16>>)}
       )
 
       {:cont, {req, res}}
