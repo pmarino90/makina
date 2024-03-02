@@ -421,7 +421,7 @@ defmodule MakinaWeb.ServiceLive do
     socket
     |> stream_insert(:logs, %{
       id: "log-entry-#{:os.system_time(:millisecond)}",
-      value: entry
+      value: Enum.join(for <<c::utf8 <- entry>>, do: <<c::utf8>>)
     })
     |> wrap_noreply()
   end
