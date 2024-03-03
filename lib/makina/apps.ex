@@ -80,6 +80,10 @@ defmodule Makina.Apps do
     token
   end
 
+  def verify_token_for_app(app_id, auth_token) do
+    ApiToken.verify_token_for_app(app_id, auth_token)
+  end
+
   @doc """
   Returns a service given its id
   """
@@ -87,6 +91,14 @@ defmodule Makina.Apps do
     do: Service |> preload([:domains, :environment_variables, :volumes]) |> Repo.get!(id)
 
   def get_app!(id), do: Application |> preload(^@app_preloads) |> Repo.get!(id)
+
+  def trigger_service_redeploy(service) do
+    PubSub.broadcast(
+      Makina.PubSub,
+      "system::service::#{service.id}",
+      {:redeploy, []}
+    )
+  end
 
   defp notify_config_change({:ok, service} = res, section) do
     PubSub.broadcast(

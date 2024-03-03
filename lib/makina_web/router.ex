@@ -2,6 +2,7 @@ defmodule MakinaWeb.Router do
   use MakinaWeb, :router
 
   import MakinaWeb.UserAuth
+  import MakinaWeb.ApiAuth
 
   pipeline :browser do
     plug :accepts, ["html"]
@@ -15,6 +16,13 @@ defmodule MakinaWeb.Router do
 
   pipeline :api do
     plug :accepts, ["json"]
+    plug :verify_auth_token
+  end
+
+  scope "/api", MakinaWeb do
+    pipe_through :api
+
+    post "/apps/:app_id/services/:service_id/redeploy", ApiController, :service_redeploy
   end
 
   scope "/", MakinaWeb do

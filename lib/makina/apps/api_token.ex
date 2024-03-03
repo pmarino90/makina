@@ -1,8 +1,11 @@
 defmodule Makina.Apps.ApiToken do
   use Ecto.Schema
 
+  alias Makina.Repo
   alias Makina.Apps.Application
   alias Makina.Apps.ApiToken
+
+  import Ecto.Query
 
   @hash_algorithm :sha256
   @rand_size 32
@@ -26,5 +29,19 @@ defmodule Makina.Apps.ApiToken do
        name: name,
        application_id: application.id
      }}
+  end
+
+  def verify_token_for_app(id, auth_token) do
+    case Base.url_decode64(auth_token, padding: false) do
+      {:ok, decoded_token} ->
+        hashed_token = :crypto.hash(@hash_algorithm, decoded_token)
+
+        query = from t in ApiToken, where: t.token == ^hashed_token and t.application_id == ^id
+
+        Repo.exists?(query)
+
+      :error ->
+        false
+    end
   end
 end
