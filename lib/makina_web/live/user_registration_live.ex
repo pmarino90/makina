@@ -45,12 +45,18 @@ defmodule MakinaWeb.UserRegistrationLive do
   def mount(_params, _session, socket) do
     changeset = Accounts.change_user_registration(%User{})
 
-    socket =
-      socket
-      |> assign(trigger_submit: false, check_errors: false)
-      |> assign_form(changeset)
+    if Accounts.is_first_user() do
+      socket =
+        socket
+        |> assign(trigger_submit: false, check_errors: false)
+        |> assign_form(changeset)
 
-    {:ok, socket, temporary_assigns: [form: nil]}
+      {:ok, socket, temporary_assigns: [form: nil]}
+    else
+      socket
+      |> push_navigate(to: ~p"/users/log_in")
+      |> wrap_ok()
+    end
   end
 
   def handle_event("save", %{"user" => user_params}, socket) do

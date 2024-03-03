@@ -350,4 +350,10 @@ defmodule Makina.Accounts do
       {:error, :user, changeset, _} -> {:error, changeset}
     end
   end
+
+  def is_first_user() do
+    users = Repo.all(User)
+
+    users == []
+  end
 end
