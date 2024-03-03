@@ -143,6 +143,12 @@ defmodule Makina.Runtime.Instance do
     {:noreply, state}
   end
 
+  def handle_info({:redeploy, _section, _service}, state) do
+    redeploy(self())
+
+    {:noreply, state}
+  end
+
   defp handle_shutdown(state) do
     Docker.stop_container(state.container_name)
     Docker.wait_for_container(state.container_name)
@@ -345,7 +351,7 @@ defmodule Makina.Runtime.Instance do
       PubSub.broadcast(
         Makina.PubSub,
         "system::service::#{state.service.id}::logs",
-        {:log_entry, Enum.join(for <<c::utf16 <- data>>, do: <<c::utf16>>)}
+        {:log_entry, data}
       )
 
       {:cont, {req, res}}
