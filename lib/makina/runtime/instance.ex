@@ -23,6 +23,8 @@ defmodule Makina.Runtime.Instance do
 
   def redeploy(pid), do: GenServer.cast(pid, :redeploy)
 
+  def continue(pid), do: GenServer.cast(pid, :continue)
+
   @doc """
   Given an instance PID it returns it's current running state.
   The state should reprensent what the current state is in the underlying runtime,
@@ -78,24 +80,68 @@ defmodule Makina.Runtime.Instance do
 
   ## Cast
 
+  ### Boot sequence
+  # On its own the boot sequence is a series of cast to the instance, each handling an
+  # individual piece.
+
   def handle_cast(:prepare, state) do
+    GenServer.cast(self(), :continue)
+
+    {:noreply, %{state | running_state: :preparing}}
+  end
+
+  def handle_cast(:pull_image, state) do
+    log(state, "Pulling image...")
+
     state
     |> pull_image()
+
+    {:noreply, %{state | running_state: :image_pull}}
+  end
+
+  def handle_cast(:create_app_network, state) do
+    log(state, "Creating network...")
+
+    state
     |> create_app_network()
+
+    continue(self())
+
+    {:noreply, %{state | running_state: :network_create}}
+  end
+
+  def handle_cast(:create_container, state) do
+    log(state, "Creating container...")
+
+    state
     |> create_container()
+
+    continue(self())
+
+    {:noreply, %{state | running_state: :container_create}}
+  end
+
+  def handle_cast(:network_connect_web, state) do
+    log(state, "Connecting container to web network...")
+
+    state
     |> connect_to_web_network()
 
-    if state.auto_boot, do: bootstrap(self())
+    continue(self())
 
-    {:noreply, %{state | running_state: :prepared}}
+    {:noreply, %{state | running_state: :network_web_connect}}
   end
 
   @doc false
   def handle_cast(:bootstrap, state) do
+    log(state, "Starting container...")
+
     state
     |> start_container()
     |> collect_logs()
     |> notify_running_state(:running)
+
+    continue(self())
 
     {:noreply, %{state | running_state: :running}}
   end
@@ -108,6 +154,44 @@ defmodule Makina.Runtime.Instance do
     Process.exit(self(), :redeploy)
 
     {:noreply, %{state | running_state: :shutting_down}}
+  end
+
+  def handle_cast(:continue, %{running_state: :preparing} = state) do
+    GenServer.cast(self(), :pull_image)
+
+    {:noreply, state}
+  end
+
+  def handle_cast(:continue, %{running_state: :image_pull} = state) do
+    GenServer.cast(self(), :create_app_network)
+
+    {:noreply, state}
+  end
+
+  def handle_cast(:continue, %{running_state: :network_create} = state) do
+    GenServer.cast(self(), :create_container)
+
+    {:noreply, state}
+  end
+
+  def handle_cast(:continue, %{running_state: :container_create} = state) do
+    GenServer.cast(self(), :network_connect_web)
+
+    {:noreply, state}
+  end
+
+  def handle_cast(:continue, %{running_state: :network_web_connect, auto_boot: true} = state) do
+    GenServer.cast(self(), :bootstrap)
+
+    {:noreply, state}
+  end
+
+  def handle_cast(:continue, %{running_state: :network_web_connect, auto_boot: false} = state) do
+    {:noreply, %{state | running_state: :prepared}}
+  end
+
+  def handle_cast(:continue, state) do
+    {:noreply, state}
   end
 
   ## Calls
@@ -160,10 +244,17 @@ defmodule Makina.Runtime.Instance do
   end
 
   defp pull_image(%{service: service} = state) do
+    progress_update = fn {:data, data}, {req, res} ->
+      log(state, data, with_prompt: false)
+
+      {:cont, {req, res}}
+    end
+
     params = [
       docker: %{
         "fromImage" => full_image_reference(service)
-      }
+      },
+      on_progress: progress_update
     ]
 
     params =
@@ -171,7 +262,12 @@ defmodule Makina.Runtime.Instance do
         do: Keyword.put(params, :headers, x_registry_auth: build_auth_header(service)),
         else: params
 
-    Docker.pull_image(params)
+    Task.Supervisor.start_child(Makina.Runtime.TaskSupervisor, fn ->
+      [instance_pid] = Process.get(:"$callers")
+
+      Docker.pull_image(params)
+      GenServer.cast(instance_pid, :continue)
+    end)
 
     state
   end
@@ -348,11 +444,7 @@ defmodule Makina.Runtime.Instance do
 
   defp collect_logs(state) do
     entry_collector = fn {:data, data}, {req, res} ->
-      PubSub.broadcast(
-        Makina.PubSub,
-        "system::service::#{state.service.id}::logs",
-        {:log_entry, data}
-      )
+      log(state, data, with_prompt: false)
 
       {:cont, {req, res}}
     end
@@ -362,5 +454,28 @@ defmodule Makina.Runtime.Instance do
     end)
 
     state
+  end
+
+  defp log(state, entry, opts \\ []) do
+    with_prompt = Keyword.get(opts, :with_prompt, true)
+
+    entry = if with_prompt, do: format_log_with_prompt(entry), else: entry
+
+    PubSub.broadcast(
+      Makina.PubSub,
+      "system::service::#{state.service.id}::logs",
+      {:log_entry, IO.chardata_to_string(entry)}
+    )
+  end
+
+  defp format_log_with_prompt(entry) do
+    IO.ANSI.format([
+      :cyan,
+      :bright,
+      "[Makina][InstanceRunner]",
+      " ",
+      entry,
+      "\n\r"
+    ])
   end
 end
