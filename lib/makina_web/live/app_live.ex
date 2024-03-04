@@ -48,6 +48,15 @@ defmodule MakinaWeb.AppLive do
                     </button>
                   </.dropdown_element>
                 </.async_result>
+                <.dropdown_element>
+                  <button
+                    phx-click="delete_app"
+                    data-confirm="Do you really want to delete the app?"
+                    class="py-2 px-3 w-full text-left text-red-600"
+                  >
+                    Delete
+                  </button>
+                </.dropdown_element>
               </:elements>
             </.dropdown>
           </:actions>
@@ -179,6 +188,14 @@ defmodule MakinaWeb.AppLive do
     Runtime.start_app(socket.assigns.app)
 
     socket
+    |> wrap_noreply()
+  end
+
+  def handle_event("delete_app", _data, socket) do
+    Apps.delete_application(socket.assigns.app)
+
+    socket
+    |> push_navigate(to: ~p"/apps")
     |> wrap_noreply()
   end
 

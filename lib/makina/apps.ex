@@ -1,4 +1,5 @@
 defmodule Makina.Apps do
+  alias Makina.Runtime
   alias Phoenix.PubSub
   alias Makina.Repo
 
@@ -18,11 +19,18 @@ defmodule Makina.Apps do
     %Application{}
     |> Application.changeset(attrs)
     |> Repo.insert()
+    |> app_preload()
+    |> start_app()
   end
 
   def change_application(attrs \\ %{}) do
     %Application{}
     |> Application.changeset(attrs)
+  end
+
+  def delete_application(app) do
+    Repo.delete(app)
+    |> stop_app()
   end
 
   def change_service(attrs \\ %{}) do
@@ -111,4 +119,28 @@ defmodule Makina.Apps do
   end
 
   defp notify_config_change({:error, _} = res, _), do: res
+
+  defp app_preload({:ok, %Application{} = app}) do
+    {:ok, Repo.preload(app, @app_preloads)}
+  end
+
+  defp app_preload({:error, _} = res) do
+    res
+  end
+
+  defp start_app({:ok, %Application{} = app} = res) do
+    Runtime.start_app(app)
+
+    res
+  end
+
+  defp start_app({:error, _} = res), do: res
+
+  defp stop_app({:ok, %Application{} = app} = res) do
+    Runtime.stop_app(app.id)
+
+    res
+  end
+
+  defp stop_app({:error, _} = res), do: res
 end

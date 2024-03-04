@@ -74,7 +74,7 @@ defmodule Makina.Runtime do
   >
   > The app is not removed from the tree once stopped.
   """
-  def stop_app(id) do
+  def stop_app(id) when is_integer(id) do
     Supervisor.terminate_child(__MODULE__, app_id(id))
     Supervisor.delete_child(__MODULE__, app_id(id))
     PubSub.broadcast(Makina.PubSub, "app::#{id}", {:app_update, :state, {:stopped}})
