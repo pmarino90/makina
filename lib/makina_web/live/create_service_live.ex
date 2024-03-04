@@ -123,10 +123,10 @@ defmodule MakinaWeb.CreateServiceLive do
     app = socket.assigns.app
 
     case Apps.create_service(Map.put(service, "application_id", app.id)) do
-      {:ok, _service} ->
+      {:ok, service} ->
         socket
         |> put_flash(:info, "Service created")
-        |> push_navigate(to: ~p"/apps/#{app.id}")
+        |> push_navigate(to: ~p"/apps/#{app.id}/services/#{service.id}/logs")
         |> wrap_noreply()
 
       {:error, changeset} ->

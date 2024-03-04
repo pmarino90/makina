@@ -129,6 +129,11 @@ defmodule Makina.Runtime do
     end
   end
 
+  def start_service(app, service) do
+    app_supervisor = app_pid(app.id)
+    Supervisor.start_child(app_supervisor, App.build_child_spec(app, service))
+  end
+
   @doc """
   Stops the runtime
 

@@ -7,7 +7,8 @@ defmodule Makina.Apps do
 
   alias Makina.Apps.{Application, Service, ApiToken}
 
-  @app_preloads [:tokens, services: [:environment_variables, :volumes, :domains]]
+  @service_preloads [:environment_variables, :volumes, :domains]
+  @app_preloads [:tokens, services: @service_preloads]
 
   def list_applications() do
     Application
@@ -19,7 +20,7 @@ defmodule Makina.Apps do
     %Application{}
     |> Application.changeset(attrs)
     |> Repo.insert()
-    |> app_preload()
+    |> preload_app()
     |> start_app()
   end
 
@@ -78,6 +79,8 @@ defmodule Makina.Apps do
     %Service{}
     |> Service.changeset(attrs)
     |> Repo.insert()
+    |> preload_service()
+    |> start_service()
   end
 
   def create_api_token(name, application) do
@@ -120,11 +123,19 @@ defmodule Makina.Apps do
 
   defp notify_config_change({:error, _} = res, _), do: res
 
-  defp app_preload({:ok, %Application{} = app}) do
+  defp preload_app({:ok, %Application{} = app}) do
     {:ok, Repo.preload(app, @app_preloads)}
   end
 
-  defp app_preload({:error, _} = res) do
+  defp preload_app({:error, _} = res) do
+    res
+  end
+
+  defp preload_service({:ok, %Service{} = app}) do
+    {:ok, Repo.preload(app, [:application] ++ @service_preloads)}
+  end
+
+  defp preload_service({:error, _} = res) do
     res
   end
 
@@ -135,6 +146,14 @@ defmodule Makina.Apps do
   end
 
   defp start_app({:error, _} = res), do: res
+
+  defp start_service({:ok, %Service{} = service} = res) do
+    Runtime.start_service(service.application, service)
+
+    res
+  end
+
+  defp start_service({:error, _} = res), do: res
 
   defp stop_app({:ok, %Application{} = app} = res) do
     Runtime.stop_app(app.id)
