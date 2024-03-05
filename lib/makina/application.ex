@@ -11,8 +11,7 @@ defmodule Makina.Application do
       MakinaWeb.Telemetry,
       Makina.Vault,
       Makina.Repo,
-      {Ecto.Migrator,
-       repos: Application.fetch_env!(:makina, :ecto_repos), skip: skip_migrations?()},
+      {Ecto.Migrator, repos: Application.fetch_env!(:makina, :ecto_repos)},
       {DNSCluster, query: Application.get_env(:makina, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Makina.PubSub},
       {Finch, name: Makina.Finch},
@@ -36,10 +35,5 @@ defmodule Makina.Application do
   def config_change(changed, _new, removed) do
     MakinaWeb.Endpoint.config_change(changed, removed)
     :ok
-  end
-
-  defp skip_migrations?() do
-    # By default, sqlite migrations are run when using a release
-    System.get_env("RELEASE_NAME") != nil
   end
 end
