@@ -39,7 +39,7 @@ defmodule MakinaWeb.CreateServiceLive do
             />
             <.input
               :if={normalize_checbox(@form[:is_private_registry].value)}
-              field={f[:image_registry_unsafe_password]}
+              field={f[:image_registry_password]}
               label="Registry Password"
               type="password"
             />

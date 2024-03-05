@@ -12,8 +12,7 @@ defmodule Makina.Runtime.Instance do
   require Logger
 
   alias Phoenix.PubSub
-  alias Makina.Docker
-  alias Makina.Apps
+  alias Makina.{Apps, Docker, Vault}
 
   # Client
 
@@ -435,7 +434,7 @@ defmodule Makina.Runtime.Instance do
   defp build_auth_header(service) do
     auth_obj = %{
       "username" => service.image_registry_user,
-      "password" => service.image_registry_unsafe_password,
+      "password" => Vault.decrypt!(service.image_registry_encrypted_password),
       "serveraddress" => "https://#{service.image_registry}"
     }
 

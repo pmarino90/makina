@@ -52,6 +52,16 @@ config :tailwind,
     cd: Path.expand("../assets", __DIR__)
   ]
 
+config :makina, Makina.Vault,
+  ciphers: [
+    default: {
+      Cloak.Ciphers.AES.GCM,
+      tag: "AES.GCM.V1",
+      key: Base.decode64!("1O5SSsPNkfpkHqPYD/rAgm2fypPEKjvSrCIjvjWb6lc="),
+      iv_length: 12
+    }
+  ]
+
 # Configures Elixir's Logger
 config :logger, :console,
   format: "$time $metadata[$level] $message\n",

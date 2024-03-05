@@ -7,10 +7,9 @@ defmodule Makina.Application do
 
   @impl true
   def start(_type, _args) do
-    Makina.Release.migrate()
-
     children = [
       MakinaWeb.Telemetry,
+      Makina.Vault,
       Makina.Repo,
       {Ecto.Migrator,
        repos: Application.fetch_env!(:makina, :ecto_repos), skip: skip_migrations?()},

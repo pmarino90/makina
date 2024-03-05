@@ -60,7 +60,8 @@ defmodule Makina.MixProject do
       {:dns_cluster, "~> 0.1.1"},
       {:bandit, "~> 1.2"},
       {:req, "~> 0.4.0"},
-      {:slugy, "~> 4.1.1"}
+      {:slugy, "~> 4.1.1"},
+      {:cloak, "1.1.1"}
     ]
   end
 

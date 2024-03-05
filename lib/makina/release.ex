@@ -13,6 +13,13 @@ defmodule Makina.Release do
     end
   end
 
+  def migrate_data(opts \\ [all: true]) do
+    for repo <- repos() do
+      path = Ecto.Migrator.migrations_path(repo, "data_migrations")
+      {:ok, _, _} = Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, path, :up, opts))
+    end
+  end
+
   def rollback(repo, version) do
     load_app()
     {:ok, _, _} = Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :down, to: version))
