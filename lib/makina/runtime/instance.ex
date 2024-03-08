@@ -212,6 +212,12 @@ defmodule Makina.Runtime.Instance do
   end
 
   @doc false
+  def handle_info({:EXIT, _pid, :normal}, _state) do
+    Logger.warning("Log collect Task terminatad, attached container may not be available.")
+    raise "Attached container crashed or has been terminated unexpectedly"
+  end
+
+  @doc false
   def handle_info({:EXIT, _ref, :redeploy}, state) do
     handle_shutdown(state)
 
@@ -455,9 +461,12 @@ defmodule Makina.Runtime.Instance do
       {:cont, {req, res}}
     end
 
-    Task.Supervisor.start_child(Makina.Runtime.TaskSupervisor, fn ->
-      Docker.logs_for_container(state.container_name, entry_collector)
-    end)
+    {:ok, pid} =
+      Task.Supervisor.start_child(Makina.Runtime.TaskSupervisor, fn ->
+        Docker.logs_for_container(state.container_name, entry_collector)
+      end)
+
+    Process.link(pid)
 
     state
   end
