@@ -109,6 +109,8 @@ defmodule Makina.Docker do
 
   def list_images(), do: client() |> Req.get!(url: "/images/json", params: [all: true])
 
+  def inspect_image(name_or_id), do: client() |> Req.get!(url: "/images/#{name_or_id}/json")
+
   def create_volume(name),
     do: client() |> Req.post!(url: "/volumes/create", json: %{"Name" => name})
 

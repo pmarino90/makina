@@ -11,6 +11,7 @@ defmodule Makina.Runtime.Instance do
 
   require Logger
 
+  alias ElixirSense.Core.Struct
   alias Phoenix.PubSub
   alias Makina.{Apps, Docker, Vault}
 
@@ -92,8 +93,10 @@ defmodule Makina.Runtime.Instance do
   def handle_cast(:pull_image, state) do
     log(state, "Pulling image...")
 
-    state
-    |> pull_image()
+    state =
+      state
+      |> pull_image()
+      |> maybe_detect_exposed_port()
 
     {:noreply, %{state | running_state: :image_pull}}
   end
@@ -275,6 +278,31 @@ defmodule Makina.Runtime.Instance do
     end)
 
     state
+  end
+
+  defp maybe_detect_exposed_port(%{service: service} = state) do
+    image_info =
+      full_image_reference(service)
+      |> Docker.inspect_image()
+
+    exposed_ports =
+      image_info.body
+      |> get_in(["Config", "ExposedPorts"])
+
+    if exposed_ports != nil do
+      ports =
+        exposed_ports
+        |> Map.keys()
+        |> Enum.map(fn port_and_proto ->
+          [port, _proto] = String.split(port_and_proto, "/")
+
+          port
+        end)
+
+      %{state | running_port: hd(ports)}
+    else
+      state
+    end
   end
 
   defp create_container(%{app: app, service: service} = state) do
