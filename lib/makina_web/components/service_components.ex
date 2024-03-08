@@ -12,8 +12,9 @@ defmodule MakinaWeb.ServiceComponents do
     ~H"""
     <.inputs_for :let={f_env} field={@form}>
       <input type="hidden" class="hidden" name="service[envs_sort][]" value={f_env.index} />
-      <div class="flex space-x-2">
+      <div class="flex space-x-2 items-end">
         <.input type="text" field={f_env[:name]} placeholder="name" />
+        <.input type="select" field={f_env[:type]} options={["Plain Text": :plain, Secret: :secret]} />
         <.input type="text" field={f_env[:value]} placeholder="value" />
         <button
           name="service[envs_drop][]"
@@ -30,7 +31,7 @@ defmodule MakinaWeb.ServiceComponents do
     <input type="hidden" name="service[envs_drop][]" />
     <button
       type="button"
-      class="w-max py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-white dark:hover:bg-gray-800 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+      class="w-max mt-3 py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-white dark:hover:bg-gray-800 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
       name="service[envs_sort][]"
       value="new"
       phx-click={JS.dispatch("change")}
@@ -139,5 +140,12 @@ defmodule MakinaWeb.ServiceComponents do
       Save
     </.button>
     """
+  end
+
+  def display_env_var_value(var) do
+    case var.type do
+      :plain -> var.text_value
+      :secret -> "*********"
+    end
   end
 end

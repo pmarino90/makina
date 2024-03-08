@@ -99,7 +99,11 @@ defmodule Makina.Apps do
   Returns a service given its id
   """
   def get_service!(id),
-    do: Service |> preload([:domains, :environment_variables, :volumes]) |> Repo.get!(id)
+    do:
+      Service
+      |> preload([:domains, :environment_variables, :volumes])
+      |> Repo.get!(id)
+      |> put_env_value()
 
   def get_app!(id), do: Application |> preload(^@app_preloads) |> Repo.get!(id)
 
@@ -162,4 +166,17 @@ defmodule Makina.Apps do
   end
 
   defp stop_app({:error, _} = res), do: res
+
+  defp put_env_value(service) do
+    vars =
+      service.environment_variables
+      |> Enum.map(fn var ->
+        case var.type do
+          :plain -> Map.put(var, :value, var.text_value)
+          :secret -> Map.put(var, :value, "*****")
+        end
+      end)
+
+    Map.put(service, :environment_variables, vars)
+  end
 end

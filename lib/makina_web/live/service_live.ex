@@ -178,7 +178,7 @@ defmodule MakinaWeb.ServiceLive do
                     :for={var <- @service.environment_variables}
                     class="inline-flex items-center gap-x-2 py-3 px-4 text-sm font-medium text-gray-800 dark:text-white"
                   >
-                    <%= "#{var.name} = #{var.value}" %>
+                    <%= "#{var.name} = #{ServiceComponents.display_env_var_value(var)}" %>
                   </li>
                 </ul>
               </div>

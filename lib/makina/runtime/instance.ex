@@ -333,12 +333,19 @@ defmodule Makina.Runtime.Instance do
   defp build_env_variables(%{service: service, running_port: port}) do
     vars =
       service.environment_variables
-      |> Enum.map(fn e -> "#{e.name}=#{e.value}" end)
+      |> Enum.map(fn e -> "#{e.name}=#{get_env_variable_value(e)}" end)
 
     if service.expose_service do
       ["PORT=#{port}"] ++ vars
     else
       vars
+    end
+  end
+
+  defp get_env_variable_value(var) do
+    case var.type do
+      :secret -> Vault.decrypt!(var.encrypted_value)
+      _ -> var.text_value
     end
   end
 
