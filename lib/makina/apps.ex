@@ -34,6 +34,11 @@ defmodule Makina.Apps do
     |> stop_app()
   end
 
+  def delete_service(service) do
+    Repo.delete(service)
+    |> stop_service()
+  end
+
   def change_service(attrs \\ %{}) do
     %Service{}
     |> Service.changeset(attrs)
@@ -166,6 +171,14 @@ defmodule Makina.Apps do
   end
 
   defp stop_app({:error, _} = res), do: res
+
+  defp stop_service({:ok, %Service{} = service} = res) do
+    Runtime.stop_service(service)
+
+    res
+  end
+
+  defp stop_service({:error, _} = res), do: res
 
   defp put_env_value(service) do
     vars =

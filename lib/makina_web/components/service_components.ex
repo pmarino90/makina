@@ -126,7 +126,14 @@ defmodule MakinaWeb.ServiceComponents do
       Edit
     </.button>
 
-    <.button :if={@edit_mode == @section} type="button" level="secondary" phx-click="cancel_edit">
+    <.button
+      :if={@edit_mode == @section}
+      data-controller="hotkey"
+      data-hotkey="Escape"
+      type="button"
+      level="secondary"
+      phx-click="cancel_edit"
+    >
       Cancel
     </.button>
 

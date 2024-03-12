@@ -11,7 +11,6 @@ defmodule Makina.Runtime.Instance do
 
   require Logger
 
-  alias ElixirSense.Core.Struct
   alias Phoenix.PubSub
   alias Makina.{Apps, Docker, Vault}
 

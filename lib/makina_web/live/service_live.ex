@@ -53,11 +53,13 @@ defmodule MakinaWeb.ServiceLive do
                 "py-3 px-4 inline-flex items-center gap-x-2 bg-transparent text-sm text-gray-500 hover:text-gray-700 font-medium rounded-lg hover:hover:text-blue-600 disabled:opacity-50 disabled:pointer-events-none dark:text-gray-400 dark:hover:text-white active"
               ]}
               id="tab-settings"
+              data-controller="hotkey"
+              data-hotkey="s"
               aria-controls="settings"
               role="tab"
               patch={~p"/apps/#{@app.id}/services/#{@service.id}/"}
             >
-              Settings
+              Settings <kbd class="text-xs font-mono bg-slate-100 px-1">s</kbd>
             </.link>
             <.link
               type="button"
@@ -66,12 +68,14 @@ defmodule MakinaWeb.ServiceLive do
                   "bg-white text-gray-700 dark:text-gray-400 dark:bg-gray-800",
                 "py-3 px-4 inline-flex items-center gap-x-2 bg-transparent text-sm text-gray-500 hover:text-gray-700 font-medium rounded-lg hover:hover:text-blue-600 disabled:opacity-50 disabled:pointer-events-none dark:text-gray-400 dark:hover:text-white"
               ]}
+              data-controller="hotkey"
+              data-hotkey="l"
               id="tab-logs"
               aria-controls="logs"
               role="tab"
               patch={~p"/apps/#{@app.id}/services/#{@service.id}/logs"}
             >
-              Logs
+              Logs <kbd class="text-xs font-mono bg-slate-100 px-1">l</kbd>
             </.link>
           </nav>
         </div>
@@ -220,6 +224,40 @@ defmodule MakinaWeb.ServiceLive do
                   </li>
                 </ul>
               </div>
+            </section>
+            <section class={[
+              not is_nil(@edit_mode) && "opacity-50"
+            ]}>
+              <.header level="h4" text_class="text-lg">
+                Service Lifecycle
+                <:subtitle>
+                  Turn off, restart or delete your service
+                </:subtitle>
+              </.header>
+              <ol class="flex mt-2 space-x-3">
+                <li>
+                  <.async_result :let={status} assign={@service_running_state}>
+                    <:loading>
+                      <.status_indicator status="loading" />
+                    </:loading>
+                    <.button :if={status == :running} level="secondary" phx-click="stop_service">
+                      Stop
+                    </.button>
+                    <.button :if={status != :running} level="secondary" phx-click="start_service">
+                      Start
+                    </.button>
+                  </.async_result>
+                </li>
+                <li>
+                  <.button
+                    level="secondary"
+                    phx-click="delete_service"
+                    data-confirm="Are you sure you want to delete the current service?"
+                  >
+                    Delete
+                  </.button>
+                </li>
+              </ol>
             </section>
           </section>
         </div>
@@ -380,6 +418,28 @@ defmodule MakinaWeb.ServiceLive do
     socket
     |> assign(form: nil)
     |> assign(edit_mode: nil)
+    |> wrap_noreply()
+  end
+
+  def handle_event("stop_service", _data, socket) do
+    Runtime.stop_service(socket.assigns.service)
+
+    socket
+    |> wrap_noreply()
+  end
+
+  def handle_event("start_service", _data, socket) do
+    Runtime.start_service(socket.assigns.app, socket.assigns.service)
+
+    socket
+    |> wrap_noreply()
+  end
+
+  def handle_event("delete_service", _data, socket) do
+    Apps.delete_service(socket.assigns.service)
+
+    socket
+    |> push_navigate(to: ~p"/apps/#{socket.assigns.app.id}")
     |> wrap_noreply()
   end
 

@@ -11,6 +11,7 @@ import topbar from "../vendor/topbar";
 
 import GlobalSocketHook from "./hooks/global_socket_hook";
 import XtermController from "./controllers/xterm_controller";
+import HotkeyController from "./controllers/hotkey_controller";
 
 let csrfToken = document
   .querySelector("meta[name='csrf-token']")
@@ -35,6 +36,7 @@ window.addEventListener("phx:page-loading-stop", (_info) =>
 const Stimulus = Application.start();
 
 Stimulus.register("xterm", XtermController);
+Stimulus.register("hotkey", HotkeyController);
 
 // connect if there are any LiveViews on the page
 liveSocket.connect();
