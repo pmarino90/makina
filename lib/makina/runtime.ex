@@ -130,8 +130,21 @@ defmodule Makina.Runtime do
   end
 
   def start_service(app, service) do
-    app_supervisor = app_pid(app.id)
+    app_supervisor = app_pid(service.application_id)
     Supervisor.start_child(app_supervisor, App.build_child_spec(app, service))
+  end
+
+  def stop_service(service) do
+    app_supervisor = app_pid(service.application_id)
+
+    Supervisor.terminate_child(app_supervisor, "service_#{service.id}")
+    Supervisor.delete_child(app_supervisor, "service_#{service.id}")
+
+    PubSub.broadcast(
+      Makina.PubSub,
+      "app::#{service.application_id}",
+      {:service_update, :state, {:stopped, service}}
+    )
   end
 
   @doc """
