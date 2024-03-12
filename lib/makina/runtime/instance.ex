@@ -92,10 +92,8 @@ defmodule Makina.Runtime.Instance do
   def handle_cast(:pull_image, state) do
     log(state, "Pulling image...")
 
-    state =
-      state
-      |> pull_image()
-      |> maybe_detect_exposed_port()
+    state
+    |> pull_image()
 
     {:noreply, %{state | running_state: :image_pull}}
   end
@@ -125,8 +123,10 @@ defmodule Makina.Runtime.Instance do
   def handle_cast(:network_connect_web, state) do
     log(state, "Connecting container to web network...")
 
-    state
-    |> connect_to_web_network()
+    state =
+      state
+      |> connect_to_web_network()
+      |> maybe_detect_exposed_port()
 
     continue(self())
 
@@ -280,6 +280,8 @@ defmodule Makina.Runtime.Instance do
   end
 
   defp maybe_detect_exposed_port(%{service: service} = state) do
+    Logger.info("Detecting exposed port")
+
     image_info =
       full_image_reference(service)
       |> Docker.inspect_image()
@@ -298,7 +300,11 @@ defmodule Makina.Runtime.Instance do
           port
         end)
 
-      %{state | running_port: hd(ports)}
+      port = hd(ports)
+
+      log(state, "Detected exposed port: #{port}")
+
+      %{state | running_port: port}
     else
       state
     end
