@@ -112,8 +112,10 @@ defmodule Makina.Runtime.Instance do
   def handle_cast(:create_container, state) do
     log(state, "Creating container...")
 
-    state
-    |> create_container()
+    state =
+      state
+      |> maybe_detect_exposed_port()
+      |> create_container()
 
     continue(self())
 
@@ -123,10 +125,8 @@ defmodule Makina.Runtime.Instance do
   def handle_cast(:network_connect_web, state) do
     log(state, "Connecting container to web network...")
 
-    state =
-      state
-      |> connect_to_web_network()
-      |> maybe_detect_exposed_port()
+    state
+    |> connect_to_web_network()
 
     continue(self())
 
