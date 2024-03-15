@@ -48,6 +48,10 @@ if config_env() == :prod do
 
   config :makina, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
 
+  runtime_enable_https = System.get_env("RUNTIME_ENABLE_HTTPS", "true") == "true"
+
+  config :makina, Makina.Runtime, enable_https: runtime_enable_https
+
   config :makina, MakinaWeb.Endpoint,
     url: [host: nil, port: 443, scheme: "https"],
     http: [
