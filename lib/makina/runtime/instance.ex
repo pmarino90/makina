@@ -13,7 +13,6 @@ defmodule Makina.Runtime.Instance do
 
   alias Phoenix.PubSub
   alias Makina.{Apps, Vault}
-  alias Makina.Docker.Client, as: Docker
 
   # Client
 
@@ -242,9 +241,9 @@ defmodule Makina.Runtime.Instance do
   end
 
   defp handle_shutdown(state) do
-    Docker.stop_container!(state.container_name)
-    Docker.wait_for_container!(state.container_name)
-    Docker.remove_container!(state.container_name)
+    docker_client().stop_container!(state.container_name)
+    docker_client().wait_for_container!(state.container_name)
+    docker_client().remove_container!(state.container_name)
 
     notify_running_state(state, :stopped)
 
@@ -273,7 +272,7 @@ defmodule Makina.Runtime.Instance do
     Task.Supervisor.start_child(Makina.Runtime.TaskSupervisor, fn ->
       [instance_pid] = Process.get(:"$callers")
 
-      Docker.pull_image!(params)
+      docker_client().pull_image!(params)
       GenServer.cast(instance_pid, :continue)
     end)
 
@@ -285,7 +284,7 @@ defmodule Makina.Runtime.Instance do
 
     image_info =
       full_image_reference(service)
-      |> Docker.inspect_image!()
+      |> docker_client().inspect_image!()
 
     exposed_ports =
       image_info.body
@@ -315,7 +314,7 @@ defmodule Makina.Runtime.Instance do
     Logger.info("Creating container #{state.container_name}")
 
     state.container_name
-    |> Docker.create_container!(%{
+    |> docker_client().create_container!(%{
       "Image" => full_image_reference(service),
       "Env" => build_env_variables(state),
       "Tty" => true,
@@ -333,7 +332,7 @@ defmodule Makina.Runtime.Instance do
     Logger.info("Starting container #{state.container_name}")
 
     state.container_name
-    |> Docker.start_container!()
+    |> docker_client().start_container!()
 
     state
   end
@@ -343,7 +342,7 @@ defmodule Makina.Runtime.Instance do
     stale_name = "#{name}_stale"
 
     name
-    |> Docker.rename_container!(stale_name)
+    |> docker_client().rename_container!(stale_name)
 
     %{state | container_name: stale_name}
   end
@@ -351,19 +350,19 @@ defmodule Makina.Runtime.Instance do
   defp create_app_network(%{app: app} = state) do
     network_name = "#{app.slug}-network"
 
-    case Docker.inspect_network(network_name) do
+    case docker_client().inspect_network(network_name) do
       {:ok, _network_data} ->
         state
 
       {:error, _} ->
-        Docker.create_network!(network_name)
+        docker_client().create_network!(network_name)
         state
     end
   end
 
   defp connect_to_web_network(%{service: service} = state) do
     if service.expose_service do
-      Docker.connect_network!(state.container_name, "makina_web-net")
+      docker_client().connect_network!(state.container_name, "makina_web-net")
       state
     else
       state
@@ -497,7 +496,7 @@ defmodule Makina.Runtime.Instance do
 
     {:ok, pid} =
       Task.Supervisor.start_child(Makina.Runtime.TaskSupervisor, fn ->
-        Docker.logs_for_container!(state.container_name, entry_collector)
+        docker_client().logs_for_container!(state.container_name, entry_collector)
       end)
 
     Process.link(pid)
@@ -526,5 +525,11 @@ defmodule Makina.Runtime.Instance do
       entry,
       "\n\r"
     ])
+  end
+
+  defp docker_client() do
+    config = Application.get_env(:makina, Makina.Runtime)
+
+    Keyword.fetch!(config, :instance_runtime)
   end
 end
