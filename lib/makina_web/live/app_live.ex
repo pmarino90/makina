@@ -198,7 +198,7 @@ defmodule MakinaWeb.AppLive do
     Apps.delete_application(socket.assigns.app)
 
     socket
-    |> push_navigate(to: ~p"/apps")
+    |> push_navigate(to: ~p"/")
     |> wrap_noreply()
   end
 
