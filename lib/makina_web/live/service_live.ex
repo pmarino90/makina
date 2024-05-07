@@ -14,7 +14,7 @@ defmodule MakinaWeb.ServiceLive do
     ~H"""
     <div class="flex flex-col space-y-5">
       <.breadcrumb>
-        <:crumb navigate={~p"/apps"}>
+        <:crumb navigate={~p"/"}>
           Apps
         </:crumb>
         <:crumb navigate={~p"/apps/#{@app.id}"}>

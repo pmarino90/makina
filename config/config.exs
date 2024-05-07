@@ -7,6 +7,8 @@
 # General application configuration
 import Config
 
+config :makina, Makina.Runtime, instance_runtime: Makina.Docker.Client
+
 config :makina,
   ecto_repos: [Makina.Repo],
   generators: [timestamp_type: :utc_datetime]

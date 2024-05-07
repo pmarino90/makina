@@ -25,18 +25,12 @@ defmodule MakinaWeb.Router do
     post "/apps/:app_id/services/:service_id/redeploy", ApiController, :service_redeploy
   end
 
-  scope "/", MakinaWeb do
-    pipe_through :browser
-
-    get "/", PageController, :home
-  end
-
   # Authenticated paths
   scope "/", MakinaWeb do
     pipe_through [:browser, :require_authenticated_user]
 
     live_session :user, on_mount: [{MakinaWeb.UserAuth, :ensure_authenticated}] do
-      live "/apps", AppsLive
+      live "/", AppsLive
       live "/apps/create", CreateAppLive
       live "/apps/:id", AppLive
       live "/apps/:app_id/services/create", CreateServiceLive
