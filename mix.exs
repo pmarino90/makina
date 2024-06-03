@@ -59,7 +59,7 @@ defmodule Makina.MixProject do
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.1.1"},
       {:bandit, "~> 1.2"},
-      {:req, "~> 0.4.0"},
+      {:req, "~> 0.5.0"},
       {:slugy, "~> 4.1.1"},
       {:cloak, "1.1.4"},
       {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false}
