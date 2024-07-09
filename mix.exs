@@ -62,7 +62,8 @@ defmodule Makina.MixProject do
       {:req, "~> 0.5.0"},
       {:slugy, "~> 4.1.1"},
       {:cloak, "1.1.4"},
-      {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false}
+      {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
+      {:ex_doc, "~> 0.31", only: :dev, runtime: false}
     ]
   end
 

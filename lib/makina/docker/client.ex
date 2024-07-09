@@ -63,23 +63,22 @@ defmodule Makina.Docker.Client do
       |> as_nil()
 
   @impl true
-  def pull_image!(params) when is_list(params) do
+  def create_image(params) when is_list(params) do
     docker_params = Keyword.get(params, :docker)
     on_progress = Keyword.get(params, :on_progress, nil)
 
     client()
-    |> Req.post!(
+    |> Req.post(
       url: "/images/create",
       headers: params[:headers] || [],
       params: docker_params,
       into: on_progress,
       raw: true
     )
-    |> as_nil()
   end
 
   @impl true
-  def inspect_image!(name_or_id), do: client() |> Req.get!(url: "/images/#{name_or_id}/json")
+  def inspect_image(name_or_id), do: client() |> Req.get(url: "/images/#{name_or_id}/json")
 
   @impl true
   def create_volume!(name),
@@ -111,7 +110,7 @@ defmodule Makina.Docker.Client do
   # Service endpoints
 
   @impl true
-  def ping!(), do: client() |> Req.get!(url: "/_ping") |> as_nil()
+  def ping(), do: client() |> Req.get(url: "/_ping")
 
   defp client() do
     config = Application.get_env(:makina, Makina.Docker, [])
