@@ -3,7 +3,7 @@ import Config
 # Only in tests, remove the complexity from the password hashing algorithm
 config :bcrypt_elixir, :log_rounds, 1
 
-config :makina, Makina.Docker, socket_path: "/Users/paolomarino/.orbstack/run/docker.sock"
+config :makina, Makina.Runtime, instance_runtime: Makina.Docker.TestClient
 
 # Configure your database
 #
