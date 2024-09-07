@@ -1,8 +1,6 @@
 defmodule :"Elixir.Makina.Repo.Migrations.Migrate-env-value-to-text-value" do
   use Ecto.Migration
 
-  alias Ecto.Changeset
-
   import Ecto.Query
 
   def up do
