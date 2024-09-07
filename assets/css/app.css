@@ -1,0 +1,37 @@
+@import "tailwindcss/base";
+@import "tailwindcss/components";
+@import "tailwindcss/utilities";
+@import "@xterm/xterm/css/xterm.css";
+
+.phx-click-loading #block-add-info {
+    display: none;
+}
+
+.logo {
+    background: #1246ff;
+    background: linear-gradient(
+        to right,
+        #1246ff 0%,
+        #df2bff 50%,
+        #ff2d93 100%
+    );
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: #ff2d93;
+    text-transform: capitalize;
+}
+
+.dot {
+    content: " ";
+    display: block;
+    background-color: gray;
+    border-radius: 9999999px;
+    height: 12px;
+    width: 12px;
+}
+
+.dot.small,
+.spinner-border.small {
+    height: 12px;
+    width: 12px;
+}
