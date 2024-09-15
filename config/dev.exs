@@ -63,6 +63,16 @@ config :makina, MakinaWeb.Endpoint,
     ]
   ]
 
+config :makina, Makina.Vault,
+  ciphers: [
+    default: {
+      Cloak.Ciphers.AES.GCM,
+      tag: "AES.GCM.V1",
+      key: Base.decode64!("1O5SSsPNkfpkHqPYD/rAgm2fypPEKjvSrCIjvjWb6lc="),
+      iv_length: 12
+    }
+  ]
+
 # Enable dev routes for dashboard and mailbox
 config :makina, dev_routes: true
 

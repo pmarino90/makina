@@ -64,6 +64,20 @@ if config_env() == :prod do
     ],
     secret_key_base: secret_key_base
 
+  makina_vault_key =
+    System.get_env("MAKINA_VAULT_CURRENT_KEY") ||
+      raise """
+            Environment variable MAKINA_VAULT_CURRENT_SECRET is missing.
+      """
+
+  config :makina, Makina.Vault,
+    ciphers: [
+      default: {
+        Cloak.Ciphers.AES.GCM,
+        tag: "AES.GCM.V1", key: Base.decode64!(makina_vault_key), iv_length: 12
+      }
+    ]
+
   # ## SSL Support
   #
   # To get SSL working, you will need to add the `https` key
