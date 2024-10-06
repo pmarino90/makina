@@ -1,0 +1,80 @@
+# Example docker compose to run Makina from the main build
+
+version: "3"
+
+services:
+  reverse-proxy:
+    # The official v2 Traefik docker image
+    image: traefik:v2.11
+    restart: unless-stopped
+    # Enables the web UI and tells Traefik to listen to docker
+    command:
+      - --entryPoints.web.address=:80
+      - --entryPoints.web.http.redirections.entryPoint.to=websecure
+      - --entryPoints.web.http.redirections.entryPoint.permanent=true
+      - --entryPoints.web.http.redirections.entryPoint.scheme=https
+      - --entryPoints.websecure.address=:443
+      - --api.insecure=true
+      - --providers.docker
+      - --providers.docker.exposedByDefault=false
+      - --providers.docker.network=makina_web-net
+      - --certificatesResolvers.letsencrypt.acme.email=<email>
+      - --certificatesResolvers.letsencrypt.acme.storage=acme.json
+      - --certificatesResolvers.letsencrypt.acme.keyType=EC384
+      - --certificatesResolvers.letsencrypt.acme.httpChallenge.entryPoint=web
+    ports:
+      # The HTTP port
+      - "80:80"
+      - "443:443"
+      # The Web UI (enabled by --api.insecure=true)
+      - "8080:8080"
+
+    networks:
+      - web-net
+
+    volumes:
+      # So that Traefik can listen to the Docker events
+      - /var/run/docker.sock:/var/run/docker.sock
+      - <local-path>/acme.json:/acme.json
+
+  # When running on a raspberryPi this can be useful to announce exposed instances 
+  # in the local network.
+  # mdns-helper:
+  #   image: hardillb/traefik-avahi-
+  #   restart: unless-stopped
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #     - /run/dbus/system_bus_socket:/run/dbus/system_bus_socket
+
+  makina:
+    image: "ghcr.io/pmarino90/makina:main"
+    restart: unless-stopped
+    ports:
+      - "4000:4000"
+    networks:
+      - web-net
+
+    environment:
+      - SECRET_KEY_BASE=<SECRET KEY BASE>
+      - DATABASE_PATH=/app/data/makina_prod.db
+      - MAKINA_VAULT_CURRENT_KEY=<BASE64 ENCODED SECRET>
+
+    volumes:
+      # So that Traefik can listen to the Docker events
+      - /var/run/docker.sock:/var/run/docker.sock
+      - "makina-data:/app/data"
+
+    labels:
+      traefik.docker.network: web-net
+      traefik.enable: "true"
+      traefik.http.routers.makina.entrypoints: websecure
+      traefik.http.routers.makina.rule: Host(`<DOMAIN>`)
+      traefik.http.services.makina.loadbalancer.server.port: 4000
+      traefik.http.routers.makina.tls.certresolver: letsencrypt
+
+networks:
+  web-net:
+    driver: bridge
+
+volumes:
+  makina-data:
