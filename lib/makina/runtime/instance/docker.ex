@@ -80,11 +80,13 @@ defmodule Makina.Runtime.Instance.Docker do
     network_name = state.assigns.network_name
 
     case Docker.inspect_network(network_name) do
-      {:ok, _network_data} ->
+      {:ok, %Req.Response{status: 404}} ->
+        Logger.info("Creating network for Stack")
+        Docker.create_network!(network_name)
         state
 
-      {:error, _} ->
-        Docker.create_network!(network_name)
+      {:ok, _network_data} ->
+        Logger.info("Stack's network exists, skip creation")
         state
     end
   end
@@ -125,6 +127,23 @@ defmodule Makina.Runtime.Instance.Docker do
 
     container_name
     |> Docker.start_container!()
+
+    state
+  end
+
+  defp monitor_and_collect_console_out(state) do
+    entry_collector = fn {:data, data}, {req, res} ->
+      # log(state, data, with_prompt: false)
+
+      {:cont, {req, res}}
+    end
+
+    {:ok, pid} =
+      Task.Supervisor.start_child(Makina.Runtime.TaskSupervisor, fn ->
+        Docker.logs_for_container!(state.container_name, entry_collector)
+      end)
+
+    Process.link(pid)
 
     state
   end
