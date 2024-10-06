@@ -36,8 +36,13 @@ defmodule Makina.Runtime.Instance.Docker do
     |> monitor_and_collect_console_out()
   end
 
-  def on_stop(_args), do: raise("Not Implemented")
-  def expose_instance(_args), do: raise("Not Implemented")
+  def on_stop(%State{assigns: assigns} = state) do
+    Docker.stop_container!(assigns.container_name)
+    Docker.wait_for_container!(assigns.container_name)
+    Docker.remove_container!(assigns.container_name)
+
+    state
+  end
 
   defp fetch_dependencies(%{service: service} = state) do
     progress_update = fn {:data, data}, {req, res} ->

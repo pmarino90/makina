@@ -24,12 +24,6 @@ defmodule Makina.Runtime.Instance do
   @callback configure(State.t()) :: State.t()
 
   @doc """
-  A service may required to be exposed to the web. This might mean to configure the runtime
-  so that traffic can reach the running instance.
-  """
-  @callback expose_instance(State.t()) :: State.t()
-
-  @doc """
   Callback run before the start callback is run. This can be a good place where
   to prepare the environment needed by the start callback.
   """
@@ -127,6 +121,9 @@ defmodule Makina.Runtime.Instance do
             name: {:via, Registry, {Makina.Runtime.Registry, full_instance_name(service_id)}}
           )
 
+      @doc false
+      def terminate(_reason, state), do: shutdown(state)
+
       defp full_instance_name(service_id), do: "service-#{service_id}-instance-1"
 
       defp update_running_state(%State{} = state, running_state) do
@@ -156,26 +153,29 @@ defmodule Makina.Runtime.Instance do
         end)
       end
 
-      def handle_info({:DOWN, ref, :process, _pid, _reason}, state) do
-        if ref == state.monitor_ref, do: on_stop(state)
+      defp shutdown(state) do
+        log(state, "Shutting down instance")
+
+        state =
+          state
+          |> update_running_state(:stopping)
+          |> on_stop()
+
+        {:noreply, %{state | running_state: :stopped}}
       end
 
-      @doc false
-      def handle_info({:EXIT, _ref, :process, _pid, _reason}, state) do
+      def handle_info({:DOWN, _ref, :process, _pid, _reason}, state) do
         on_stop(state)
+      end
+
+      def handle_info({:EXIT, _from, _reason}, state) do
+        Logger.info("Genserver shtting down")
       end
 
       @doc false
       def handle_info({:EXIT, _pid, :normal}, _state) do
         Logger.warning("Log collect Task terminatad, attached container may not be available.")
         raise "Attached container crashed or has been terminated unexpectedly"
-      end
-
-      @doc false
-      def handle_info({:EXIT, _ref, :restart}, state) do
-        on_stop(state)
-
-        raise "Restart"
       end
 
       def handle_info({:config_update, _section, _service}, state) do
