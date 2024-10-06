@@ -28,6 +28,14 @@ defmodule Makina.Runtime.Instance.Infrastructure do
     if global_log, do: Logger.info(entry)
   end
 
+  def publish_running_state(state, running_state) do
+    PubSub.broadcast(
+      Makina.PubSub,
+      "stack::#{state.stack.id}",
+      {:service_update, :state, {running_state, state.service}}
+    )
+  end
+
   defp format_log_with_prompt(entry) do
     IO.ANSI.format([
       :cyan,

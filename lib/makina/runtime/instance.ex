@@ -193,6 +193,7 @@ defmodule Makina.Runtime.Instance do
       end
 
       def handle_cast({:update_running_state, running_state}, state) do
+        Infrastructure.publish_running_state(state, running_state)
         {:noreply, %State{state | running_state: running_state}}
       end
 
