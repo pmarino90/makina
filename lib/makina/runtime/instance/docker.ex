@@ -31,12 +31,17 @@ defmodule Makina.Runtime.Instance.Docker do
     |> start_container()
   end
 
+  def after_run(%State{} = state) do
+    state
+    |> monitor_and_collect_console_out()
+  end
+
   def on_stop(_args), do: raise("Not Implemented")
   def expose_instance(_args), do: raise("Not Implemented")
 
   defp fetch_dependencies(%{service: service} = state) do
     progress_update = fn {:data, data}, {req, res} ->
-      log(:info, data)
+      log(state, data)
 
       {:cont, {req, res}}
     end
@@ -81,12 +86,12 @@ defmodule Makina.Runtime.Instance.Docker do
 
     case Docker.inspect_network(network_name) do
       {:ok, %Req.Response{status: 404}} ->
-        Logger.info("Creating network for Stack")
+        log(state, "Creating network for Stack")
         Docker.create_network!(network_name)
         state
 
       {:ok, _network_data} ->
-        Logger.info("Stack's network exists, skip creation")
+        log(state, "Stack's network exists, skip creation")
         state
     end
   end
@@ -101,7 +106,7 @@ defmodule Makina.Runtime.Instance.Docker do
   end
 
   defp create_container(%State{service: service, assigns: assigns} = state) do
-    Logger.info("Creating container #{assigns.container_name}")
+    log(state, "Creating container #{assigns.container_name}")
 
     network_name = assigns.network_name
 
@@ -123,7 +128,7 @@ defmodule Makina.Runtime.Instance.Docker do
   defp start_container(state) do
     container_name = state.assigns.container_name
 
-    Logger.info("Starting container #{container_name}")
+    log(state, "Starting container #{container_name}")
 
     container_name
     |> Docker.start_container!()
@@ -133,14 +138,14 @@ defmodule Makina.Runtime.Instance.Docker do
 
   defp monitor_and_collect_console_out(state) do
     entry_collector = fn {:data, data}, {req, res} ->
-      # log(state, data, with_prompt: false)
+      log(state, data, with_prompt: false, global_log: false)
 
       {:cont, {req, res}}
     end
 
     {:ok, pid} =
       Task.Supervisor.start_child(Makina.Runtime.TaskSupervisor, fn ->
-        Docker.logs_for_container!(state.container_name, entry_collector)
+        Docker.logs_for_container!(state.assigns.container_name, entry_collector)
       end)
 
     Process.link(pid)

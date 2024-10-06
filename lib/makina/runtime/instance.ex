@@ -46,9 +46,12 @@ defmodule Makina.Runtime.Instance do
                       before_stop: 1,
                       after_stop: 1
 
-  def log(level, message_or_fn) do
-    Logger.log(level, message_or_fn)
-  end
+  @doc """
+  Defines a unified log entry point.
+  This function can both log into Makina's console and also the container's 
+  log stream (generally visible from the Web UI.
+  """
+  defdelegate log(state, entry, opts \\ []), to: Infrastructure
 
   def assign(%State{} = state, key_value_pairs) do
     assigns = Enum.into(key_value_pairs, %{})
