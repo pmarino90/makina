@@ -11,6 +11,8 @@ defmodule Makina.Runtime.Instance.State do
             running_port: 0,
             running_state: :new,
             auto_boot: true,
+            monitor_ref: nil,
+            pid: nil,
             assigns: %{}
 
   @type t :: %__MODULE__{
@@ -20,6 +22,8 @@ defmodule Makina.Runtime.Instance.State do
           running_port: number(),
           running_state: :new | :configuring | :starting | :running | :stopping | :stopped,
           auto_boot: boolean(),
+          monitor_ref: reference(),
+          pid: pid(),
           assigns: map()
         }
 end

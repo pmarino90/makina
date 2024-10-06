@@ -76,6 +76,8 @@ defmodule Makina.Runtime.Instance do
   """
   def run(pid), do: GenServer.cast(pid, :run)
 
+  def get_current_state(pid), do: GenServer.call(pid, :get_current_state)
+
   defmacro __using__(_opts) do
     quote do
       use GenServer
@@ -109,6 +111,7 @@ defmodule Makina.Runtime.Instance do
             service: service,
             instance_number: 1,
             running_port: port_number,
+            pid: self(),
             auto_boot: auto_boot
           })
 
@@ -121,8 +124,16 @@ defmodule Makina.Runtime.Instance do
       def start_link({_parent, _app_, service_id, _opts} = args),
         do:
           GenServer.start_link(__MODULE__, args,
-            name: {:via, Registry, {Makina.Runtime.Registry, "service-#{service_id}-instance-1"}}
+            name: {:via, Registry, {Makina.Runtime.Registry, full_instance_name(service_id)}}
           )
+
+      defp full_instance_name(service_id), do: "service-#{service_id}-instance-1"
+
+      defp update_running_state(%State{} = state, running_state) do
+        GenServer.cast(state.pid, {:update_running_state, running_state})
+
+        state
+      end
 
       defp boot(state) do
         before_run_cb =
@@ -136,16 +147,17 @@ defmodule Makina.Runtime.Instance do
             else: fn state -> state end
 
         Task.Supervisor.start_child(Makina.Runtime.TaskSupervisor, fn ->
-          state =
-            state
-            |> before_run_cb.()
-            |> on_run()
-            |> after_run_cb.()
+          state
+          |> update_running_state(:starting)
+          |> before_run_cb.()
+          |> on_run()
+          |> after_run_cb.()
+          |> update_running_state(:running)
         end)
       end
 
-      def handle_info({:DOWN, _ref, :process, _pid, _reason}, state) do
-        on_stop(state)
+      def handle_info({:DOWN, ref, :process, _pid, _reason}, state) do
+        if ref == state.monitor_ref, do: on_stop(state)
       end
 
       @doc false
@@ -178,6 +190,20 @@ defmodule Makina.Runtime.Instance do
         GenServer.cast(self(), :restart)
 
         {:noreply, state}
+      end
+
+      def handle_cast({:update_running_state, running_state}, state) do
+        {:noreply, %State{state | running_state: running_state}}
+      end
+
+      def handle_call({:monitor, pid}, state) do
+        ref = Process.monitor(pid)
+
+        {:reply, ref, %State{state | monitor_ref: ref}}
+      end
+
+      def handle_call(:get_current_state, _from, state) do
+        {:reply, state.running_state, state}
       end
     end
   end
