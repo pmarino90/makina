@@ -122,7 +122,17 @@ defmodule Makina.Runtime.Instance do
           )
 
       @doc false
-      def terminate(_reason, state), do: shutdown(state)
+      def terminate(:shutdown, state) do
+        shutdown(state)
+      end
+
+      def terminate(_reason, state) do
+        Logger.warning("Terminating instance unexpectedly, might restart soon.")
+
+        Infrastructure.publish_running_state(state, :crashed)
+
+        {:noreply, %{state | running_state: :crashed}}
+      end
 
       defp full_instance_name(service_id), do: "service-#{service_id}-instance-1"
 
@@ -164,18 +174,10 @@ defmodule Makina.Runtime.Instance do
         {:noreply, %{state | running_state: :stopped}}
       end
 
-      def handle_info({:DOWN, _ref, :process, _pid, _reason}, state) do
-        on_stop(state)
-      end
-
-      def handle_info({:EXIT, _from, _reason}, state) do
-        Logger.info("Genserver shtting down")
-      end
-
       @doc false
       def handle_info({:EXIT, _pid, :normal}, _state) do
-        Logger.warning("Log collect Task terminatad, attached container may not be available.")
-        raise "Attached container crashed or has been terminated unexpectedly"
+        Logger.warning("Linked process terminated unexpectedly")
+        raise "restart"
       end
 
       def handle_info({:config_update, _section, _service}, state) do
@@ -197,10 +199,10 @@ defmodule Makina.Runtime.Instance do
         {:noreply, %State{state | running_state: running_state}}
       end
 
-      def handle_call({:monitor, pid}, state) do
-        ref = Process.monitor(pid)
+      def handle_call({:link, pid}, _from, state) do
+        Process.link(pid)
 
-        {:reply, ref, %State{state | monitor_ref: ref}}
+        {:reply, true, state}
       end
 
       def handle_call(:get_current_state, _from, state) do

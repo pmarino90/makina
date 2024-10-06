@@ -153,7 +153,7 @@ defmodule Makina.Runtime.Instance.Docker do
         Docker.logs_for_container!(state.assigns.container_name, entry_collector)
       end)
 
-    Process.link(pid)
+    GenServer.call(state.pid, {:link, pid})
 
     state
   end
