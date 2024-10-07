@@ -13,7 +13,6 @@ defmodule Makina.Runtime.Instance do
   """
   require Logger
 
-  alias Makina.Stacks
   alias Makina.Runtime.Instance.State
   alias Makina.Runtime.Instance.Infrastructure
 
@@ -85,9 +84,7 @@ defmodule Makina.Runtime.Instance do
       alias Makina.Runtime.Instance
       alias Makina.Runtime.Instance.State
 
-      def init({parent_process, stack_id, service_id, opts}) do
-        stack = Stacks.get_app!(stack_id)
-        service = Stacks.get_service!(service_id)
+      def init({parent_process, stack, service, opts}) do
         port_number = Enum.random(1024..65535)
         auto_boot = Keyword.get(opts, :auto_boot, true)
 
@@ -115,10 +112,10 @@ defmodule Makina.Runtime.Instance do
       end
 
       @doc false
-      def start_link({_parent, _app_, service_id, _opts} = args),
+      def start_link({_parent, _app_, service, _opts} = args),
         do:
           GenServer.start_link(__MODULE__, args,
-            name: {:via, Registry, {Makina.Runtime.Registry, full_instance_name(service_id)}}
+            name: {:via, Registry, {Makina.Runtime.Registry, full_instance_name(service.slug)}}
           )
 
       @doc false
@@ -134,7 +131,7 @@ defmodule Makina.Runtime.Instance do
         {:noreply, %{state | running_state: :crashed}}
       end
 
-      defp full_instance_name(service_id), do: "service-#{service_id}-instance-1"
+      defp full_instance_name(slug), do: "service-#{slug}-instance-1"
 
       defp update_running_state(%State{} = state, running_state) do
         GenServer.cast(state.pid, {:update_running_state, running_state})
