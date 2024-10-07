@@ -15,6 +15,7 @@ defmodule Makina.Runtime do
   use Supervisor
   require Logger
 
+  alias Makina.Runtime.SupportServices
   alias Phoenix.PubSub
   alias Makina.Runtime.Instance
   alias Makina.Stacks
@@ -43,7 +44,8 @@ defmodule Makina.Runtime do
 
     children = [
       {Registry, keys: :unique, name: Makina.Runtime.Registry},
-      {Task.Supervisor, name: Makina.Runtime.TaskSupervisor}
+      {Task.Supervisor, name: Makina.Runtime.TaskSupervisor},
+      {SupportServices, name: Makina.Runtime.SupportServices}
     ]
 
     child_apps =
