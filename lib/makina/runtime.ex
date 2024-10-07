@@ -18,7 +18,7 @@ defmodule Makina.Runtime do
   alias Phoenix.PubSub
   alias Makina.Runtime.Instance
   alias Makina.Stacks
-  alias Makina.Runtime.App
+  alias Makina.Runtime.Stack
 
   @doc false
   def start_link(args) do
@@ -134,9 +134,9 @@ defmodule Makina.Runtime do
     end
   end
 
-  def start_service(app, service) do
-    app_supervisor = app_pid(service.application_id)
-    Supervisor.start_child(app_supervisor, App.build_child_spec(app, service))
+  def start_service(stack, service) do
+    stack_supervisor = app_pid(service.application_id)
+    Supervisor.start_child(stack_supervisor, Stack.build_child_spec(stack, service))
   end
 
   def stop_service(service) do

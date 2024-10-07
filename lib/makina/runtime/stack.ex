@@ -1,4 +1,4 @@
-defmodule Makina.Runtime.App do
+defmodule Makina.Runtime.Stack do
   @moduledoc """
   User can create apps, which are a collection of one or more services
 
@@ -12,9 +12,9 @@ defmodule Makina.Runtime.App do
 
   alias Makina.Runtime.Service
 
-  def start_link({_, app} = args) do
+  def start_link({_, stack} = args) do
     Supervisor.start_link(__MODULE__, args,
-      name: {:via, Registry, {Makina.Runtime.Registry, "app-#{app.id}"}}
+      name: {:via, Registry, {Makina.Runtime.Registry, "app-#{stack.id}"}}
     )
   end
 
