@@ -16,7 +16,7 @@ defmodule Makina.Application do
       {Phoenix.PubSub, name: Makina.PubSub},
       {Finch, name: Makina.Finch},
       # Start the Finch HTTP client for sending emails
-      Makina.Runtime,
+      Makina.Runtime.Supervisor,
       # Start a worker by calling: Makina.Worker.start_link(arg)
       # {Makina.Worker, arg},
       # Start to serve requests, typically the last entry

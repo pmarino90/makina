@@ -12,49 +12,12 @@ defmodule Makina.Runtime do
   When the Runtime is shutdown all apps are shutdown as well.
   """
 
-  use Supervisor
   require Logger
 
-  alias Makina.Runtime.SupportServices
   alias Phoenix.PubSub
   alias Makina.Runtime.Instance
   alias Makina.Stacks
   alias Makina.Runtime.Stack
-
-  @doc false
-  def start_link(args) do
-    Supervisor.start_link(__MODULE__, args, name: __MODULE__)
-  end
-
-  @doc false
-  def child_spec(_init_arg) do
-    %{id: __MODULE__, start: {__MODULE__, :start_link, [{}]}, restart: :transient}
-  end
-
-  @doc false
-  def init(_init_args) do
-    apps = Stacks.list_applications()
-
-    Logger.info("Starting Makina Runtime")
-
-    case validate_system_depencencies() do
-      {:error, err} -> raise "Cannot start, system not configured #{err}"
-      _ -> :ok
-    end
-
-    children = [
-      {Registry, keys: :unique, name: Makina.Runtime.Registry},
-      {Task.Supervisor, name: Makina.Runtime.TaskSupervisor},
-      {SupportServices, name: Makina.Runtime.SupportServices}
-    ]
-
-    child_apps =
-      for app <- apps do
-        build_app_child_spec(app)
-      end
-
-    Supervisor.init(children ++ child_apps, strategy: :one_for_one, max_seconds: 30)
-  end
 
   @doc """
   Starts an application given an app definition according to `Makina.Stacks.Stack`,
@@ -160,19 +123,6 @@ defmodule Makina.Runtime do
   All the running applications and services are stopped as well.
   """
   def stop(), do: Supervisor.stop(__MODULE__)
-
-  defp validate_system_depencencies() do
-    case docker_client().ping() do
-      {:ok, _} -> :ok
-      _ -> {:error, :no_docker_service}
-    end
-  end
-
-  defp docker_client() do
-    config = Application.get_env(:makina, Makina.Runtime)
-
-    Keyword.fetch!(config, :instance_runtime)
-  end
 
   defp build_app_child_spec(app) do
     %{start: {App, :start_link, [app_spec: app]}, id: app_id(app), restart: :transient}
