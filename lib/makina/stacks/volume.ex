@@ -8,6 +8,7 @@ defmodule Makina.Stacks.Volume do
   schema "volumes" do
     field :name, :string
     field :mount_point, :string
+    field :local_path, :string
 
     belongs_to :service, Service
 

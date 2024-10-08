@@ -4,7 +4,7 @@ defmodule Makina.Stacks.Service do
   import Ecto.Changeset
   import Slugy
 
-  alias Makina.Stacks.{EnvironmentVariable, Volume, Domain}
+  alias Makina.Stacks.{EnvironmentVariable, Volume, Domain, Stack}
 
   @fields ~w[name slug image_registry image_registry_user image_registry_password image_name image_tag expose_service application_id]a
   @required_fields ~w[name slug image_registry image_name image_tag application_id]a
@@ -20,6 +20,7 @@ defmodule Makina.Stacks.Service do
     field :image_name, :string
     field :image_tag, :string, default: "latest"
     field :expose_service, :boolean, default: false
+    field :command, {:array, :string}
 
     belongs_to :stack, Stack, foreign_key: :application_id
 
