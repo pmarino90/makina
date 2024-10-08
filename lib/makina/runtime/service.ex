@@ -21,7 +21,7 @@ defmodule Makina.Runtime.Service do
     children = [
       %{
         id: "service_#{service.id}",
-        start: {Docker, :start_link, [{self(), app.id, service.id, []}]}
+        start: {Docker, :start_link, [{self(), app, service, []}]}
       }
     ]
 

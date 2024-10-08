@@ -112,11 +112,11 @@ defmodule Makina.Runtime.Instance do
       end
 
       @doc false
-      def start_link({_parent, _app_, service, _opts} = args),
-        do:
-          GenServer.start_link(__MODULE__, args,
-            name: {:via, Registry, {Makina.Runtime.Registry, full_instance_name(service.slug)}}
-          )
+      def start_link({_parent, _app_, service, _opts} = args) do
+        GenServer.start_link(__MODULE__, args,
+          name: {:via, Registry, {Makina.Runtime.Registry, full_instance_name(service.slug)}}
+        )
+      end
 
       @doc false
       def terminate(:shutdown, state) do
