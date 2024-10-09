@@ -20,8 +20,6 @@ defmodule Makina.Stacks do
     %Stack{}
     |> Stack.changeset(attrs)
     |> Repo.insert()
-    |> preload_app()
-    |> start_app()
   end
 
   def change_application(attrs \\ %{}) do
@@ -31,12 +29,10 @@ defmodule Makina.Stacks do
 
   def delete_application(app) do
     Repo.delete(app)
-    |> stop_app()
   end
 
   def delete_service(service) do
     Repo.delete(service)
-    |> stop_service()
   end
 
   def change_service(attrs \\ %{}) do
@@ -84,8 +80,6 @@ defmodule Makina.Stacks do
     %Service{}
     |> Service.changeset(attrs)
     |> Repo.insert()
-    |> preload_service()
-    |> start_service()
   end
 
   def create_api_token(name, application) do

@@ -9,6 +9,8 @@ defmodule Makina.Runtime.Instance.Docker do
 
   alias Makina.{Docker, Vault}
 
+  @public_network "makina_web-net"
+
   def configure(%State{stack: stack, service: service} = state) do
     state =
       state
@@ -21,6 +23,7 @@ defmodule Makina.Runtime.Instance.Docker do
   def before_run(%State{} = state) do
     state
     |> fetch_dependencies()
+    |> create_public_network()
     |> create_stack_network()
     |> create_container()
     |> maybe_expose_container()
@@ -101,9 +104,24 @@ defmodule Makina.Runtime.Instance.Docker do
     end
   end
 
+  defp create_public_network(%State{} = state) do
+    network_name = @public_network
+
+    case Docker.inspect_network(network_name) do
+      {:ok, %Req.Response{status: 404}} ->
+        log(state, "Creating public network")
+        Docker.create_network!(network_name)
+        state
+
+      {:ok, _network_data} ->
+        log(state, "Public network already created")
+        state
+    end
+  end
+
   defp maybe_expose_container(%State{service: service} = state) do
     if service.expose_service do
-      Docker.connect_network!(state.assigns.container_name, "makina_web-net")
+      Docker.connect_network!(state.assigns.container_name, @public_network)
       state
     else
       state
@@ -117,6 +135,7 @@ defmodule Makina.Runtime.Instance.Docker do
 
     assigns.container_name
     |> Docker.create_container!(%{
+      "Cmd" => service.command,
       "Image" => full_image_reference(service),
       "Env" => build_env_variables(state),
       "Tty" => true,
@@ -183,12 +202,21 @@ defmodule Makina.Runtime.Instance.Docker do
 
     service.volumes
     |> Enum.map(fn v ->
-      %{
-        "Target" => v.mount_point,
-        "Source" => "#{stack.slug}-#{service.slug}-#{v.name}",
-        "Type" => "volume",
-        "ReadOnly" => false
-      }
+      if is_nil(v.local_path) do
+        %{
+          "Target" => v.mount_point,
+          "Source" => "#{stack.slug}-#{service.slug}-#{v.name}",
+          "Type" => "volume",
+          "ReadOnly" => false
+        }
+      else
+        %{
+          "Target" => v.mount_point,
+          "Source" => v.local_path,
+          "Type" => "bind",
+          "ReadOnly" => false
+        }
+      end
     end)
   end
 
