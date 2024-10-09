@@ -13,7 +13,10 @@ config :makina, Makina.Runtime, enable_https: https_enabled
 
 if https_enabled do
   config :makina, Makina.Runtime,
-    proxy: [letsencrypt_acme_path: env!("RUNTIME_PROXY_LESTENCRYPT_ACME_PATH", :string!)]
+    proxy: [
+      letsencrypt_acme_path: env!("RUNTIME_PROXY_LESTENCRYPT_ACME_PATH", :string!),
+      letsencrypt_email: env!("RUNTIME_PROXY_LETSENCRYPT_EMAIL", :string!)
+    ]
 end
 
 config :makina, Makina.Docker, socket_path: env!("RUNTIME_DOCKER_SOCKET_PATH", :string!)

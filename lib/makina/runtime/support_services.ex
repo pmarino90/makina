@@ -69,6 +69,7 @@ defmodule Makina.Runtime.SupportServices do
 
   defp reverse_proxy_https_config() do
     config = Application.get_env(:makina, Makina.Runtime)
+    proxy_config = config[:proxy]
 
     if Keyword.get(config, :enable_https, true) do
       [
@@ -76,7 +77,7 @@ defmodule Makina.Runtime.SupportServices do
         "--entryPoints.web.http.redirections.entryPoint.to=websecure",
         "--entryPoints.web.http.redirections.entryPoint.permanent=true",
         "--entryPoints.web.http.redirections.entryPoint.scheme=https",
-        "--certificatesResolvers.letsencrypt.acme.email=<email>",
+        "--certificatesResolvers.letsencrypt.acme.email=#{proxy_config[:letsencrypt_email]}",
         " --certificatesResolvers.letsencrypt.acme.storage=acme.json",
         " --certificatesResolvers.letsencrypt.acme.keyType=EC384",
         " --certificatesResolvers.letsencrypt.acme.httpChallenge.entryPoint=web"
