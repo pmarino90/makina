@@ -7,9 +7,14 @@ if System.get_env("PHX_SERVER") do
   config :makina, MakinaWeb.Endpoint, server: true
 end
 
-config :makina, Makina.Runtime,
-  enable_https: env!("RUNTIME_ENABLE_HTTPS", :boolean, "true"),
-  reverse_proxy: [letsencrypt_email: "foo@bar.ext", acme_file_path: "./acme.json"]
+https_enabled = env!("RUNTIME_ENABLE_HTTPS", :boolean, "true")
+
+config :makina, Makina.Runtime, enable_https: https_enabled
+
+if https_enabled do
+  config :makina, Makina.Runtime,
+    proxy: [letsencrypt_acme_path: env!("RUNTIME_PROXY_LESTENCRYPT_ACME_PATH", :string!)]
+end
 
 config :makina, Makina.Docker, socket_path: env!("RUNTIME_DOCKER_SOCKET_PATH", :string!)
 
