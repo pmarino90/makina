@@ -284,7 +284,7 @@ defmodule MakinaWeb.Stacks.ViewServiceLive do
     |> assign_async(
       :service_running_state,
       fn ->
-        {:ok, %{service_running_state: Runtime.get_service_state(service.id, consolidated: true)}}
+        {:ok, %{service_running_state: Runtime.get_service_state(service, consolidated: true)}}
       end
     )
     |> wrap_ok()

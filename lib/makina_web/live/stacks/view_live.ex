@@ -250,7 +250,7 @@ defmodule MakinaWeb.Stacks.ViewLive do
     services
     |> Enum.reduce(socket, fn service, sock ->
       start_async(sock, {:fetch_service_state, service.id}, fn ->
-        Runtime.get_service_state(service.id, consolidated: true)
+        Runtime.get_service_state(service, consolidated: true)
       end)
     end)
   end

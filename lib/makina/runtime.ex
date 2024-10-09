@@ -70,31 +70,31 @@ defmodule Makina.Runtime do
   Given a `service_id` it returns the current status of all the running instances.
   If the consolidated state is needed see `Runtime.get_service_state/2`
   """
-  def get_service_state(id) do
-    Registry.lookup(Makina.Runtime.Registry, "service-#{id}-instance-1")
+  def get_service_state(service) do
+    Registry.lookup(Makina.Runtime.Registry, "service-#{service.slug}-instance-1")
     |> Enum.map(fn {pid, _} -> Instance.get_current_state(pid) end)
   end
 
   @doc """
-  Given a `service_id` it returns the current status of all the running instances.
+  Given a service service_id` it returns the current status of all the running instances.
 
   Accepts additional options:
   * `:consolidated`, returns the consolidated state meaning that if all instances are running
   the returned state is `:running` while if only part of them are the state is `:incosistant`
   """
-  def get_service_state(id, opts) do
+  def get_service_state(service, opts) do
     unless Keyword.get(opts, :consolidated),
       do: raise("Invalid options provided, only `:consolidate` supported.")
 
     states =
-      get_service_state(id)
+      get_service_state(service)
       |> Enum.uniq()
 
     count = Enum.count(states)
 
     cond do
       count == 1 -> hd(states)
-      count > 1 -> :inconsistant
+      count > 1 -> :inconsistent
       count < 1 -> :no_service
     end
   end
