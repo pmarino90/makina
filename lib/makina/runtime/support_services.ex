@@ -78,9 +78,9 @@ defmodule Makina.Runtime.SupportServices do
         "--entryPoints.web.http.redirections.entryPoint.permanent=true",
         "--entryPoints.web.http.redirections.entryPoint.scheme=https",
         "--certificatesResolvers.letsencrypt.acme.email=#{proxy_config[:letsencrypt_email]}",
-        " --certificatesResolvers.letsencrypt.acme.storage=acme.json",
-        " --certificatesResolvers.letsencrypt.acme.keyType=EC384",
-        " --certificatesResolvers.letsencrypt.acme.httpChallenge.entryPoint=web"
+        "--certificatesResolvers.letsencrypt.acme.storage=acme.json",
+        "--certificatesResolvers.letsencrypt.acme.keyType=EC384",
+        "--certificatesResolvers.letsencrypt.acme.httpChallenge.entryPoint=web"
       ]
     else
       []

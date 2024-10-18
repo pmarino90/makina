@@ -33,7 +33,7 @@ if config_env() == :prod do
 
   port = env!("PORT", :integer, "4000")
 
-  config :makina, :dns_cluster_query, env!("DNS_CLUSTER_QUERY", :string?)
+  config :makina, :dns_cluster_query, env!("DNS_CLUSTER_QUERY", :string!, nil)
 
   config :makina, MakinaWeb.Endpoint,
     url: [host: nil, port: 443, scheme: "https"],
