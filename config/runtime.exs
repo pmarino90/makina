@@ -7,7 +7,7 @@ if System.get_env("PHX_SERVER") do
   config :makina, MakinaWeb.Endpoint, server: true
 end
 
-https_enabled = env!("RUNTIME_ENABLE_HTTPS", :boolean, "true")
+https_enabled = env!("RUNTIME_ENABLE_HTTPS", :boolean, true)
 
 config :makina, Makina.Runtime, enable_https: https_enabled
 
@@ -27,7 +27,7 @@ if config_env() == :prod do
 
   config :makina, Makina.Repo,
     database: database_path,
-    pool_size: env!("POOL_SIZE", :integer, "5")
+    pool_size: env!("POOL_SIZE", :integer, 5)
 
   secret_key_base = env!("SECRET_KEY_BASE", :string!)
 
