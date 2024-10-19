@@ -181,14 +181,14 @@ defmodule MakinaWeb.Stacks.ViewLive do
   end
 
   def handle_event("stop_app", _data, socket) do
-    Runtime.stop_app(socket.assigns.app.id)
+    Runtime.stop_stack(socket.assigns.app)
 
     socket
     |> wrap_noreply()
   end
 
   def handle_event("start_app", _data, socket) do
-    Runtime.start_app(socket.assigns.app)
+    Runtime.start_stack(socket.assigns.app)
 
     socket
     |> wrap_noreply()

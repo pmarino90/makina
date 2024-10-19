@@ -23,18 +23,18 @@ defmodule Makina.Runtime do
   Starts an application given an app definition according to `Makina.Stacks.Stack`,
   should contain also services.
   """
-  def start_app(app) do
-    child_spec = build_app_child_spec(app)
+  def start_stack(stack) do
+    child_spec = build_app_child_spec(stack)
 
-    case Supervisor.start_child(__MODULE__, child_spec) do
+    case Supervisor.start_child(Makina.Runtime.Supervisor, child_spec) do
       {:error, :already_present} ->
-        Supervisor.restart_child(__MODULE__, app_id(app))
+        Supervisor.restart_child(Makina.Runtime.Supervisor, app_id(stack))
 
       {:ok, _} ->
         :ok
     end
 
-    PubSub.broadcast(Makina.PubSub, "stack::#{app.id}", {:app_update, :state, {:running}})
+    PubSub.broadcast(Makina.PubSub, "stack::#{stack.id}", {:app_update, :state, {:running}})
   end
 
   @doc """
@@ -44,10 +44,10 @@ defmodule Makina.Runtime do
   >
   > The app is not removed from the tree once stopped.
   """
-  def stop_app(id) when is_integer(id) do
-    Supervisor.terminate_child(__MODULE__, app_id(id))
-    Supervisor.delete_child(__MODULE__, app_id(id))
-    PubSub.broadcast(Makina.PubSub, "stack::#{id}", {:app_update, :state, {:stopped}})
+  def stop_stack(stack) do
+    Supervisor.terminate_child(Makina.Runtime.Supervisor, app_id(stack.id))
+    Supervisor.delete_child(Makina.Runtime.Supervisor, app_id(stack.id))
+    PubSub.broadcast(Makina.PubSub, "stack::#{stack.id}", {:app_update, :state, {:stopped}})
   end
 
   @doc """
@@ -122,14 +122,14 @@ defmodule Makina.Runtime do
 
   All the running applications and services are stopped as well.
   """
-  def stop(), do: Supervisor.stop(__MODULE__)
+  def stop(), do: Supervisor.stop(Makina.Runtime.Supervisor)
 
   defp build_app_child_spec(app) do
     %{start: {App, :start_link, [app_spec: app]}, id: app_id(app), restart: :transient}
   end
 
   defp app_pid(app_id) do
-    Supervisor.which_children(__MODULE__)
+    Supervisor.which_children(Makina.Runtime.Supervisor)
     |> Enum.find_value(fn {id, pid, _, _} ->
       if app_id(app_id) == id, do: pid, else: false
     end)

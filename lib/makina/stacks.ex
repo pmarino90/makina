@@ -20,6 +20,8 @@ defmodule Makina.Stacks do
     %Stack{}
     |> Stack.changeset(attrs)
     |> Repo.insert()
+    |> preload_stack()
+    |> start_stack()
   end
 
   def change_application(attrs \\ %{}) do
@@ -29,10 +31,12 @@ defmodule Makina.Stacks do
 
   def delete_application(app) do
     Repo.delete(app)
+    |> stop_stack()
   end
 
   def delete_service(service) do
     Repo.delete(service)
+    |> stop_service()
   end
 
   def change_service(attrs \\ %{}) do
@@ -80,6 +84,8 @@ defmodule Makina.Stacks do
     %Service{}
     |> Service.changeset(attrs)
     |> Repo.insert()
+    |> preload_service()
+    |> start_service()
   end
 
   def create_api_token(name, application) do
@@ -126,11 +132,11 @@ defmodule Makina.Stacks do
 
   defp notify_config_change({:error, _} = res, _), do: res
 
-  defp preload_app({:ok, %Stack{} = app}) do
-    {:ok, Repo.preload(app, @app_preloads)}
+  defp preload_stack({:ok, %Stack{} = stack}) do
+    {:ok, Repo.preload(stack, @app_preloads)}
   end
 
-  defp preload_app({:error, _} = res) do
+  defp preload_stack({:error, _} = res) do
     res
   end
 
@@ -142,13 +148,13 @@ defmodule Makina.Stacks do
     res
   end
 
-  defp start_app({:ok, %Stack{} = app} = res) do
-    Runtime.start_app(app)
+  defp start_stack({:ok, %Stack{} = stack} = res) do
+    Runtime.start_stack(stack)
 
     res
   end
 
-  defp start_app({:error, _} = res), do: res
+  defp start_stack({:error, _} = res), do: res
 
   defp start_service({:ok, %Service{} = service} = res) do
     Runtime.start_service(service.stack, service)
@@ -158,13 +164,13 @@ defmodule Makina.Stacks do
 
   defp start_service({:error, _} = res), do: res
 
-  defp stop_app({:ok, %Stack{} = app} = res) do
-    Runtime.stop_app(app.id)
+  defp stop_stack({:ok, %Stack{} = stack} = res) do
+    Runtime.stop_stack(stack.id)
 
     res
   end
 
-  defp stop_app({:error, _} = res), do: res
+  defp stop_stack({:error, _} = res), do: res
 
   defp stop_service({:ok, %Service{} = service} = res) do
     Runtime.stop_service(service)
