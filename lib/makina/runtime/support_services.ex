@@ -15,7 +15,7 @@ defmodule Makina.Runtime.SupportServices do
   def init(_args) do
     Logger.info("Starting support services")
 
-    children = [reverse_proxy()]
+    children = []
 
     Supervisor.init(children, strategy: :one_for_one, max_seconds: 30)
   end
