@@ -101,7 +101,9 @@ defmodule Makina.Runtime do
 
   def start_service(stack, service) do
     stack_supervisor = app_pid(service.application_id)
+
     Supervisor.start_child(stack_supervisor, Stack.build_child_spec(stack, service))
+    |> dbg()
   end
 
   def stop_service(service) do
@@ -125,7 +127,7 @@ defmodule Makina.Runtime do
   def stop(), do: Supervisor.stop(Makina.Runtime.Supervisor)
 
   defp build_app_child_spec(app) do
-    %{start: {App, :start_link, [app_spec: app]}, id: app_id(app), restart: :transient}
+    %{start: {Stack, :start_link, [app_spec: app]}, id: app_id(app), restart: :transient}
   end
 
   defp app_pid(app_id) do

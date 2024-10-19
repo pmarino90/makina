@@ -114,7 +114,7 @@ defmodule Makina.Runtime.Instance do
       @doc false
       def start_link({_parent, _app_, service, _opts} = args) do
         GenServer.start_link(__MODULE__, args,
-          name: {:via, Registry, {Makina.Runtime.Registry, full_instance_name(service.slug)}}
+          name: {:via, Registry, {Makina.Runtime.Registry, full_instance_name(service)}}
         )
       end
 
@@ -131,7 +131,7 @@ defmodule Makina.Runtime.Instance do
         {:noreply, %{state | running_state: :crashed}}
       end
 
-      defp full_instance_name(slug), do: "service-#{slug}-instance-1"
+      defp full_instance_name(service), do: "service-#{service.id}-#{service.slug}-instance_1"
 
       defp update_running_state(%State{} = state, running_state) do
         GenServer.cast(state.pid, {:update_running_state, running_state})
