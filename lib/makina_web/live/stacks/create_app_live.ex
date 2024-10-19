@@ -25,7 +25,7 @@ defmodule MakinaWeb.Stacks.CreateLive do
   end
 
   def mount(_params, _session, socket) do
-    form = Stacks.change_application() |> to_form(as: :application)
+    form = Stacks.change_stack() |> to_form(as: :application)
 
     socket
     |> assign(form: form)
@@ -34,7 +34,7 @@ defmodule MakinaWeb.Stacks.CreateLive do
 
   def handle_event("validate_application", data, socket) do
     form =
-      Stacks.change_application(data)
+      Stacks.change_stack(data)
       |> to_form(as: :application)
 
     socket
@@ -45,7 +45,7 @@ defmodule MakinaWeb.Stacks.CreateLive do
   def handle_event("create_application", data, socket) do
     current_user = socket.assigns.current_user
 
-    case Stacks.create_application(Map.put(data, "owner_id", current_user.id)) do
+    case Stacks.create_stack(Map.put(data, "owner_id", current_user.id)) do
       {:ok, app} ->
         socket
         |> push_navigate(to: ~p"/stacks/#{app.id}")

@@ -64,7 +64,7 @@ defmodule MakinaWeb.Stacks.ListLive do
 
   def mount(_params, _session, socket) do
     socket
-    |> assign(:stacks, Stacks.list_applications())
+    |> assign(:stacks, Stacks.list_stacks())
     |> wrap_ok()
   end
 end

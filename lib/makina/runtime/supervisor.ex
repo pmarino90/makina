@@ -18,7 +18,7 @@ defmodule Makina.Runtime.Supervisor do
 
   @doc false
   def init(_init_args) do
-    apps = Stacks.list_applications()
+    apps = Stacks.list_stacks()
 
     Logger.info("Starting Makina Runtime")
 

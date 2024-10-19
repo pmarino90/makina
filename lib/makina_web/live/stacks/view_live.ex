@@ -195,7 +195,7 @@ defmodule MakinaWeb.Stacks.ViewLive do
   end
 
   def handle_event("delete_app", _data, socket) do
-    Stacks.delete_application(socket.assigns.app)
+    Stacks.delete_stack(socket.assigns.app)
 
     socket
     |> push_navigate(to: ~p"/")

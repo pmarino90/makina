@@ -10,13 +10,13 @@ defmodule Makina.Stacks do
   @service_preloads [:environment_variables, :volumes, :domains]
   @app_preloads [:tokens, services: @service_preloads]
 
-  def list_applications() do
+  def list_stacks() do
     Stack
     |> preload(^@app_preloads)
     |> Repo.all()
   end
 
-  def create_application(attrs) do
+  def create_stack(attrs) do
     %Stack{}
     |> Stack.changeset(attrs)
     |> Repo.insert()
@@ -24,13 +24,13 @@ defmodule Makina.Stacks do
     |> start_stack()
   end
 
-  def change_application(attrs \\ %{}) do
+  def change_stack(attrs \\ %{}) do
     %Stack{}
     |> Stack.changeset(attrs)
   end
 
-  def delete_application(app) do
-    Repo.delete(app)
+  def delete_stack(stack) do
+    Repo.delete(stack)
     |> stop_stack()
   end
 
@@ -165,7 +165,7 @@ defmodule Makina.Stacks do
   defp start_service({:error, _} = res), do: res
 
   defp stop_stack({:ok, %Stack{} = stack} = res) do
-    Runtime.stop_stack(stack.id)
+    Runtime.stop_stack(stack)
 
     res
   end
