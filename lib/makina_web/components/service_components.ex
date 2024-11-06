@@ -2,7 +2,8 @@ defmodule MakinaWeb.ServiceComponents do
   use Phoenix.Component
   use MakinaWeb, :verified_routes
 
-  import MakinaWeb.CoreComponents
+  import MakinaWeb.CoreComponents, except: [button: 1]
+  import ArticUI.Component.Button
 
   alias Phoenix.LiveView.JS
 
@@ -16,28 +17,26 @@ defmodule MakinaWeb.ServiceComponents do
         <.input type="text" field={f_env[:name]} placeholder="name" />
         <.input type="select" field={f_env[:type]} options={["Plain Text": :plain, Secret: :secret]} />
         <.input type="text" field={f_env[:value]} placeholder="value" />
-        <button
+        <.button
+          variant="secondary"
           name="service[envs_drop][]"
-          type="button"
-          class="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent text-gray-500 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-gray-400 dark:hover:bg-gray-800 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
           value={f_env.index}
           phx-click={JS.dispatch("change")}
         >
           <.icon name="hero-minus" />
-        </button>
+        </.button>
       </div>
     </.inputs_for>
 
     <input type="hidden" name="service[envs_drop][]" />
-    <button
-      type="button"
-      class="w-max mt-3 py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-white dark:hover:bg-gray-800 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+    <.button
+      variant="secondary"
       name="service[envs_sort][]"
       value="new"
       phx-click={JS.dispatch("change")}
     >
       <.icon name="hero-plus" />
-    </button>
+    </.button>
     """
   end
 
@@ -50,29 +49,27 @@ defmodule MakinaWeb.ServiceComponents do
       <div class="flex space-x-2">
         <.input type="text" field={f_env[:name]} placeholder="name" />
         <.input type="text" field={f_env[:mount_point]} placeholder="mount point" />
-        <button
+        <.button
+          variant="secondary"
           name="service[volumes_drop][]"
-          type="button"
-          class="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent text-gray-500 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-gray-400 dark:hover:bg-gray-800 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
           value={f_env.index}
           phx-click={JS.dispatch("change")}
         >
           <.icon name="hero-minus" />
-        </button>
+        </.button>
       </div>
     </.inputs_for>
 
     <input type="hidden" name="service[volumes_drop][]" />
 
-    <button
-      type="button"
-      class="w-max py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-white dark:hover:bg-gray-800 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
+    <.button
+      variant="secondary"
       name="service[volumes_sort][]"
       value="new"
       phx-click={JS.dispatch("change")}
     >
       <.icon name="hero-plus" />
-    </button>
+    </.button>
     """
   end
 
@@ -84,28 +81,27 @@ defmodule MakinaWeb.ServiceComponents do
       <input type="hidden" class="hidden" name="service[domains_sort][]" value={f_env.index} />
       <div class="flex space-x-2">
         <.input type="text" field={f_env[:domain]} placeholder="domain" />
-        <button
+        <.button
+          variant="secondary"
           name="service[domains_drop][]"
-          type="button"
-          class="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-semibold rounded-lg border border-transparent text-gray-500 hover:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-gray-400 dark:hover:bg-gray-800 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
           value={f_env.index}
           phx-click={JS.dispatch("change")}
         >
           <.icon name="hero-minus" />
-        </button>
+        </.button>
       </div>
     </.inputs_for>
 
     <input type="hidden" name="service[domains_drop][]" />
-    <button
+    <.button
+      variant="secondary"
       type="button"
-      class="w-max py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:pointer-events-none dark:bg-slate-900 dark:border-gray-700 dark:text-white dark:hover:bg-gray-800 dark:focus:outline-none dark:focus:ring-1 dark:focus:ring-gray-600"
       name="service[domains_sort][]"
       value="new"
       phx-click={JS.dispatch("change")}
     >
       <.icon name="hero-plus" />
-    </button>
+    </.button>
     """
   end
 
@@ -117,7 +113,7 @@ defmodule MakinaWeb.ServiceComponents do
     <.button
       :if={@edit_mode != @section}
       type="button"
-      level="secondary"
+      variant="secondary"
       value={Atom.to_string(@section)}
       disabled={not is_nil(@edit_mode)}
       phx-click="set_edit_mode"
@@ -131,7 +127,7 @@ defmodule MakinaWeb.ServiceComponents do
       data-controller="hotkey"
       data-hotkey="Escape"
       type="button"
-      level="secondary"
+      variant="secondary"
       phx-click="cancel_edit"
     >
       Cancel

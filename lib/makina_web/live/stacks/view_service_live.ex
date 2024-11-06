@@ -1,7 +1,9 @@
 defmodule MakinaWeb.Stacks.ViewServiceLive do
   use MakinaWeb, :live_view
 
-  import MakinaWeb.CoreComponents
+  import MakinaWeb.CoreComponents, except: [button: 1]
+
+  import ArticUI.Component.Button
 
   alias Phoenix.PubSub
   alias Phoenix.LiveView.AsyncResult
@@ -240,17 +242,17 @@ defmodule MakinaWeb.Stacks.ViewServiceLive do
                     <:loading>
                       <.status_indicator status="loading" />
                     </:loading>
-                    <.button :if={status == :running} level="secondary" phx-click="stop_service">
+                    <.button :if={status == :running} variant="secondary" phx-click="stop_service">
                       Stop
                     </.button>
-                    <.button :if={status != :running} level="secondary" phx-click="start_service">
+                    <.button :if={status != :running} variant="secondary" phx-click="start_service">
                       Start
                     </.button>
                   </.async_result>
                 </li>
                 <li>
                   <.button
-                    level="secondary"
+                    variant="destructive"
                     phx-click="delete_service"
                     data-confirm="Are you sure you want to delete the current service?"
                   >

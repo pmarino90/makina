@@ -40,3 +40,10 @@ Stimulus.register("hotkey", HotkeyController);
 
 // connect if there are any LiveViews on the page
 liveSocket.connect();
+
+// Allows to execute JS commands from the server
+window.addEventListener("phx:js-exec", ({detail}) => {
+  document.querySelectorAll(detail.to).forEach(el => {
+    liveSocket.execJS(el, el.getAttribute(detail.attr))
+  })
+})

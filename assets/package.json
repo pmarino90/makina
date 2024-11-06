@@ -7,5 +7,8 @@
     "@xterm/xterm": "^5.4.0",
     "preline": "^2.0.3",
     "sortablejs": "^1.15.2"
+  },
+  "devDependencies": {
+    "tailwindcss-animate": "^1.0.7"
   }
 }
