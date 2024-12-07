@@ -23,6 +23,7 @@ defmodule Makina.Runtime.Instance.Docker do
   def before_run(%State{} = state) do
     state
     |> fetch_dependencies()
+    |> maybe_detect_exposed_port()
     |> create_public_network()
     |> create_stack_network()
     |> create_container()
@@ -68,6 +69,37 @@ defmodule Makina.Runtime.Instance.Docker do
 
     Docker.create_image(params)
     state
+  end
+
+  defp maybe_detect_exposed_port(%{service: service} = state) do
+    Logger.info("Detecting exposed port")
+
+    image_info =
+      full_image_reference(service)
+      |> Docker.inspect_image!()
+
+    exposed_ports =
+      image_info.body
+      |> get_in(["Config", "ExposedPorts"])
+
+    if exposed_ports != nil do
+      ports =
+        exposed_ports
+        |> Map.keys()
+        |> Enum.map(fn port_and_proto ->
+          [port, _proto] = String.split(port_and_proto, "/")
+
+          port
+        end)
+
+      port = hd(ports)
+
+      log(state, "Detected exposed port: #{port}")
+
+      %{state | running_port: port}
+    else
+      state
+    end
   end
 
   defp full_service_name(%{stack: stack, service: service}), do: "#{stack.slug}-#{service.slug}"
