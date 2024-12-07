@@ -11,16 +11,11 @@ module.exports = {
     "./node_modules/preline/dist/*.js",
     "../lib/*_web.ex",
     "../lib/*_web/**/*.*ex",
-    "../lib/artic_ui/**/*.*ex"
   ],
   theme: {
-    extend: {
-      colors: require("./tailwind.colors.json"),
-    },
+    extend: {},
   },
   plugins: [
-    require("@tailwindcss/typography"),
-    require("tailwindcss-animate"),
     require("@tailwindcss/forms"),
     plugin(({ addVariant }) =>
       addVariant("phx-no-feedback", [
@@ -47,7 +42,7 @@ module.exports = {
       ]),
     ),
     require("preline/plugin"),
-    plugin(function({ matchComponents, theme }) {
+    plugin(function ({ matchComponents, theme }) {
       let iconsDir = path.join(__dirname, "./vendor/heroicons/optimized");
       let values = {};
       let icons = [

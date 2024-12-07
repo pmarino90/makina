@@ -65,9 +65,7 @@ defmodule Makina.MixProject do
       {:cloak, "1.1.4"},
       {:mix_test_watch, "~> 1.0", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.31", only: :dev, runtime: false},
-      {:dotenvy, "~> 0.8.0"},
-      {:salad_ui, "~> 0.13.0", only: [:dev]},
-      {:tails, "~> 0.1"}
+      {:dotenvy, "~> 0.8.0"}
     ]
   end
 
