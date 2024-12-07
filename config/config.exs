@@ -7,7 +7,7 @@
 # General application configuration
 import Config
 
-config :makina, Makina.Runtime, instance_runtime: Makina.Docker
+config :makina, Makina.Runtime, instance_runtime: Makina.Runtime.DockerInstance
 
 config :makina,
   ecto_repos: [Makina.Repo],

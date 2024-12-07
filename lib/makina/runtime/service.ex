@@ -10,18 +10,18 @@ defmodule Makina.Runtime.Service do
 
   require Logger
 
-  # alias Makina.Runtime.Instance
-  alias Makina.Runtime.Instance.Docker
-
   def start_link(args) do
     Supervisor.start_link(__MODULE__, args)
   end
 
   def init({app, service}) do
+    config = Application.get_env(:makina, Makina.Runtime)
+    runtime = Keyword.get(config, :instance_runtime, nil)
+
     children = [
       %{
         id: "service_#{service.id}",
-        start: {Docker, :start_link, [{self(), app, service, []}]}
+        start: {runtime, :start_link, [{self(), app, service, []}]}
       }
     ]
 

@@ -1,4 +1,4 @@
-defmodule Makina.Runtime.Instance.Docker do
+defmodule Makina.Runtime.DockerInstance do
   @moduledoc """
   Docker implementation for an Instance.
 
