@@ -15,20 +15,19 @@ defmodule Makina.FileTest do
 
   describe "fetch_servers/1" do
     test "returns empty list if not servers are defined" do
-      servers = File.fetch_servers([])
+      servers = File.fetch_servers()
 
       assert servers == []
     end
 
     test "returns all servers defined inside the file" do
       build_file = Path.expand("../support/fixtures/file_with_servers.exs", __DIR__)
+      File.compile_build_file(build_file)
 
-      servers =
-        File.compile_build_file(build_file)
-        |> File.fetch_servers()
+      servers = File.fetch_servers()
 
-      assert Enum.count(servers) == 1
-      assert Map.get(List.first(servers), :host) == "123"
+      assert Enum.count(servers) == 2
+      assert Map.get(List.first(servers), :host) == "example.com"
     end
   end
 end
