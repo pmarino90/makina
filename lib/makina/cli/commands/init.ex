@@ -3,6 +3,11 @@ defmodule Makina.Cli.Commands.Init do
 
   alias Owl.IO
 
+  def name(), do: "init"
+
+  def short_description(),
+    do: "Initializes the current repository with an empty Makinafile"
+
   def exec(arguments, _options) do
     destination_path = List.first(arguments, File.cwd!())
     file = Path.join(destination_path, "Makinafile.exs")

@@ -3,6 +3,11 @@ defmodule Makina.Cli.Commands.Test do
 
   alias Makina.SSH
 
+  def name(), do: "test"
+
+  def short_description(),
+    do: "Tests whether nodes configured inside the Makinafile can be successully reached"
+
   def exec(_arguments, _options) do
     makinafile = Path.join(File.cwd!(), "Makinafile.exs")
     Makina.File.compile_build_file(makinafile)

@@ -1,11 +1,13 @@
 defmodule Makina.Cli do
   alias Makina.Cli.Commands
 
-  @commands %{
-    help: Commands.Help,
-    init: Commands.Init,
-    test: Commands.Test
-  }
+  def commands do
+    %{
+      help: Commands.Help,
+      init: Commands.Init,
+      test: Commands.Test
+    }
+  end
 
   def start(_, [:test]) do
     {:ok, self()}
@@ -23,7 +25,7 @@ defmodule Makina.Cli do
   end
 
   def command(command, arguments \\ [], options \\ []) do
-    module = Map.get(@commands, command, Commands.Help)
+    module = Map.get(commands(), command, Commands.Help)
 
     module.exec(arguments, options)
   end
