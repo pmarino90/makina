@@ -16,9 +16,9 @@ defmodule Makina.Cli do
     :ok
   end
 
-  def command(command, options \\ [])
+  def command(command, arguments \\ [], options \\ [])
 
-  def command(:help, _options) do
+  def command(:help, _arguments, _options) do
     message = """
     Makina
     Paolo Marino
@@ -38,11 +38,17 @@ defmodule Makina.Cli do
     {:ok, message}
   end
 
-  def command(:init, _options) do
-    {:ok, "TBD"}
+  def command(:init, arguments, _options) do
+    destination_path = List.first(arguments, File.cwd!())
+
+    File.write(Path.join(destination_path, "Makinafile.exs"), """
+    # Hello
+    """)
+
+    {:ok, ""}
   end
 
-  def command(_cmd, options), do: command(:help, options)
+  def command(_cmd, arguments, options), do: command(:help, arguments, options)
 
   @doc """
   Parses a list of cli args and returns a tuple in the form of `{command, arguments, options}`
@@ -51,7 +57,16 @@ defmodule Makina.Cli do
     {:help, [], []}
   end
 
-  def parse_command([command | _options]) do
-    {String.to_atom(command), [], []}
+  def parse_command([command | rest]) do
+    command = String.to_atom(command)
+
+    {options, arguments, _invalid} =
+      OptionParser.parse(rest,
+        switches: options_for(command)
+      )
+
+    {command, arguments, options}
   end
+
+  defp options_for(_cmd), do: []
 end
