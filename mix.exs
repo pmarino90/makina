@@ -16,7 +16,7 @@ defmodule Makina.MixProject do
   def application do
     [
       extra_applications: [:logger],
-      mod: {Makina.Cli, []}
+      mod: {Makina.Cli, [Mix.env()]}
     ]
   end
 
@@ -37,6 +37,7 @@ defmodule Makina.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:mix_test_interactive, "~> 4.3", only: :dev, runtime: false},
       {:burrito, "~> 1.0"}
     ]
   end
