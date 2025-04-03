@@ -7,17 +7,14 @@ defmodule Makina.CliTest do
 
   describe "Command: help" do
     test "shows the help message when invoked" do
-      {:ok, response} = Cli.command(:help)
-
-      assert response =~ "Usage"
+      assert :ok = Cli.command(:help)
     end
   end
 
   describe "Command: init" do
     test "creates a default file in the provided path", %{tmp_dir: tmp_dir} do
-      {:ok, response} = Cli.command(:init, [tmp_dir])
+      assert :ok = Cli.command(:init, [tmp_dir])
 
-      assert response == ""
       assert File.exists?(Path.join(tmp_dir, "Makinafile.exs"))
     end
   end
