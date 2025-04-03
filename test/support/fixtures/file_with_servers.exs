@@ -1,5 +1,4 @@
-server_1 = %Makina.Definitions.Server{
-  host: "123",
-  port: 22,
-  user: "foo"
-}
+import Makina.DSL
+
+server host: "example.com"
+server host: "example2.com"

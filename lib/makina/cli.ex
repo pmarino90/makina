@@ -1,6 +1,8 @@
 defmodule Makina.Cli do
   alias Owl.IO
 
+  alias Makina.SSH
+
   def start(_, [:test]) do
     {:ok, self()}
   end
@@ -9,11 +11,9 @@ defmodule Makina.Cli do
     {command, _arguments, _options} = parse_command(Burrito.Util.Args.argv())
 
     case command(command) do
-      {:ok, out} -> IO.puts(out)
-      {:error, out} -> IO.puts(out, :stderr)
+      :ok -> System.halt(0)
+      :error -> System.halt(-1)
     end
-
-    System.halt(0)
 
     :ok
   end
@@ -37,7 +37,9 @@ defmodule Makina.Cli do
      -h, --help       Print help
     """
 
-    {:ok, message}
+    IO.puts(message)
+
+    :ok
   end
 
   def command(:init, arguments, _options) do
@@ -55,6 +57,55 @@ defmodule Makina.Cli do
     end
 
     {:ok, ""}
+  end
+
+  def command(:test, _arguments, _options) do
+    makinafile = Path.join(File.cwd!(), "Makinafile.exs")
+
+    Makina.File.compile_build_file(makinafile)
+    servers = Makina.File.fetch_servers()
+
+    Owl.ProgressBar.start(
+      id: :server_tests,
+      label: "Testing servers",
+      total: Enum.count(servers)
+    )
+
+    results =
+      for server <- servers do
+        response =
+          SSH.connect(
+            server.host,
+            user: server.user,
+            password: server.password,
+            port: server.port
+          )
+
+        case response do
+          {:ok, conn_ref} ->
+            SSH.disconnect(conn_ref)
+            Owl.ProgressBar.inc(id: :server_tests)
+
+            {:ok, server}
+
+          {:error, _reason} ->
+            Owl.ProgressBar.inc(id: :server_tests)
+
+            {:error, server}
+        end
+      end
+
+    Owl.LiveScreen.await_render()
+
+    if test_with_errors?(results) do
+      IO.puts(Owl.Data.tag("Cannot reach some servers", :red))
+
+      :error
+    else
+      IO.puts("All servers are reachable ✅")
+
+      :ok
+    end
   end
 
   def command(_cmd, arguments, options), do: command(:help, arguments, options)
@@ -78,4 +129,7 @@ defmodule Makina.Cli do
   end
 
   defp options_for(_cmd), do: []
+
+  defp test_with_errors?(results),
+    do: Enum.any?(results, fn r -> elem(r, 0) == :error end)
 end
