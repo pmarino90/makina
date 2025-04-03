@@ -15,7 +15,7 @@ defmodule Makina.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger],
+      extra_applications: [:logger, :ssh],
       mod: {Makina.Cli, [Mix.env()]}
     ]
   end
@@ -40,7 +40,8 @@ defmodule Makina.MixProject do
       {:mix_test_interactive, "~> 4.3", only: :dev, runtime: false},
       {:burrito, "~> 1.0"},
       {:owl, "~> 0.12"},
-      {:ucwidth, "~> 0.2"}
+      {:ucwidth, "~> 0.2"},
+      {:nimble_options, "~> 1.0"}
     ]
   end
 end
