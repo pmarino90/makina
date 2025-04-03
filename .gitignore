@@ -25,3 +25,5 @@ makina-*.tar
 burrito_out
 
 .DS_Store
+
+Makinafile.exs
