@@ -39,14 +39,17 @@ defmodule Makina.Cli do
 
   def parse_command([command | rest]) do
     command = String.to_atom(command)
+    module = Map.get(commands(), command, nil)
 
-    {options, arguments, _invalid} =
-      OptionParser.parse(rest,
-        switches: options_for(command)
-      )
+    if is_nil(module) do
+      raise "Command not found"
+    else
+      {options, arguments, _invalid} =
+        OptionParser.parse(rest,
+          switches: module.options()
+        )
 
-    {command, arguments, options}
+      {command, arguments, options}
+    end
   end
-
-  defp options_for(_cmd), do: []
 end
