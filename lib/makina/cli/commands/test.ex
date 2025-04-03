@@ -21,14 +21,14 @@ defmodule Makina.Cli.Commands.Test do
     * --file - The path to a Makinafile, if not provided the command will look for it in the current folder.
     """
 
-  def exec(_arguments, _options) do
-    makinafile = Path.join(File.cwd!(), "Makinafile.exs")
+  def exec(_arguments, options) do
+    makinafile = makinafile(options)
     Makina.File.compile_build_file(makinafile)
     servers = Makina.File.fetch_servers()
 
     Owl.ProgressBar.start(
       id: :server_tests,
-      label: "Testing servers",
+      label: "Testing servers connectivity",
       total: Enum.count(servers)
     )
 
@@ -70,7 +70,19 @@ defmodule Makina.Cli.Commands.Test do
   end
 
   def options() do
-    []
+    [file: :string]
+  end
+
+  defp makinafile([]) do
+    Path.join(File.cwd!(), "Makinafile.exs")
+  end
+
+  defp makinafile(options) do
+    if Keyword.has_key?(options, :file) do
+      options[:file]
+    else
+      makinafile([])
+    end
   end
 
   defp test_with_errors?(results),
