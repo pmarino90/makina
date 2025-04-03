@@ -38,7 +38,9 @@ defmodule Makina.MixProject do
   defp deps do
     [
       {:mix_test_interactive, "~> 4.3", only: :dev, runtime: false},
-      {:burrito, "~> 1.0"}
+      {:burrito, "~> 1.0"},
+      {:owl, "~> 0.12"},
+      {:ucwidth, "~> 0.2"}
     ]
   end
 end
