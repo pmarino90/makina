@@ -6,7 +6,20 @@ defmodule Makina.Cli.Commands.Init do
   def name(), do: "init"
 
   def short_description(),
-    do: "Initializes the current repository with an empty Makinafile"
+    do: "Initializes the current folder with an empty Makinafile"
+
+  def help,
+    do: """
+    Makina
+    Initialization command
+
+    Creates a Makinafile.exs in the current working directory or to a given <PATH>
+
+    makina init [PATH]
+
+    Arguments:
+    * PATH - An optional path where to create the Makinafile. Should be a path, without file name.
+    """
 
   def exec(arguments, _options) do
     destination_path = List.first(arguments, File.cwd!())

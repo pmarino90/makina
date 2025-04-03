@@ -4,4 +4,5 @@ defmodule Makina.Cli.Command do
 
   @callback name() :: String.t()
   @callback short_description() :: String.t()
+  @callback help() :: String.t()
 end
