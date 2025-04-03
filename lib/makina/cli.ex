@@ -1,4 +1,6 @@
 defmodule Makina.Cli do
+  alias Owl.IO
+
   def start(_, [:test]) do
     {:ok, self()}
   end
@@ -8,7 +10,7 @@ defmodule Makina.Cli do
 
     case command(command) do
       {:ok, out} -> IO.puts(out)
-      {:error, out} -> IO.puts(:stderr, out)
+      {:error, out} -> IO.puts(out, :stderr)
     end
 
     System.halt(0)
@@ -40,10 +42,17 @@ defmodule Makina.Cli do
 
   def command(:init, arguments, _options) do
     destination_path = List.first(arguments, File.cwd!())
+    file = Path.join(destination_path, "Makinafile.exs")
 
-    File.write(Path.join(destination_path, "Makinafile.exs"), """
-    # Hello
-    """)
+    if File.exists?(file) do
+      IO.puts("File already exists, skipping!")
+    else
+      File.write(file, """
+      # Hello
+      """)
+
+      IO.puts("Makinafile created at #{Path.relative_to_cwd(file)} ✅")
+    end
 
     {:ok, ""}
   end
