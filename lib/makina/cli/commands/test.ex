@@ -8,6 +8,19 @@ defmodule Makina.Cli.Commands.Test do
   def short_description(),
     do: "Tests whether nodes configured inside the Makinafile can be successully reached"
 
+  def help,
+    do: """
+    Makina
+    Test command
+
+    Given the Makinafile the command tries to connect to those servers defined in it and reports the result.
+
+    makina test [OPTIONS]
+
+    Options:
+    * --file - The path to a Makinafile, if not provided the command will look for it in the current folder.
+    """
+
   def exec(_arguments, _options) do
     makinafile = Path.join(File.cwd!(), "Makinafile.exs")
     Makina.File.compile_build_file(makinafile)
