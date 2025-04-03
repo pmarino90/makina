@@ -1,0 +1,43 @@
+defmodule Makina.MixProject do
+  use Mix.Project
+
+  def project do
+    [
+      app: :makina,
+      version: "0.1.0",
+      elixir: "~> 1.18",
+      start_permanent: Mix.env() == :prod,
+      deps: deps(),
+      releases: releases()
+    ]
+  end
+
+  # Run "mix help compile.app" to learn about applications.
+  def application do
+    [
+      extra_applications: [:logger],
+      mod: {Makina.Cli, []}
+    ]
+  end
+
+  def releases do
+    [
+      makina_cli: [
+        steps: [:assemble, &Burrito.wrap/1],
+        burrito: [
+          debug: Mix.env() != :prod,
+          targets: [
+            macos_m1: [os: :darwin, cpu: :aarch64]
+          ]
+        ]
+      ]
+    ]
+  end
+
+  # Run "mix help deps" to learn about dependencies.
+  defp deps do
+    [
+      {:burrito, "~> 1.0"}
+    ]
+  end
+end
