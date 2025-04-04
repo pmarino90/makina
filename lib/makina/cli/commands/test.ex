@@ -1,6 +1,8 @@
 defmodule Makina.Cli.Commands.Test do
   @behaviour Makina.Cli.Command
 
+  import Makina.Cli.Utils
+
   alias Makina.SSH
   alias Owl.IO
 
@@ -77,18 +79,6 @@ defmodule Makina.Cli.Commands.Test do
 
   def options() do
     [file: :string]
-  end
-
-  defp makinafile([]) do
-    Path.join(File.cwd!(), "Makinafile.exs")
-  end
-
-  defp makinafile(options) do
-    if Keyword.has_key?(options, :file) do
-      options[:file]
-    else
-      makinafile([])
-    end
   end
 
   defp test_with_errors?(results),
