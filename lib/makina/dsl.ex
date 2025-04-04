@@ -1,4 +1,5 @@
 defmodule Makina.DSL do
+  alias Makina.Definitions.Application
   alias Makina.Definitions.Server
 
   @doc """
@@ -33,8 +34,10 @@ defmodule Makina.DSL do
   #{NimbleOptions.docs(@server_opts)}
   """
   defmacro server(opts) do
-    quote bind_quoted: [schema: @server_opts, opts: opts] do
-      validation = NimbleOptions.validate(opts, schema)
+    schema = @server_opts
+
+    quote do
+      validation = NimbleOptions.validate(unquote(opts), unquote(schema))
 
       case validation do
         {:ok, opts} ->
@@ -50,11 +53,58 @@ defmodule Makina.DSL do
     end
   end
 
+  @doc """
+  Defines a block of applications that are standalone
+
+  Applications defined inside this block are deployed, or removed, in the remote server
+  independently from others, this means that dependencies cannot be defined between these.
+
+  Can be useful if you want to deploy a standalone application that doesn't have other moving pieces.
+
+  For cases where the application might require other services (for example a webapp + a database) then `stack` is the correct option.
+  """
   defmacro standalone(do: block) do
     quote do
-      Module.put_attribute(__MODULE__, :is_standalone_block?, true)
+      unquote(set_wrapping_context(:standalone))
       unquote(block)
-      Module.put_attribute(__MODULE__, :is_standalone_block?, false)
+      unquote(set_wrapping_context(nil))
+    end
+  end
+
+  @app_opts [name: [type: :string, required: true]]
+
+  @doc """
+  Defines an application
+  Within this block you can configure the application that you want to deploy, can be used within a `standalone` block or `stack` block.
+
+  Depending on the context some configurations might not be available
+  """
+  defmacro app(opts, do: block) do
+    schema = @app_opts
+
+    quote do
+      validation = NimbleOptions.validate(unquote(opts), unquote(schema))
+
+      case validation do
+        {:ok, opts} ->
+          unquote(set_wrapping_context(:app))
+
+          @current_application struct(Application, opts)
+
+          unquote(block)
+
+          @standalone_applications @current_application
+          Module.delete_attribute(__MODULE__, :current_application)
+
+          unquote(set_wrapping_context(nil))
+
+        {:error, error} ->
+          raise """
+            The parameters provided to the `server` statement are not correct:
+
+            #{Exception.message(error)}
+          """
+      end
     end
   end
 
@@ -86,6 +136,18 @@ defmodule Makina.DSL do
 
           #{Exception.message(error)}
         """
+    end
+  end
+
+  defp set_wrapping_context(nil) do
+    quote do
+      Module.delete_attribute(__MODULE__, :wrapping_context)
+    end
+  end
+
+  defp set_wrapping_context(name) do
+    quote do
+      Module.put_attribute(__MODULE__, :wrapping_context, unquote(name))
     end
   end
 
