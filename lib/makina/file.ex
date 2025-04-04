@@ -1,7 +1,12 @@
 defmodule Makina.File do
   def compile_build_file(path) do
     file = File.read!(path)
-    {:ok, env} = Macro.Env.define_import(__ENV__, [line: 1], Makina.DSL)
+
+    {:ok, env} =
+      __ENV__
+      |> Map.put(:file, path)
+      |> Macro.Env.define_import([line: 1], Makina.DSL)
+
     {_term, bindings} = Code.eval_string(file, [], env)
 
     bindings

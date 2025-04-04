@@ -2,6 +2,7 @@ defmodule Makina.Cli.Commands.Test do
   @behaviour Makina.Cli.Command
 
   alias Makina.SSH
+  alias Owl.IO
 
   def name(), do: "test"
 
@@ -59,7 +60,7 @@ defmodule Makina.Cli.Commands.Test do
     Owl.LiveScreen.await_render()
 
     if test_with_errors?(results) do
-      IO.puts(Owl.Data.tag("Cannot reach some servers", :red))
+      IO.puts(Owl.Data.tag("Cannot reach some servers", :red), :stderr)
 
       :error
     else
