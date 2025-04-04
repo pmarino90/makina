@@ -24,8 +24,13 @@ defmodule Makina.Cli.Commands.Test do
 
   def exec(_arguments, options) do
     makinafile = makinafile(options)
-    Makina.File.compile_build_file(makinafile)
-    servers = Makina.File.fetch_servers()
+
+    ctx =
+      Makina.File.read_makina_file!(makinafile)
+      |> Makina.File.evaluate_makina_file()
+      |> Makina.File.collect_makina_file_context()
+
+    servers = ctx[:servers]
 
     Owl.ProgressBar.start(
       id: :server_tests,
