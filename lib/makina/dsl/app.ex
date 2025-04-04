@@ -3,8 +3,6 @@ defmodule Makina.DSL.App do
   Specific expressions to use inside an application block
   """
 
-  import Makina.DSL.Utils
-
   @from_docker_image_opts [
     name: [type: :string, required: true],
     tag: [type: :string, default: "latest"]

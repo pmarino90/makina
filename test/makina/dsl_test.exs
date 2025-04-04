@@ -96,6 +96,27 @@ defmodule Makina.DSLTest do
       assert app.docker_image[:name] == "name"
       assert app.docker_image[:tag] == "tag"
     end
+
+    test "raises if app block is not invoked correctly" do
+      import DSL
+
+      catch_error(
+        makina do
+          standalone do
+            app("test")
+          end
+        end
+      )
+
+      catch_error(
+        makina do
+          standalone do
+            app "test" do
+            end
+          end
+        end
+      )
+    end
   end
 
   describe "secret_for/1" do
