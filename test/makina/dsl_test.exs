@@ -53,6 +53,29 @@ defmodule Makina.DSLTest do
       assert Map.has_key?(context, :standalone_applications)
       assert context[:standalone_applications] == []
     end
+
+    test "collects apps defined inside the block" do
+      import DSL
+
+      term =
+        makina do
+          standalone do
+            app name: "test" do
+            end
+          end
+        end
+
+      module = elem(term, 1)
+      context = module.collect_context()
+
+      assert Map.has_key?(context, :standalone_applications)
+
+      assert List.first(context[:standalone_applications])
+             |> is_struct(Makina.Definitions.Application)
+    end
+  end
+
+  describe "app/2" do
   end
 
   describe "secret_for/1" do

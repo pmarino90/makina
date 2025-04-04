@@ -1,7 +1,9 @@
 # Used by "mix format"
 
 locals_without_parens = [
-  server: 1
+  server: 1,
+  standalone: 1,
+  app: 2
 ]
 
 [
