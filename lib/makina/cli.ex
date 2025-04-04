@@ -1,6 +1,8 @@
 defmodule Makina.Cli do
   alias Makina.Cli.Commands
 
+  alias Owl.IO
+
   def commands do
     %{
       help: Commands.Help,
@@ -14,11 +16,24 @@ defmodule Makina.Cli do
   end
 
   def start(_, _args) do
-    {command, arguments, options} = parse_command(Burrito.Util.Args.argv())
+    try do
+      {command, arguments, options} = parse_command(Burrito.Util.Args.argv())
 
-    case command(command, arguments, options) do
-      :ok -> System.halt(0)
-      :error -> System.halt(-1)
+      case command(command, arguments, options) do
+        :ok -> System.halt(0)
+        :error -> System.halt(1)
+      end
+    rescue
+      err ->
+        IO.puts(
+          Owl.Data.tag(
+            "#{Exception.message(err)}",
+            :red
+          ),
+          :stderr
+        )
+
+        System.halt(1)
     end
 
     :ok
@@ -42,7 +57,10 @@ defmodule Makina.Cli do
     module = Map.get(commands(), command, nil)
 
     if is_nil(module) do
-      raise "Command not found"
+      raise """
+        Unknown command: makina #{command}
+        Run 'makina help' to explore available commands.
+      """
     else
       {options, arguments, _invalid} =
         OptionParser.parse(rest,
