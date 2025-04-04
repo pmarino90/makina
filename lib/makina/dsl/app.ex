@@ -21,7 +21,11 @@ defmodule Makina.DSL.App do
 
       case validation do
         {:ok, opts} ->
-          @current_application Map.put(@current_application, :docker_image, opts)
+          @current_application Map.put(
+                                 @current_application,
+                                 :docker_image,
+                                 Enum.into(opts, %{})
+                               )
 
         {:error, error} ->
           raise """
