@@ -37,6 +37,24 @@ defmodule Makina.DSLTest do
     end
   end
 
+  describe "standalone/1" do
+    test "returns an empty list of applications when the block is empty" do
+      import DSL
+
+      term =
+        makina do
+          standalone do
+          end
+        end
+
+      module = elem(term, 1)
+      context = module.collect_context()
+
+      assert Map.has_key?(context, :standalone_applications)
+      assert context[:standalone_applications] == []
+    end
+  end
+
   describe "secret_for/1" do
     test "returns a secret stored in an environment variable" do
       System.put_env("FOO", "secret")

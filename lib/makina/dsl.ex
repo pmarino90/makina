@@ -50,6 +50,14 @@ defmodule Makina.DSL do
     end
   end
 
+  defmacro standalone(do: block) do
+    quote do
+      Module.put_attribute(__MODULE__, :is_standalone_block?, true)
+      unquote(block)
+      Module.put_attribute(__MODULE__, :is_standalone_block?, false)
+    end
+  end
+
   @secret_from_opts [
     environment: [
       type: :string,
@@ -81,17 +89,10 @@ defmodule Makina.DSL do
     end
   end
 
-  defmacro stack(opts, do: block) do
-    quote do
-      @stack_name unquote(opts[:name])
-      unquote(block)
-      Module.delete_attribute(__MODULE__, :stack_name)
-    end
-  end
-
   defp define_context_attributes() do
     quote do
       Module.register_attribute(__MODULE__, :servers, accumulate: true)
+      Module.register_attribute(__MODULE__, :standalone_applications, accumulate: true)
     end
   end
 
@@ -99,7 +100,8 @@ defmodule Makina.DSL do
     quote do
       def collect_context() do
         %{
-          servers: @servers
+          servers: @servers,
+          standalone_applications: @standalone_applications
         }
       end
     end
