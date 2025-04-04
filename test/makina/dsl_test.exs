@@ -76,6 +76,26 @@ defmodule Makina.DSLTest do
   end
 
   describe "app/2" do
+    test "allow setting docker image config" do
+      import DSL
+
+      term =
+        makina do
+          standalone do
+            app name: "test" do
+              from_docker_image name: "name", tag: "tag"
+            end
+          end
+        end
+
+      module = elem(term, 1)
+      context = module.collect_context()
+
+      app = List.first(context[:standalone_applications])
+
+      assert app.docker_image[:name] == "name"
+      assert app.docker_image[:tag] == "tag"
+    end
   end
 
   describe "secret_for/1" do

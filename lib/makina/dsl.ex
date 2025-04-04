@@ -1,4 +1,6 @@
 defmodule Makina.DSL do
+  import Makina.DSL.Utils
+
   alias Makina.Definitions.Application
   alias Makina.Definitions.Server
 
@@ -87,6 +89,8 @@ defmodule Makina.DSL do
 
       case validation do
         {:ok, opts} ->
+          import Makina.DSL.App
+
           unquote(set_wrapping_context(:app))
 
           @current_application struct(Application, opts)
@@ -100,7 +104,7 @@ defmodule Makina.DSL do
 
         {:error, error} ->
           raise """
-            The parameters provided to the `server` statement are not correct:
+            The parameters provided to the `app` statement are not correct:
 
             #{Exception.message(error)}
           """
@@ -136,18 +140,6 @@ defmodule Makina.DSL do
 
           #{Exception.message(error)}
         """
-    end
-  end
-
-  defp set_wrapping_context(nil) do
-    quote do
-      Module.delete_attribute(__MODULE__, :wrapping_context)
-    end
-  end
-
-  defp set_wrapping_context(name) do
-    quote do
-      Module.put_attribute(__MODULE__, :wrapping_context, unquote(name))
     end
   end
 
