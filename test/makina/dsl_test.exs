@@ -36,4 +36,14 @@ defmodule Makina.DSLTest do
       assert Enum.count(context[:servers]) == 1
     end
   end
+
+  describe "secret_for/1" do
+    test "returns a secret stored in an environment variable" do
+      System.put_env("FOO", "secret")
+
+      secret = DSL.secret_from(environment: "FOO")
+
+      assert secret == "secret"
+    end
+  end
 end
