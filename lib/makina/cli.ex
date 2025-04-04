@@ -54,20 +54,18 @@ defmodule Makina.Cli do
 
   def parse_command([command | rest]) do
     command = String.to_atom(command)
+
+    {options, arguments, _invalid} =
+      OptionParser.parse(rest,
+        switches: get_command_options(command)
+      )
+
+    {command, arguments, options}
+  end
+
+  defp get_command_options(command) do
     module = Map.get(commands(), command, nil)
 
-    if is_nil(module) do
-      raise """
-        Unknown command: makina #{command}
-        Run 'makina help' to explore available commands.
-      """
-    else
-      {options, arguments, _invalid} =
-        OptionParser.parse(rest,
-          switches: module.options()
-        )
-
-      {command, arguments, options}
-    end
+    if is_nil(module), do: [], else: module.options()
   end
 end
