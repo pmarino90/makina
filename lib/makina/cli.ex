@@ -7,7 +7,8 @@ defmodule Makina.Cli do
     %{
       help: Commands.Help,
       init: Commands.Init,
-      test: Commands.Test
+      test: Commands.Test,
+      debug: Commands.Debug
     }
   end
 
