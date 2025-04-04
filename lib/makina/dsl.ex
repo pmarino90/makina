@@ -81,7 +81,8 @@ defmodule Makina.DSL do
 
   Depending on the context some configurations might not be available
   """
-  defmacro app(opts, do: block) do
+
+  defmacro app(opts, do: block) when is_list(opts) do
     schema = @app_opts
 
     quote do
@@ -110,6 +111,28 @@ defmodule Makina.DSL do
           """
       end
     end
+  end
+
+  defmacro app(opts, do: _block) when is_binary(opts) do
+    raise """
+    Invalid block definition for `app`.
+
+    A correct block definition is like so:
+        app name: "my_app" do
+
+        end
+    """
+  end
+
+  def app(_opts) do
+    raise """
+    Invalid block definition for `app`.
+
+    A correct block definition is like so:
+        app name: "my_app" do
+
+        end
+    """
   end
 
   @secret_from_opts [
