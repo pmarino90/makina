@@ -4,7 +4,7 @@ defmodule Makina.Docker do
   On their own these do not do anything except returning a correctly formatted
   command that should then be executed over SSH.
   """
-  alias Makina.Definitions.Application
+  alias Makina.Models.Application
 
   def run_command(%Application{} = app) do
     "docker run -d --restart always #{app.docker_image[:name]}"

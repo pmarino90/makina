@@ -1,7 +1,7 @@
 defmodule Makina.DSL.Utils do
   @moduledoc false
 
-  def set_wrapping_context(nil) do
+  def unset_wrapping_context() do
     quote do
       Module.delete_attribute(__MODULE__, :wrapping_context)
     end
