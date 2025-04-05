@@ -4,7 +4,7 @@ defmodule Makina.Cli.Commands.Test do
   import Makina.Cli.Utils
 
   alias Makina.SSH
-  alias Owl.IO
+  alias Makina.IO
 
   def name(), do: "test"
 
@@ -25,12 +25,9 @@ defmodule Makina.Cli.Commands.Test do
     """
 
   def exec(_arguments, options) do
-    makinafile = makinafile(options)
-
     ctx =
-      Makina.File.read_makina_file!(makinafile)
-      |> Makina.File.evaluate_makina_file()
-      |> Makina.File.collect_makina_file_context()
+      makinafile(options)
+      |> fetch_context()
 
     servers = ctx[:servers]
 
@@ -67,11 +64,11 @@ defmodule Makina.Cli.Commands.Test do
     Owl.LiveScreen.await_render()
 
     if test_with_errors?(results) do
-      IO.puts(Owl.Data.tag("Cannot reach some servers", :red), :stderr)
+      IO.puts_error("Cannot reach some servers")
 
       :error
     else
-      IO.puts("All servers are reachable ✅")
+      IO.puts_success("All servers are reachable ✅")
 
       :ok
     end

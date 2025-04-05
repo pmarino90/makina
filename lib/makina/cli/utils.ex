@@ -12,4 +12,10 @@ defmodule Makina.Cli.Utils do
       makinafile([])
     end
   end
+
+  def fetch_context(makinafile) do
+    Makina.File.read_makina_file!(makinafile)
+    |> Makina.File.evaluate_makina_file()
+    |> Makina.File.collect_makina_file_context()
+  end
 end
