@@ -3,8 +3,8 @@ defmodule Makina.Applications do
 
   require Logger
 
-  alias Makina.Definitions.Server
-  alias Makina.Definitions.Application
+  alias Makina.Models.Server
+  alias Makina.Models.Application
   alias Makina.SSH
   alias Makina.Docker
   alias Makina.IO

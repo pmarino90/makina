@@ -1,8 +1,8 @@
 defmodule Makina.DSL do
   import Makina.DSL.Utils
 
-  alias Makina.Definitions.Application
-  alias Makina.Definitions.Server
+  alias Makina.Models.Application
+  alias Makina.Models.Server
 
   @doc """
   Toplevel expression used to define a Makinafile
@@ -43,7 +43,7 @@ defmodule Makina.DSL do
 
       case validation do
         {:ok, opts} ->
-          Module.put_attribute(__MODULE__, :servers, struct(Server, opts))
+          Module.put_attribute(__MODULE__, :servers, Server.new(opts))
 
         {:error, error} ->
           raise """
@@ -94,14 +94,14 @@ defmodule Makina.DSL do
 
           unquote(set_wrapping_context(:app))
 
-          @current_application struct(Application, opts)
+          @current_application Application.new(opts)
 
           unquote(block)
 
           @standalone_applications @current_application
           Module.delete_attribute(__MODULE__, :current_application)
 
-          unquote(set_wrapping_context(nil))
+          unquote(unset_wrapping_context())
 
         {:error, error} ->
           raise """

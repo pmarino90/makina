@@ -71,7 +71,7 @@ defmodule Makina.DSLTest do
       assert Map.has_key?(context, :standalone_applications)
 
       assert List.first(context[:standalone_applications])
-             |> is_struct(Makina.Definitions.Application)
+             |> is_struct(Makina.Models.Application)
     end
   end
 
