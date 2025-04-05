@@ -23,6 +23,8 @@ defmodule Makina.SSH do
   def connect(host, opts) when is_list(opts) do
     opts = NimbleOptions.validate!(opts, @connect_opts)
 
+    Logger.debug("Connecting to #{host}")
+
     :ssh.connect(String.to_charlist(host), opts[:port],
       user: String.to_charlist(opts[:user]),
       password: String.to_charlist(opts[:password]),
@@ -34,6 +36,7 @@ defmodule Makina.SSH do
   Disconnects from a server, requires the connection reference.
   """
   def disconnect(connection_ref) do
+    Logger.debug("Connection closed.")
     :ssh.close(connection_ref)
   end
 
@@ -74,7 +77,7 @@ defmodule Makina.SSH do
         collect_output(connection_ref, %{result | status: status})
 
       {:ssh_cm, ^connection_ref, {:closed, _channel_id}} ->
-        Logger.debug("Connection closed")
+        Logger.debug("Command execution completed, session closed.")
 
         case result.status do
           0 -> {:ok, %{result | data: Enum.reverse(result[:data])}}
@@ -82,7 +85,7 @@ defmodule Makina.SSH do
         end
     after
       @command_execution_timeout ->
-        IO.puts("Timeout waiting for SSH response.")
+        Logger.debug("Timeout waiting for SSH response.")
         :timeout
     end
   end
