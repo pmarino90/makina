@@ -1,5 +1,7 @@
 defmodule Makina.Models.Internal do
   def hash(struct) do
-    :erlang.phash2(struct)
+    struct
+    |> :erlang.term_to_binary()
+    |> :erlang.phash2()
   end
 end
