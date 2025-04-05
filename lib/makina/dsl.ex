@@ -135,36 +135,7 @@ defmodule Makina.DSL do
     """
   end
 
-  @secret_from_opts [
-    environment: [
-      type: :string,
-      doc: """
-      The environment variable's name where the secret is currently stored.
-      Note: This refers to the environment in which the `makina` command is run.
-      """
-    ]
-  ]
-  @doc """
-  Fetches a secret from a given provider.
-
-  ## Supported providers:
-  #{NimbleOptions.docs(@secret_from_opts)}
-  """
-  def secret_from(opts) do
-    validation = NimbleOptions.validate(opts, @secret_from_opts)
-
-    case validation do
-      {:ok, opts} ->
-        System.get_env(opts[:environment])
-
-      {:error, error} ->
-        raise """
-          The parameters provided to `secret_for` are not correct:
-
-          #{Exception.message(error)}
-        """
-    end
-  end
+  defdelegate secret_from(opts), to: Makina.DSL.Secrets
 
   defp define_context_attributes() do
     quote do

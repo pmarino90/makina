@@ -18,6 +18,8 @@ defmodule Makina.Cli do
   end
 
   def start(_, _args) do
+    :ssh.start()
+
     try do
       {command, arguments, options} = parse_command(Burrito.Util.Args.argv())
 
