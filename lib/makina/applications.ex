@@ -34,12 +34,23 @@ defmodule Makina.Applications do
 
     SSH.disconnect(conn_ref)
 
-    Logger.debug("All applications deployed on #{server.host}")
     results
   end
 
-  defp deploy_application_on_server(conn_ref, %Server{} = server, %Application{} = application) do
-    IO.puts("Deploying application application...")
-    SSH.cmd(conn_ref, Docker.run_command(server, application))
+  defp deploy_application_on_server(conn_ref, %Server{} = server, %Application{} = app) do
+    IO.puts("Deploying \"#{app.name}\"...")
+
+    case Docker.inspect(conn_ref, server, app) do
+      {:ok, nil} ->
+        Logger.debug("No current instances of #{app.name} running, deploying")
+        Docker.run_command(conn_ref, server, app)
+
+      {:ok, _container} ->
+        Logger.debug("A version of #{app.name} is already running, skipping.")
+        {:ok, :skipping}
+
+      {:error, reason} ->
+        {:error, reason}
+    end
   end
 end
