@@ -41,7 +41,7 @@ defmodule Makina.SSH do
   end
 
   @doc """
-  Executes a one-shot command over SSH.
+  Executes a command over SSH.
 
   Requires a connection to be already open using `Makina.SSH.connect/2`.
   A session will be automatically created and closed after the command finishes,
@@ -52,7 +52,7 @@ defmodule Makina.SSH do
   * `{:error, reason | data}` when either there has been errors launching the command or the executed command returned a non-zero result.
   * `:timeout` in case a timeout has bee reached while waiting for a response.
   """
-  def exec(connection_ref, cmd) do
+  def cmd(connection_ref, cmd) do
     case :ssh_connection.session_channel(connection_ref, @command_execution_timeout) do
       {:ok, session_id} ->
         :ssh_connection.exec(connection_ref, session_id, cmd, @command_execution_timeout)

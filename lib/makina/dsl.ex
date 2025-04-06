@@ -23,7 +23,8 @@ defmodule Makina.DSL do
     host: [type: :string, required: true],
     user: [type: :string],
     password: [type: :string],
-    port: [type: :pos_integer, default: 22]
+    port: [type: :pos_integer, default: 22],
+    config: [type: :keyword_list]
   ]
 
   @doc """
