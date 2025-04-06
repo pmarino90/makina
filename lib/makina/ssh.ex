@@ -53,6 +53,8 @@ defmodule Makina.SSH do
   * `:timeout` in case a timeout has bee reached while waiting for a response.
   """
   def cmd(connection_ref, cmd) do
+    Logger.debug("Running command: #{cmd}")
+
     case :ssh_connection.session_channel(connection_ref, @command_execution_timeout) do
       {:ok, session_id} ->
         :ssh_connection.exec(connection_ref, session_id, cmd, @command_execution_timeout)
@@ -60,7 +62,7 @@ defmodule Makina.SSH do
         collect_output(connection_ref)
 
       {:error, reason} ->
-        IO.puts(reason)
+        {:error, reason}
     end
   end
 
@@ -80,13 +82,20 @@ defmodule Makina.SSH do
         Logger.debug("Command execution completed, session closed.")
 
         case result.status do
-          0 -> {:ok, %{result | data: Enum.reverse(result[:data])}}
-          _ -> {:error, %{result | data: Enum.reverse(result[:data])}}
+          0 -> {:ok, %{result | data: prepare_command_output(result[:data])}}
+          _ -> {:error, %{result | data: prepare_command_output(result[:data])}}
         end
     after
       @command_execution_timeout ->
         Logger.debug("Timeout waiting for SSH response.")
         :timeout
     end
+  end
+
+  defp prepare_command_output(data) do
+    data
+    |> Enum.reverse()
+    |> List.flatten()
+    |> Enum.join()
   end
 end
