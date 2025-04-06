@@ -29,7 +29,7 @@ defmodule Makina.Applications do
 
     results =
       for app <- applications do
-        deploy_application_on_server(conn_ref, app)
+        deploy_application_on_server(conn_ref, server, app)
       end
 
     SSH.disconnect(conn_ref)
@@ -38,8 +38,8 @@ defmodule Makina.Applications do
     results
   end
 
-  defp deploy_application_on_server(conn_ref, %Application{} = application) do
+  defp deploy_application_on_server(conn_ref, %Server{} = server, %Application{} = application) do
     IO.puts("Deploying application application...")
-    SSH.exec(conn_ref, Docker.run_command(application))
+    SSH.cmd(conn_ref, Docker.run_command(server, application))
   end
 end
