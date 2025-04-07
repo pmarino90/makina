@@ -18,6 +18,7 @@ defmodule Makina.Docker do
         "#{app_name(app)}",
         "--label",
         "org.makina.app.hash=#{app.hash}",
+        volumes(app),
         app.docker_image[:name],
         "--tag",
         app.docker_image[:tag]
@@ -50,8 +51,19 @@ defmodule Makina.Docker do
   defp docker(server, command, args) do
     docker_path = Keyword.get(server.config, :docker_path, "")
     bin = Path.join(docker_path, "docker")
-    args = Enum.join(args, " ")
+    args = args |> List.flatten() |> Enum.join(" ")
 
     "#{bin} #{command} " <> args
+  end
+
+  defp volumes(%Application{volumes: []}) do
+    []
+  end
+
+  defp volumes(%Application{} = app) do
+    app.volumes
+    |> Enum.flat_map(fn v ->
+      ["--volume", "#{v.source}:#{v.destination}"]
+    end)
   end
 end
