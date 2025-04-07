@@ -27,7 +27,7 @@ defmodule Makina.FileTest do
 
     test "ensure that Makina.DSL is automatically imported" do
       file = """
-      makina do
+      makina "test-auto-import" do
 
       end
       """
@@ -43,7 +43,7 @@ defmodule Makina.FileTest do
   describe "collect_makina_file_context/1" do
     test "returns a map with all collected info from a Makinafile" do
       file = """
-      makina do
+      makina "test-context-collection" do
 
       end
       """
