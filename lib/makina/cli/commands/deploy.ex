@@ -30,7 +30,7 @@ defmodule Makina.Cli.Commands.Deploy do
       makinafile(options)
       |> fetch_context()
 
-    servers = ctx[:servers]
+    servers = ctx.servers
 
     deployment_result =
       Makina.deploy_standalone_applications(servers, ctx.standalone_applications)

@@ -29,7 +29,7 @@ defmodule Makina.Cli.Commands.Test do
       makinafile(options)
       |> fetch_context()
 
-    servers = ctx[:servers]
+    servers = ctx.servers
 
     Owl.ProgressBar.start(
       id: :server_tests,

@@ -3,6 +3,7 @@ defmodule Makina.Models.Application do
 
   @derive {JSON.Encoder, []}
   defstruct name: nil,
+            scope: [],
             hash: nil,
             docker_image: nil,
             environment_variables: [],

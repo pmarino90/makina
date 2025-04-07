@@ -7,9 +7,15 @@ defmodule Makina.DSL.Utils do
     end
   end
 
-  def set_wrapping_context(name) do
+  def set_scope(scope) when is_list(scope) do
+    for s <- scope do
+      set_scope(s)
+    end
+  end
+
+  def set_scope(scope) do
     quote do
-      Module.put_attribute(__MODULE__, :wrapping_context, unquote(name))
+      @scope unquote(scope)
     end
   end
 end
