@@ -33,7 +33,7 @@ defmodule Makina.Cli.Commands.Deploy do
     servers = ctx[:servers]
 
     deployment_result =
-      Makina.deploy_standalone_applications(servers, ctx[:standalone_applications])
+      Makina.deploy_standalone_applications(servers, ctx.standalone_applications)
 
     case deployment_errors?(deployment_result) do
       true ->

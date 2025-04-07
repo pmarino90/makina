@@ -20,7 +20,7 @@ defmodule Makina.DSLTest do
 
       context = mod.collect_context()
 
-      assert context[:id] == "foo"
+      assert context.id == "foo"
     end
   end
 
@@ -37,7 +37,7 @@ defmodule Makina.DSLTest do
       context = module.collect_context()
 
       assert Map.has_key?(context, :servers)
-      assert Enum.count(context[:servers]) == 1
+      assert Enum.count(context.servers) == 1
     end
   end
 
@@ -55,7 +55,7 @@ defmodule Makina.DSLTest do
       context = module.collect_context()
 
       assert Map.has_key?(context, :standalone_applications)
-      assert context[:standalone_applications] == []
+      assert context.standalone_applications == []
     end
 
     test "collects apps defined inside the block" do
@@ -74,7 +74,7 @@ defmodule Makina.DSLTest do
 
       assert Map.has_key?(context, :standalone_applications)
 
-      assert List.first(context[:standalone_applications])
+      assert List.first(context.standalone_applications)
              |> is_struct(Makina.Models.Application)
     end
   end
@@ -95,7 +95,7 @@ defmodule Makina.DSLTest do
       module = elem(term, 1)
       context = module.collect_context()
 
-      app = List.first(context[:standalone_applications])
+      app = List.first(context.standalone_applications)
 
       assert app.docker_image[:name] == "name"
       assert app.docker_image[:tag] == "tag"

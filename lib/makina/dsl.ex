@@ -3,6 +3,7 @@ defmodule Makina.DSL do
 
   alias Makina.Models.Application
   alias Makina.Models.Server
+  alias Makina.Models.Context
 
   @doc """
   Toplevel expression used to define a Makinafile
@@ -149,11 +150,11 @@ defmodule Makina.DSL do
   defp define_support_functions() do
     quote do
       def collect_context() do
-        %{
+        Context.new(
           id: @context_id,
           servers: @servers,
           standalone_applications: @standalone_applications
-        }
+        )
       end
     end
   end
