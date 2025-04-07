@@ -36,4 +36,18 @@ defmodule Makina.DSL.App do
       end
     end
   end
+
+  defmacro volume(source, destination) when is_binary(source) and is_binary(destination) do
+    volume = %{source: source, destination: destination}
+
+    quote do
+      @current_application Map.put(
+                             @current_application,
+                             :volumes,
+                             [
+                               unquote(Macro.escape(volume)) | @current_application.volumes
+                             ]
+                           )
+    end
+  end
 end

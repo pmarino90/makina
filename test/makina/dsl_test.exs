@@ -101,6 +101,30 @@ defmodule Makina.DSLTest do
       assert app.docker_image[:tag] == "tag"
     end
 
+    test "allow volumes to be specified" do
+      import DSL
+
+      term =
+        makina "app-test-specify-module" do
+          standalone do
+            app name: "test" do
+              volume "foo", "/app/data"
+            end
+          end
+        end
+
+      module = elem(term, 1)
+      context = module.collect_context()
+
+      app = List.first(context.standalone_applications)
+
+      assert is_list(app.volumes)
+
+      volume = List.first(app.volumes)
+
+      assert volume == %{source: "foo", destination: "/app/data"}
+    end
+
     test "raises if app block is not invoked correctly" do
       import DSL
 
