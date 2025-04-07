@@ -16,6 +16,8 @@ defmodule Makina.Docker do
         "always",
         "--name",
         "#{app_name(app)}",
+        "--label",
+        "org.makina.app.hash=#{app.hash}",
         app.docker_image[:name],
         "--tag",
         app.docker_image[:tag]
