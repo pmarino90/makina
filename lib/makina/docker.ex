@@ -42,11 +42,11 @@ defmodule Makina.Docker do
   end
 
   defp app_name(%Application{} = app) do
-    "makina-standalone-#{app.name}"
+    app.scope |> Enum.reverse() |> Enum.join("_")
   end
 
   defp docker(server, command, args) do
-    docker_path = Keyword.get(server.config, :docker_path, nil)
+    docker_path = Keyword.get(server.config, :docker_path, "")
     bin = Path.join(docker_path, "docker")
     args = Enum.join(args, " ")
 

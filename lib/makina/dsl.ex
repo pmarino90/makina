@@ -15,6 +15,7 @@ defmodule Makina.DSL do
       defmodule unquote(module_name) do
         @context_id unquote(id)
         unquote(define_context_attributes())
+        unquote(set_scope([:makina, id]))
         unquote(block)
         unquote(define_support_functions())
       end
@@ -70,9 +71,8 @@ defmodule Makina.DSL do
   """
   defmacro standalone(do: block) do
     quote do
-      unquote(set_wrapping_context(:standalone))
+      unquote(set_scope(:standalone))
       unquote(block)
-      unquote(set_wrapping_context(nil))
     end
   end
 
@@ -95,16 +95,14 @@ defmodule Makina.DSL do
         {:ok, opts} ->
           import Makina.DSL.App
 
-          unquote(set_wrapping_context(:app))
+          unquote(set_scope([:app, opts[:name]]))
 
-          @current_application Application.new(opts)
+          @current_application Application.new(Keyword.put(opts, :scope, @scope))
 
           unquote(block)
 
           @standalone_applications @current_application
           Module.delete_attribute(__MODULE__, :current_application)
-
-          unquote(unset_wrapping_context())
 
         {:error, error} ->
           raise """
@@ -142,6 +140,7 @@ defmodule Makina.DSL do
 
   defp define_context_attributes() do
     quote do
+      Module.register_attribute(__MODULE__, :scope, accumulate: true)
       Module.register_attribute(__MODULE__, :servers, accumulate: true)
       Module.register_attribute(__MODULE__, :standalone_applications, accumulate: true)
     end
