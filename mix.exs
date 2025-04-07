@@ -41,7 +41,8 @@ defmodule Makina.MixProject do
       {:burrito, "~> 1.0"},
       {:owl, "~> 0.12"},
       {:ucwidth, "~> 0.2"},
-      {:nimble_options, "~> 1.0"}
+      {:nimble_options, "~> 1.0"},
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
     ]
   end
 end

@@ -8,7 +8,7 @@ defmodule Makina.DSLTest do
       import DSL
 
       term =
-        makina do
+        makina "foo" do
         end
 
       assert elem(term, 0) == :module
@@ -17,6 +17,10 @@ defmodule Makina.DSLTest do
       mod = elem(term, 1)
 
       assert Kernel.function_exported?(mod, :collect_context, 0)
+
+      context = mod.collect_context()
+
+      assert context[:id] == "foo"
     end
   end
 
@@ -25,7 +29,7 @@ defmodule Makina.DSLTest do
       import DSL
 
       term =
-        makina do
+        makina "test-server-dsl" do
           server host: "example.com", user: "user"
         end
 
@@ -42,7 +46,7 @@ defmodule Makina.DSLTest do
       import DSL
 
       term =
-        makina do
+        makina "standalone-test" do
           standalone do
           end
         end
@@ -58,7 +62,7 @@ defmodule Makina.DSLTest do
       import DSL
 
       term =
-        makina do
+        makina "standalone-test-collect-apps" do
           standalone do
             app name: "test" do
             end
@@ -80,7 +84,7 @@ defmodule Makina.DSLTest do
       import DSL
 
       term =
-        makina do
+        makina "app-test-allow-docker-image" do
           standalone do
             app name: "test" do
               from_docker_image name: "name", tag: "tag"
@@ -101,7 +105,7 @@ defmodule Makina.DSLTest do
       import DSL
 
       catch_error(
-        makina do
+        makina "error-test-app" do
           standalone do
             app("test")
           end
@@ -109,7 +113,7 @@ defmodule Makina.DSLTest do
       )
 
       catch_error(
-        makina do
+        makina "error-test-app-2" do
           standalone do
             app "test" do
             end

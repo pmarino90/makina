@@ -1,4 +1,6 @@
 import Makina.DSL
 
-server host: "example.com"
-server host: "example2.com"
+makina "test-wth-servers" do
+  server host: "example.com"
+  server host: "example2.com"
+end

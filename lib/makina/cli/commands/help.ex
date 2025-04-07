@@ -51,7 +51,6 @@ defmodule Makina.Cli.Commands.Help do
   defp commands_short_description() do
     Makina.Cli.commands()
     |> Map.values()
-    |> Enum.map(fn c -> "#{c.name()}    #{c.short_description()}" end)
-    |> Enum.join("\n")
+    |> Enum.map_join("\n", fn c -> "#{c.name()}    #{c.short_description()}" end)
   end
 end

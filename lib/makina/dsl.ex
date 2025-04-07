@@ -7,11 +7,12 @@ defmodule Makina.DSL do
   @doc """
   Toplevel expression used to define a Makinafile
   """
-  defmacro makina(do: block) do
-    module_name = "User.MakinaFile.#{DateTime.utc_now()}" |> String.to_atom()
+  defmacro makina(id, do: block) do
+    module_name = "User.MakinaFile.#{id}" |> String.to_atom()
 
     quote do
       defmodule unquote(module_name) do
+        @context_id unquote(id)
         unquote(define_context_attributes())
         unquote(block)
         unquote(define_support_functions())
@@ -149,6 +150,7 @@ defmodule Makina.DSL do
     quote do
       def collect_context() do
         %{
+          id: @context_id,
           servers: @servers,
           standalone_applications: @standalone_applications
         }
