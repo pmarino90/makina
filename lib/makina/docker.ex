@@ -12,11 +12,12 @@ defmodule Makina.Docker do
     docker(server, "run", [
       "-d",
       "--restart",
-      "always",
+      "unless-stopped",
       name(app),
       labels(app),
       volumes(app),
       envs(app),
+      ports(app),
       image(app),
 
       # should always be the last one as it provides additional parameters
@@ -89,6 +90,13 @@ defmodule Makina.Docker do
     app.env_vars
     |> Enum.flat_map(fn e ->
       ["--env", "#{e.key}=#{e.value}"]
+    end)
+  end
+
+  defp ports(%Application{} = app) do
+    app.exposed_ports
+    |> Enum.flat_map(fn p ->
+      ["--port", "#{p.internal}:#{p.external}"]
     end)
   end
 

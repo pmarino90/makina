@@ -41,7 +41,7 @@ defmodule Makina.Models.DockerTest do
       assert cmd.server == server
 
       assert cmd.cmd ==
-               "docker run -d --restart always --name foo --label org.makina.app.hash=#{app.__hash__} nginx:1.16"
+               "docker run -d --restart unless-stopped --name foo --label org.makina.app.hash=#{app.__hash__} nginx:1.16"
     end
 
     test "contains volumes" do
@@ -57,7 +57,7 @@ defmodule Makina.Models.DockerTest do
       cmd = Docker.run(server, app)
 
       assert cmd.cmd ==
-               "docker run -d --restart always --name foo --label org.makina.app.hash=#{app.__hash__} --volume foo:/app/data nginx:1.16"
+               "docker run -d --restart unless-stopped --name foo --label org.makina.app.hash=#{app.__hash__} --volume foo:/app/data nginx:1.16"
     end
 
     test "contains environment variables" do
@@ -73,36 +73,52 @@ defmodule Makina.Models.DockerTest do
       cmd = Docker.run(server, app)
 
       assert cmd.cmd ==
-               "docker run -d --restart always --name foo --label org.makina.app.hash=#{app.__hash__} --env ENV=prod nginx:1.16"
+               "docker run -d --restart unless-stopped --name foo --label org.makina.app.hash=#{app.__hash__} --env ENV=prod nginx:1.16"
     end
-  end
 
-  test "contains command arguments" do
-    server =
-      Server.new(host: "example.com")
-      |> Server.put_private(:conn_ref, self())
+    test "contains command arguments" do
+      server =
+        Server.new(host: "example.com")
+        |> Server.put_private(:conn_ref, self())
 
-    app =
-      Application.new(name: "foo")
-      |> Application.set_docker_image(name: "traefik", tag: "v3.3")
-      |> Application.put_volume(
-        source: "/var/run/docker.sock",
-        destination: "/var/run/docker.sock"
-      )
+      app =
+        Application.new(name: "foo")
+        |> Application.set_docker_image(name: "traefik", tag: "v3.3")
+        |> Application.put_volume(
+          source: "/var/run/docker.sock",
+          destination: "/var/run/docker.sock"
+        )
 
-    app =
-      app
-      |> Application.set_private(:__docker__, %{
-        app.__docker__
-        | command: [
-            "--api.insecure=true",
-            "--providers.docker"
-          ]
-      })
+      app =
+        app
+        |> Application.set_private(:__docker__, %{
+          app.__docker__
+          | command: [
+              "--api.insecure=true",
+              "--providers.docker"
+            ]
+        })
 
-    cmd = Docker.run(server, app)
+      cmd = Docker.run(server, app)
 
-    assert cmd.cmd ==
-             "docker run -d --restart always --name foo --label org.makina.app.hash=#{app.__hash__} --volume /var/run/docker.sock:/var/run/docker.sock traefik:v3.3 --api.insecure=true --providers.docker"
+      assert cmd.cmd ==
+               "docker run -d --restart unless-stopped --name foo --label org.makina.app.hash=#{app.__hash__} --volume /var/run/docker.sock:/var/run/docker.sock traefik:v3.3 --api.insecure=true --providers.docker"
+    end
+
+    test "contains exposed ports" do
+      server =
+        Server.new(host: "example.com")
+        |> Server.put_private(:conn_ref, self())
+
+      app =
+        Application.new(name: "foo")
+        |> Application.set_docker_image(name: "nginx", tag: "1.16")
+        |> Application.put_exposed_port(internal: 80, external: 80)
+
+      cmd = Docker.run(server, app)
+
+      assert cmd.cmd ==
+               "docker run -d --restart unless-stopped --name foo --label org.makina.app.hash=#{app.__hash__} --port 80:80 nginx:1.16"
+    end
   end
 end

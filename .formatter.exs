@@ -5,7 +5,8 @@ locals_without_parens = [
   standalone: 1,
   app: 2,
   from_docker_image: 1,
-  volume: 2
+  volume: 2,
+  expose_port: 2
 ]
 
 [

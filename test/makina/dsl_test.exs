@@ -125,6 +125,30 @@ defmodule Makina.DSLTest do
       assert volume == %{source: "foo", destination: "/app/data"}
     end
 
+    test "allow exposed port to be specified" do
+      import DSL
+
+      term =
+        makina "app-test-specify-port" do
+          standalone do
+            app name: "test" do
+              expose_port 8080, 80
+            end
+          end
+        end
+
+      module = elem(term, 1)
+      context = module.collect_context()
+
+      app = List.first(context.standalone_applications)
+
+      assert is_list(app.exposed_ports)
+
+      port = List.first(app.exposed_ports)
+
+      assert port == %{internal: 8080, external: 80}
+    end
+
     test "raises if app block is not invoked correctly" do
       import DSL
 
