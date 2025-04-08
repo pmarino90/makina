@@ -118,7 +118,7 @@ defmodule Makina.Models.DockerTest do
       cmd = Docker.run(server, app)
 
       assert cmd.cmd ==
-               "docker run -d --restart unless-stopped --name foo --label org.makina.app.hash=#{app.__hash__} --port 80:80 nginx:1.16"
+               "docker run -d --restart unless-stopped --name foo --label org.makina.app.hash=#{app.__hash__} -p 80:80 nginx:1.16"
     end
   end
 end
