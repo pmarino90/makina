@@ -1,0 +1,79 @@
+defmodule Makina.Models.DockerTest do
+  use ExUnit.Case
+
+  alias Makina.Models.Server
+  alias Makina.Models.Application
+
+  alias Makina.Docker
+
+  describe "inspect/2" do
+    test "returns a complete command to inspect a container" do
+      server =
+        Server.new(host: "example.com")
+        |> Server.put_private(:conn_ref, self())
+
+      app =
+        Application.new(name: "foo")
+        |> Application.set_docker_image(name: "nginx", tag: "1.16")
+
+      cmd = Docker.inspect(server, app)
+
+      assert is_struct(cmd, Makina.Command)
+
+      assert cmd.cmd == "docker inspect foo"
+      assert cmd.server == server
+    end
+  end
+
+  describe "run/2" do
+    test "returns a command to run a container on a server" do
+      server =
+        Server.new(host: "example.com")
+        |> Server.put_private(:conn_ref, self())
+
+      app =
+        Application.new(name: "foo")
+        |> Application.set_docker_image(name: "nginx", tag: "1.16")
+
+      cmd = Docker.run(server, app)
+
+      assert is_struct(cmd, Makina.Command)
+      assert cmd.server == server
+
+      assert cmd.cmd ==
+               "docker run -d --restart always --name foo --label org.makina.app.hash=#{app.__hash__} nginx:1.16"
+    end
+
+    test "contains volumes" do
+      server =
+        Server.new(host: "example.com")
+        |> Server.put_private(:conn_ref, self())
+
+      app =
+        Application.new(name: "foo")
+        |> Application.set_docker_image(name: "nginx", tag: "1.16")
+        |> Application.put_volume(source: "foo", destination: "/app/data")
+
+      cmd = Docker.run(server, app)
+
+      assert cmd.cmd ==
+               "docker run -d --restart always --name foo --label org.makina.app.hash=#{app.__hash__} --volume foo:/app/data nginx:1.16"
+    end
+
+    test "contains environment variables" do
+      server =
+        Server.new(host: "example.com")
+        |> Server.put_private(:conn_ref, self())
+
+      app =
+        Application.new(name: "foo")
+        |> Application.set_docker_image(name: "nginx", tag: "1.16")
+        |> Application.put_environment(key: "ENV", value: "prod")
+
+      cmd = Docker.run(server, app)
+
+      assert cmd.cmd ==
+               "docker run -d --restart always --name foo --label org.makina.app.hash=#{app.__hash__} --env ENV=prod nginx:1.16"
+    end
+  end
+end

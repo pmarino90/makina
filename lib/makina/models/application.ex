@@ -36,7 +36,10 @@ defmodule Makina.Models.Application do
 
   @derive {JSON.Encoder, []}
   defstruct __hash__: nil,
-            __docker__: nil,
+            __docker__: %{
+              labels: [],
+              command: []
+            },
             __scope__: [],
             name: nil,
             docker_image: nil,
@@ -49,10 +52,6 @@ defmodule Makina.Models.Application do
 
     app
     |> set_private(:__hash__, current_hash)
-    |> set_private(:__docker__, %{
-      labels: ["org.makina.app.hash=#{current_hash}"],
-      command: []
-    })
   end
 
   def put_volume(%__MODULE__{} = app, volume) when is_list(volume) do
