@@ -48,6 +48,22 @@ defmodule Makina.Models.ApplicationTest do
     end
   end
 
+  describe "put_environment/2" do
+    test "adds environment variables to the application" do
+      params = [name: "foo"]
+
+      app = Application.new(params)
+      init_hash = app.__hash__
+
+      assert app.env_vars == []
+
+      app = app |> Application.put_environment(key: "key", value: "value")
+
+      assert app.env_vars == [%{key: "key", value: "value"}]
+      assert app.__hash__ != init_hash
+    end
+  end
+
   describe "set_private/3" do
     test "sets private fields" do
       params = [name: "foo"]
