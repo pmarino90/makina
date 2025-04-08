@@ -75,7 +75,7 @@ defmodule Makina.Models.ApplicationTest do
 
       assert app.__docker__ == %{
                command: [],
-               labels: ["org.makina.app.hash=#{init_hash}"]
+               labels: []
              }
 
       app = Application.set_private(app, :__scope__, [:foo])

@@ -27,9 +27,11 @@ defmodule Makina.Applications do
         password: server.password
       )
 
+    server = Server.put_private(server, :conn_ref, conn_ref)
+
     results =
       for app <- applications do
-        deploy_application_on_server(conn_ref, server, app)
+        deploy_application_on_server(server, app)
       end
 
     SSH.disconnect(conn_ref)
@@ -37,13 +39,14 @@ defmodule Makina.Applications do
     results
   end
 
-  defp deploy_application_on_server(conn_ref, %Server{} = server, %Application{} = app) do
+  defp deploy_application_on_server(%Server{} = server, %Application{} = app) do
     IO.puts("Deploying \"#{app.name}\"...")
 
-    case Docker.inspect(conn_ref, server, app) do
+    case Docker.inspect(server, app) |> SSH.execute() do
       {:ok, nil} ->
         Logger.debug("No current instances of #{app.name} running, deploying")
-        Docker.run(conn_ref, server, app)
+
+        Docker.run(server, app) |> SSH.execute()
 
       {:ok, _container} ->
         Logger.debug("A version of #{app.name} is already running, skipping.")
