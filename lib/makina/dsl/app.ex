@@ -3,6 +3,8 @@ defmodule Makina.DSL.App do
   Specific expressions to use inside an application block
   """
 
+  alias Makina.Models.Application
+
   @from_docker_image_opts [
     name: [type: :string, required: true],
     tag: [type: :string, default: "latest"]
@@ -21,11 +23,7 @@ defmodule Makina.DSL.App do
 
       case validation do
         {:ok, opts} ->
-          @current_application Map.put(
-                                 @current_application,
-                                 :docker_image,
-                                 Enum.into(opts, %{})
-                               )
+          @current_application Application.set_docker_image(@current_application, opts)
 
         {:error, error} ->
           raise """
@@ -38,15 +36,10 @@ defmodule Makina.DSL.App do
   end
 
   defmacro volume(source, destination) when is_binary(source) and is_binary(destination) do
-    volume = %{source: source, destination: destination}
-
-    quote do
-      @current_application Map.put(
-                             @current_application,
-                             :volumes,
-                             [
-                               unquote(Macro.escape(volume)) | @current_application.volumes
-                             ]
+    quote bind_quoted: [source: source, destination: destination] do
+      @current_application Application.put_volume(@current_application,
+                             source: source,
+                             destination: destination
                            )
     end
   end

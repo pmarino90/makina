@@ -97,7 +97,8 @@ defmodule Makina.DSL do
 
           unquote(set_scope([:app, opts[:name]]))
 
-          @current_application Application.new(Keyword.put(opts, :scope, @scope))
+          @current_application Application.new(opts)
+                               |> Application.set_private(:__scope__, @scope)
 
           unquote(block)
 

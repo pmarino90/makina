@@ -16,8 +16,7 @@ defmodule Makina.Docker do
         "always",
         "--name",
         "#{app_name(app)}",
-        "--label",
-        "org.makina.app.hash=#{app.hash}",
+        labels(app),
         volumes(app),
         app.docker_image[:name],
         "--tag",
@@ -45,7 +44,7 @@ defmodule Makina.Docker do
   end
 
   defp app_name(%Application{} = app) do
-    app.scope |> Enum.reverse() |> Enum.join("_")
+    app.__scope__ |> Enum.reverse() |> Enum.join("_")
   end
 
   defp docker(server, command, args) do
@@ -64,6 +63,13 @@ defmodule Makina.Docker do
     app.volumes
     |> Enum.flat_map(fn v ->
       ["--volume", "#{v.source}:#{v.destination}"]
+    end)
+  end
+
+  defp labels(%Application{} = app) do
+    Map.get(app.__docker__, :labels, [])
+    |> Enum.flat_map(fn label ->
+      ["--label", label]
     end)
   end
 end
