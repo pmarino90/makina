@@ -35,11 +35,50 @@ defmodule Makina.DSL.App do
     end
   end
 
+  @doc """
+  Mounts a volume to the given app.
+
+  ## Usage
+  ```elixir
+  makina "example" do
+    app name: "foo" do
+
+    volume "source", "destination"
+
+    end
+  end
+  ```
+  """
   defmacro volume(source, destination) when is_binary(source) and is_binary(destination) do
     quote bind_quoted: [source: source, destination: destination] do
       @current_application Application.put_volume(@current_application,
                              source: source,
                              destination: destination
+                           )
+    end
+  end
+
+  @doc """
+  Exposes a port on the given app
+
+  ## Usage
+  ```elixir
+  makina "example" do
+    app name: "foo" do
+
+    # expose_port <internal port>, <external port>
+    expose_port 8080, 80
+
+    end
+  end
+  ```
+  """
+  defmacro expose_port(internal, external)
+           when is_number(internal) and is_number(external) do
+    quote bind_quoted: [internal: internal, external: external] do
+      @current_application Application.put_exposed_port(@current_application,
+                             internal: internal,
+                             external: external
                            )
     end
   end

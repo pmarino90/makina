@@ -64,6 +64,22 @@ defmodule Makina.Models.ApplicationTest do
     end
   end
 
+  describe "put_exposed_port/2" do
+    test "adds an exposed port pair to the list" do
+      params = [name: "foo"]
+
+      app = Application.new(params)
+      init_hash = app.__hash__
+
+      assert app.env_vars == []
+
+      app = app |> Application.put_exposed_port(internal: 80, external: 8080)
+
+      assert app.exposed_ports == [%{internal: 80, external: 8080}]
+      assert app.__hash__ != init_hash
+    end
+  end
+
   describe "set_private/3" do
     test "sets private fields" do
       params = [name: "foo"]
