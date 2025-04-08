@@ -43,7 +43,7 @@ defmodule Makina.Applications do
     case Docker.inspect(conn_ref, server, app) do
       {:ok, nil} ->
         Logger.debug("No current instances of #{app.name} running, deploying")
-        Docker.run_command(conn_ref, server, app)
+        Docker.run(conn_ref, server, app)
 
       {:ok, _container} ->
         Logger.debug("A version of #{app.name} is already running, skipping.")

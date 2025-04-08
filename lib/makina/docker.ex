@@ -8,19 +8,21 @@ defmodule Makina.Docker do
   alias Makina.Models.Application
   alias Makina.SSH
 
-  def run_command(conn_ref, %Server{} = server, %Application{} = app) do
+  def run(conn_ref, %Server{} = server, %Application{} = app) do
     cmd =
       docker(server, "run", [
         "-d",
         "--restart",
         "always",
-        "--name",
-        "#{app_name(app)}",
+        name(app),
         labels(app),
         volumes(app),
-        app.docker_image[:name],
-        "--tag",
-        app.docker_image[:tag]
+        envs(app),
+        image(app),
+
+        # should always be the last one as it provides additional parameters
+        # to the container's running command
+        command(app)
       ])
 
     SSH.cmd(conn_ref, cmd)
@@ -55,8 +57,12 @@ defmodule Makina.Docker do
     "#{bin} #{command} " <> args
   end
 
-  defp volumes(%Application{volumes: []}) do
-    []
+  defp image(%Application{} = app) do
+    "#{app.docker_image[:name]}:#{app.docker_image[:tag]}"
+  end
+
+  defp name(%Application{} = app) do
+    ["--name", app_name(app)]
   end
 
   defp volumes(%Application{} = app) do
@@ -71,5 +77,16 @@ defmodule Makina.Docker do
     |> Enum.flat_map(fn label ->
       ["--label", label]
     end)
+  end
+
+  defp envs(%Application{} = app) do
+    app.env_vars
+    |> Enum.flat_map(fn e ->
+      ["--env", "#{e.key}=#{e.value}"]
+    end)
+  end
+
+  defp command(%Application{} = app) do
+    app.__docker__.command
   end
 end
