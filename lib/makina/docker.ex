@@ -96,7 +96,7 @@ defmodule Makina.Docker do
   defp ports(%Application{} = app) do
     app.exposed_ports
     |> Enum.flat_map(fn p ->
-      ["--port", "#{p.internal}:#{p.external}"]
+      ["-p", "#{p.internal}:#{p.external}"]
     end)
   end
 
