@@ -76,4 +76,33 @@ defmodule Makina.Models.DockerTest do
                "docker run -d --restart always --name foo --label org.makina.app.hash=#{app.__hash__} --env ENV=prod nginx:1.16"
     end
   end
+
+  test "contains command arguments" do
+    server =
+      Server.new(host: "example.com")
+      |> Server.put_private(:conn_ref, self())
+
+    app =
+      Application.new(name: "foo")
+      |> Application.set_docker_image(name: "traefik", tag: "v3.3")
+      |> Application.put_volume(
+        source: "/var/run/docker.sock",
+        destination: "/var/run/docker.sock"
+      )
+
+    app =
+      app
+      |> Application.set_private(:__docker__, %{
+        app.__docker__
+        | command: [
+            "--api.insecure=true",
+            "--providers.docker"
+          ]
+      })
+
+    cmd = Docker.run(server, app)
+
+    assert cmd.cmd ==
+             "docker run -d --restart always --name foo --label org.makina.app.hash=#{app.__hash__} --volume /var/run/docker.sock:/var/run/docker.sock traefik:v3.3 --api.insecure=true --providers.docker"
+  end
 end
