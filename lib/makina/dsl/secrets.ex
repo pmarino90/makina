@@ -12,10 +12,8 @@ defmodule Makina.DSL.Secrets do
     one_password: [
       type: :non_empty_keyword_list,
       keys: [
-        vault: [type: :string],
-        account: [type: :string],
-        item: [type: :string],
-        field: [type: :string, default: "password"]
+        account: [type: :string, required: true],
+        reference: [type: :string, required: true]
       ]
     ]
   ]
