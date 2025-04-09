@@ -3,6 +3,7 @@ defmodule Makina.Applications do
 
   require Logger
 
+  alias Makina.Servers
   alias Makina.Models.Server
   alias Makina.Models.Application
   alias Makina.SSH
@@ -12,35 +13,24 @@ defmodule Makina.Applications do
   def deploy_standalone_applications(servers, applications)
       when is_list(servers) and is_list(applications) do
     for server <- servers do
-      deploy_applications_on_server(server, applications)
+      server = Servers.connect_to_server(server)
+      deployment_result = deploy_applications_on_server(server, applications)
+
+      Servers.disconnect_from_server(server)
+
+      deployment_result
     end
   end
 
-  defp deploy_applications_on_server(%Server{} = server, applications)
-       when is_list(applications) do
-    Logger.debug("Deploying standalone applications on #{server.host}")
-
-    {:ok, conn_ref} =
-      SSH.connect(
-        server.host,
-        user: server.user,
-        password: server.password
-      )
-
-    server = Server.put_private(server, :conn_ref, conn_ref)
-
-    results =
-      for app <- applications do
-        deploy_application_on_server(server, app)
-      end
-
-    SSH.disconnect(conn_ref)
-
-    results
+  def deploy_applications_on_server(%Server{} = server, applications)
+      when is_list(applications) do
+    for app <- applications do
+      do_deploy_application(server, app)
+    end
   end
 
-  defp deploy_application_on_server(%Server{} = server, %Application{} = app) do
-    IO.puts("Deploying \"#{app.name}\"...")
+  defp do_deploy_application(%Server{} = server, %Application{} = app) do
+    IO.puts(" Deploying \"#{app.name}\"")
 
     with {:ok, _} <- maybe_login_to_registry(server, app),
          {:ok, nil} <- ensure_app_not_running(server, app) do

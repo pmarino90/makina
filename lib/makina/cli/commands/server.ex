@@ -6,8 +6,7 @@ defmodule Makina.Cli.Commands.Server do
   require Logger
   alias Makina.SSH
   alias Makina.IO
-  alias Makina.Applications
-  alias Makina.Models.Application
+  alias Makina.Servers
 
   @sub_commands ~w[test prepare]a
 
@@ -51,13 +50,9 @@ defmodule Makina.Cli.Commands.Server do
 
     servers = ctx.servers
 
-    system_applications = [
-      reverse_proxy()
-    ]
-
-    # Create network if doesn't exist
-    # Create System application if they do not exist
-    Applications.deploy_standalone_applications(servers, system_applications)
+    for server <- servers do
+      Servers.prepare_server(server)
+    end
 
     :ok
   end
@@ -128,25 +123,4 @@ defmodule Makina.Cli.Commands.Server do
 
   defp test_with_errors?(results),
     do: Enum.any?(results, fn r -> elem(r, 0) == :error end)
-
-  defp reverse_proxy() do
-    app =
-      Application.new(name: "makina-proxy")
-      |> Application.set_docker_image(name: "traefik", tag: "v3.3")
-      |> Application.put_exposed_port(internal: 80, external: 80)
-      |> Application.put_exposed_port(internal: 8080, external: 8080)
-      |> Application.put_volume(
-        source: "/var/run/docker.sock",
-        destination: "/var/run/docker.sock"
-      )
-
-    Application.set_private(app, :__docker__, %{
-      app.__docker__
-      | command: [
-          "--entryPoints.web.address=:80",
-          "--api.insecure=true",
-          "--providers.docker"
-        ]
-    })
-  end
 end
