@@ -11,7 +11,7 @@ defmodule Makina.SecretProvider do
 
   @providers %{
     environment: Makina.SecretProvider.Environment,
-    "1password": Makina.SecretProvider.OnePassword
+    one_password: Makina.SecretProvider.OnePassword
   }
 
   @doc """

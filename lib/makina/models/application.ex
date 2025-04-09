@@ -32,7 +32,7 @@ defmodule Makina.Models.Application do
 
   alias Makina.Models.Internal
 
-  @hashable_keys ~w[name docker_image env_vars volumes exposed_ports]a
+  @hashable_keys ~w[name docker_image docker_registry env_vars volumes exposed_ports]a
 
   @derive {JSON.Encoder, []}
   defstruct __hash__: nil,
@@ -43,6 +43,7 @@ defmodule Makina.Models.Application do
             __scope__: [],
             name: nil,
             docker_image: nil,
+            docker_registry: nil,
             volumes: [],
             env_vars: [],
             exposed_ports: []
@@ -77,10 +78,25 @@ defmodule Makina.Models.Application do
   end
 
   def set_docker_image(%__MODULE__{} = app, image) when is_list(image) do
-    image = Enum.into(image, %{})
+    image = image |> Enum.into(%{})
     app = %__MODULE__{app | docker_image: image}
 
     set_private(app, :__hash__, hash(app))
+  end
+
+  def set_docker_registry(%__MODULE__{} = app, registry) when is_list(registry) do
+    registry = registry |> Enum.into(%{})
+    app = %__MODULE__{app | docker_registry: registry}
+
+    set_private(app, :__hash__, hash(app))
+  end
+
+  def private_docker_registry?(%__MODULE__{docker_registry: nil}) do
+    false
+  end
+
+  def private_docker_registry?(%__MODULE__{docker_registry: docker_registry}) do
+    not (is_nil(docker_registry.user) and is_nil(docker_registry.password))
   end
 
   def set_private(%__MODULE{} = app, key, value) do

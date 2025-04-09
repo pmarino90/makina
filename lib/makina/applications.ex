@@ -42,18 +42,33 @@ defmodule Makina.Applications do
   defp deploy_application_on_server(%Server{} = server, %Application{} = app) do
     IO.puts("Deploying \"#{app.name}\"...")
 
-    case Docker.inspect(server, app) |> SSH.execute() do
-      {:ok, nil} ->
-        Logger.debug("No current instances of #{app.name} running, deploying")
+    with {:ok, _} <- maybe_login_to_registry(server, app),
+         {:ok, nil} <- ensure_app_not_running(server, app) do
+      Logger.debug("No current instances of #{app.name} running, deploying")
 
-        Docker.run(server, app) |> SSH.execute()
-
+      Docker.run(server, app) |> SSH.execute()
+    else
       {:ok, _container} ->
         Logger.debug("A version of #{app.name} is already running, skipping.")
         {:ok, :skipping}
 
       {:error, reason} ->
         {:error, reason}
+
+      err ->
+        err
+    end
+  end
+
+  defp ensure_app_not_running(server, app) do
+    Docker.inspect(server, app) |> SSH.execute()
+  end
+
+  defp maybe_login_to_registry(server, app) do
+    if Application.private_docker_registry?(app) do
+      Docker.login(server, app) |> SSH.execute()
+    else
+      {:ok, :no_login}
     end
   end
 end

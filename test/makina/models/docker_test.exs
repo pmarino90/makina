@@ -113,12 +113,31 @@ defmodule Makina.Models.DockerTest do
       app =
         Application.new(name: "foo")
         |> Application.set_docker_image(name: "nginx", tag: "1.16")
-        |> Application.put_exposed_port(internal: 80, external: 80)
+        |> Application.put_exposed_port(internal: 80, external: 8080)
 
       cmd = Docker.run(server, app)
 
       assert cmd.cmd ==
-               "docker run -d --restart unless-stopped --name foo --label org.makina.app.hash=#{app.__hash__} -p 80:80 nginx:1.16"
+               "docker run -d --restart unless-stopped --name foo --label org.makina.app.hash=#{app.__hash__} -p 8080:80 nginx:1.16"
+    end
+  end
+
+  describe "login/2" do
+    test "returns a command to login into a private registry" do
+      server =
+        Server.new(host: "example.com")
+        |> Server.put_private(:conn_ref, self())
+
+      app =
+        Application.new(name: "foo")
+        |> Application.set_docker_registry(host: "ghcr.io", user: "user", password: "password")
+        |> Application.set_docker_image(name: "nginx", tag: "1.16")
+
+      cmd = Docker.login(server, app)
+
+      assert is_struct(cmd, Makina.Command)
+
+      assert cmd.cmd == "docker login ghcr.io -u user -p password"
     end
   end
 end

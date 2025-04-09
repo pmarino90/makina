@@ -146,7 +146,7 @@ defmodule Makina.DSLTest do
 
       port = List.first(app.exposed_ports)
 
-      assert port == %{internal: 8080, external: 80}
+      assert port == %{internal: 80, external: 8080}
     end
 
     test "raises if app block is not invoked correctly" do
