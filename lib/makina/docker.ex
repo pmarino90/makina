@@ -47,6 +47,9 @@ defmodule Makina.Docker do
     end)
   end
 
+  @doc """
+  Logs into the private registry defined inside the Application
+  """
   def login(%Server{} = server, %Application{} = app) do
     docker(server, "login", [
       app.docker_registry.host,
@@ -55,6 +58,20 @@ defmodule Makina.Docker do
       "-p",
       app.docker_registry.password
     ])
+  end
+
+  @doc """
+  Creates a bridged network with the provided name
+  """
+  def create_network(%Server{} = server, name) do
+    docker(server, "network", ["create", name])
+  end
+
+  @doc """
+    Inspects a network with the provided name
+  """
+  def inspect_network(%Server{} = server, name) do
+    docker(server, "network", ["inspect", name])
   end
 
   defp app_name(%Application{__scope__: []} = app) do

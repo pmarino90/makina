@@ -140,4 +140,32 @@ defmodule Makina.Models.DockerTest do
       assert cmd.cmd == "docker login ghcr.io -u user -p password"
     end
   end
+
+  describe "create_network/2" do
+    test "returns a command to create a network with a given name" do
+      server =
+        Server.new(host: "example.com")
+        |> Server.put_private(:conn_ref, self())
+
+      cmd = Docker.create_network(server, "foo")
+
+      assert is_struct(cmd, Makina.Command)
+
+      assert cmd.cmd == "docker network create foo"
+    end
+  end
+
+  describe "inspect_network/2" do
+    test "returns a command to inspect a given network" do
+      server =
+        Server.new(host: "example.com")
+        |> Server.put_private(:conn_ref, self())
+
+      cmd = Docker.inspect_network(server, "foo")
+
+      assert is_struct(cmd, Makina.Command)
+
+      assert cmd.cmd == "docker network inspect foo"
+    end
+  end
 end
