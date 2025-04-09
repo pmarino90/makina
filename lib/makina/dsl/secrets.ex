@@ -9,7 +9,7 @@ defmodule Makina.DSL.Secrets do
       Note: This refers to the environment in which the `makina` command is run.
       """
     ],
-    "1password": [
+    one_password: [
       type: :non_empty_keyword_list,
       keys: [
         vault: [type: :string],

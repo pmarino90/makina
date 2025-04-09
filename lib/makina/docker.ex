@@ -1,5 +1,5 @@
 defmodule Makina.Docker do
-  @doc """
+  @moduledoc """
   Module that contains all docker-related cli command building functions.
   On their own these do not do anything except returning a correctly formatted
   command that should then be executed over SSH.
@@ -8,6 +8,9 @@ defmodule Makina.Docker do
   alias Makina.Models.Server
   alias Makina.Models.Application
 
+  @doc """
+  Prepares `docker run` command based on the application being deployed
+  """
   def run(%Server{} = server, %Application{} = app) do
     docker(server, "run", [
       "-d",
@@ -26,6 +29,9 @@ defmodule Makina.Docker do
     ])
   end
 
+  @doc """
+  Prepares the `docker inspect` command for a give container
+  """
   def inspect(%Server{} = server, %Application{} = app) do
     docker(server, "inspect", [app_name(app)], fn
       {:ok, result} ->
@@ -39,6 +45,16 @@ defmodule Makina.Docker do
       rest ->
         rest
     end)
+  end
+
+  def login(%Server{} = server, %Application{} = app) do
+    docker(server, "login", [
+      app.docker_registry.host,
+      "-u",
+      app.docker_registry.user,
+      "-p",
+      app.docker_registry.password
+    ])
   end
 
   defp app_name(%Application{__scope__: []} = app) do
@@ -96,7 +112,7 @@ defmodule Makina.Docker do
   defp ports(%Application{} = app) do
     app.exposed_ports
     |> Enum.flat_map(fn p ->
-      ["-p", "#{p.internal}:#{p.external}"]
+      ["-p", "#{p.external}:#{p.internal}"]
     end)
   end
 

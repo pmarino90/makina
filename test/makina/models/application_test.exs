@@ -48,6 +48,29 @@ defmodule Makina.Models.ApplicationTest do
     end
   end
 
+  describe "set_docker_registry/2" do
+    test "sets the docker registry with credentials" do
+      params = [name: "foo"]
+
+      app = Application.new(params)
+      init_hash = app.__hash__
+
+      assert app.docker_image == nil
+
+      app =
+        app
+        |> Application.set_docker_registry(host: "ghcr.io", user: "foo", password: "bar")
+
+      assert app.docker_registry == %{
+               host: "ghcr.io",
+               user: "foo",
+               password: "bar"
+             }
+
+      assert app.__hash__ != init_hash
+    end
+  end
+
   describe "put_environment/2" do
     test "adds environment variables to the application" do
       params = [name: "foo"]
