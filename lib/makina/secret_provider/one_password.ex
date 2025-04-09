@@ -1,5 +1,8 @@
 defmodule Makina.SecretProvider.OnePassword do
   @moduledoc false
+
+  require Logger
+
   @behaviour Makina.SecretProvider
 
   def available?() do
@@ -26,23 +29,75 @@ defmodule Makina.SecretProvider.OnePassword do
   end
 
   defp exec(options) do
-    session_token =
-      System.get_env("OP_SESSION_#{options[:account]}") ||
+    case token_or_sign_in() do
+      :error ->
         raise """
-        Makina could not find the Session Token.
-
-        In order to fetch secrets from your vault Makina requires a session token.
-        When you run eval $(op signin) 1Password automatically sets the session token for you.
-
-        Also make sure that when providing the reference to which secret you want to fetch, you specify as account the ID, which can be found by running: "op accounts list" or op whoami .
+        Could not get the session token from 1Password.
         """
 
-    System.cmd("op", [
-      "read",
-      "op://#{options[:reference]}",
-      "--no-newline",
-      "--force",
-      "--session=#{session_token}"
-    ])
+      :timeout ->
+        raise """
+        Could not get the session token from 1Password.
+        """
+
+      session_token when is_binary(session_token) ->
+        Process.put(:one_password_session_token, session_token)
+
+        System.cmd("op", [
+          "read",
+          "op://#{options[:reference]}",
+          "--no-newline",
+          "--force",
+          "--session=#{session_token}"
+        ])
+    end
+  end
+
+  defp token_or_sign_in() do
+    case Process.get(:one_password_session_token) do
+      nil ->
+        signin()
+
+      token ->
+        token
+    end
+  end
+
+  # although everything is fine this is required because probably there are some
+  # mismatching specs for Owl.IO.input
+  @dialyzer {:no_return, signin: 0}
+  defp signin do
+    port = Port.open({:spawn, "op signin --raw"}, [:binary, :exit_status])
+
+    password =
+      Owl.IO.input(label: "Insert password to unlock 1Password: ", secret: true)
+
+    Port.command(port, password <> "\n")
+
+    wait_for_token(port)
+  end
+
+  @spec wait_for_token(port()) :: String.t() | :error | :timeout
+  defp wait_for_token(port) do
+    receive do
+      {^port, {:data, data}} ->
+        case String.trim(data) do
+          session_token when byte_size(session_token) > 0 ->
+            session_token
+
+          _ ->
+            wait_for_token(port)
+        end
+
+      {^port, {:exit_status, status}} when status != 0 ->
+        Logger.debug("op signin command exited with status #{status}")
+        :error
+
+      _ ->
+        wait_for_token(port)
+    after
+      60 * 1000 ->
+        :timeout
+    end
   end
 end
