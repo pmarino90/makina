@@ -65,9 +65,14 @@ defmodule Makina.Servers do
       |> Application.set_docker_image(name: "traefik", tag: "v3.3")
       |> Application.put_exposed_port(internal: 80, external: 80)
       |> Application.put_exposed_port(internal: 8080, external: 8080)
+      |> expose_https_ports(proxy_config)
       |> Application.put_volume(
         source: "/var/run/docker.sock",
         destination: "/var/run/docker.sock"
+      )
+      |> Application.put_volume(
+        source: "makina-proxy",
+        destination: "/var/proxy/data/"
       )
 
     base_command = [
@@ -85,22 +90,28 @@ defmodule Makina.Servers do
     })
   end
 
+  defp expose_https_ports(app, %ProxyConfig{https_enabled: https}) when not is_nil(https) do
+    Application.put_exposed_port(app, internal: 443, external: 443)
+  end
+
   defp put_https_command_args(command, %ProxyConfig{https_enabled: nil} = _config) do
     command
   end
 
   defp put_https_command_args(
          command,
-         %ProxyConfig{https_enabled: {:letsencrypt, letsencrypt_config}} = _config
+         %ProxyConfig{https_enabled: config}
        ) do
+    letsencrypt_config = config[:letsencrypt]
+
     command ++
       [
         "--entryPoints.websecure.address=:443",
         "--entryPoints.web.http.redirections.entryPoint.to=websecure",
         "--entryPoints.web.http.redirections.entryPoint.permanent=true",
         "--entryPoints.web.http.redirections.entryPoint.scheme=https",
-        "--certificatesResolvers.letsencrypt.acme.email=#{letsencrypt_config.email}",
-        "--certificatesResolvers.letsencrypt.acme.storage=/letsencrypt/acme.json",
+        "--certificatesResolvers.letsencrypt.acme.email=#{letsencrypt_config[:email]}",
+        "--certificatesResolvers.letsencrypt.acme.storage=/var/proxy/data/letsencrypt/acme.json",
         "--certificatesResolvers.letsencrypt.acme.keyType=EC384",
         "--certificatesResolvers.letsencrypt.acme.httpChallenge.entryPoint=web"
       ]

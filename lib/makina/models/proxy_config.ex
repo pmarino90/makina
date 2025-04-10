@@ -1,6 +1,7 @@
 defmodule Makina.Models.ProxyConfig do
   alias Makina.Models.ProxyConfig
 
+  @derive JSON.Encoder
   defstruct https_enabled: nil
 
   @type t() :: %ProxyConfig{https_enabled: nil | acme_config()}
