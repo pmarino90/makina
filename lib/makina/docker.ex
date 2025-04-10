@@ -111,7 +111,7 @@ defmodule Makina.Docker do
   end
 
   defp labels(%Application{} = app) do
-    labels = Map.get(app.__docker__, :labels, []) ++ [hash_label(app)]
+    labels = Map.get(app.__docker__, :labels, []) ++ hash_label(app) ++ proxy_labels(app)
 
     labels
     |> Enum.flat_map(fn label ->
@@ -138,6 +138,34 @@ defmodule Makina.Docker do
   end
 
   defp hash_label(%Application{} = app) do
-    "org.makina.app.hash=#{app.__hash__}"
+    ["org.makina.app.hash=#{app.__hash__}"]
+  end
+
+  defp proxy_labels(%Application{domains: []}) do
+    []
+  end
+
+  defp proxy_labels(%Application{domains: domains} = app) when is_list(domains) do
+    [
+      "traefik.enable=true",
+      "traefik.http.middlewares.#{app_name(app)}.compress=true",
+      "traefik.http.routers.foo.rule=Host\\(#{format_domains(domains)}\\)",
+      "traefik.http.routers.#{app_name(app)}.tls.certresolver=letsencrypt",
+      "traefik.http.services.foo.loadBalancer.server.port=#{first_exposed_port(app)}"
+    ]
+  end
+
+  defp format_domains(domains) when is_list(domains) do
+    domains |> Enum.map_join(",", fn d -> "\\`#{d}\\`" end)
+  end
+
+  defp first_exposed_port(%Application{exposed_ports: []}) do
+    "8080"
+  end
+
+  defp first_exposed_port(%Application{} = app) do
+    port_pair = app.exposed_ports |> List.first()
+
+    port_pair.external
   end
 end

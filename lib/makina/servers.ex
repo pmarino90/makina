@@ -79,7 +79,7 @@ defmodule Makina.Servers do
       "--entryPoints.web.address=:80",
       "--providers.docker",
       "--providers.docker.exposedByDefault=false",
-      "--providers.docker.network=makina_web-net"
+      "--providers.docker.network=#{@docker_web_network}"
     ]
 
     Application.set_private(app, :__docker__, %{
@@ -115,10 +115,6 @@ defmodule Makina.Servers do
         "--certificatesResolvers.letsencrypt.acme.keyType=EC384",
         "--certificatesResolvers.letsencrypt.acme.httpChallenge.entryPoint=web"
       ]
-  end
-
-  defp put_https_command_args(command, %ProxyConfig{} = _config) do
-    command
   end
 
   defp deploy_support_applications(server, ctx) do

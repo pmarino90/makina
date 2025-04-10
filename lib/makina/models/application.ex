@@ -32,7 +32,7 @@ defmodule Makina.Models.Application do
 
   alias Makina.Models.Internal
 
-  @hashable_keys ~w[name docker_image docker_registry env_vars volumes exposed_ports]a
+  @hashable_keys ~w[name docker_image docker_registry env_vars volumes exposed_ports domains]a
 
   @derive {JSON.Encoder, []}
   defstruct __hash__: nil,
@@ -46,7 +46,8 @@ defmodule Makina.Models.Application do
             docker_registry: nil,
             volumes: [],
             env_vars: [],
-            exposed_ports: []
+            exposed_ports: [],
+            domains: []
 
   def new(opts) do
     app = struct(__MODULE__, opts)
@@ -73,6 +74,12 @@ defmodule Makina.Models.Application do
   def put_exposed_port(%__MODULE__{} = app, port) when is_list(port) do
     port = Enum.into(port, %{})
     app = %__MODULE__{app | exposed_ports: [port | app.exposed_ports]}
+
+    set_private(app, :__hash__, hash(app))
+  end
+
+  def put_domain(%__MODULE__{} = app, domain) when is_binary(domain) do
+    app = %__MODULE__{app | domains: [domain | app.domains]}
 
     set_private(app, :__hash__, hash(app))
   end
