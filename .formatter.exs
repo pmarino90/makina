@@ -8,7 +8,8 @@ locals_without_parens = [
   docker_registry: 1,
   volume: 2,
   env: 2,
-  expose_port: 2
+  expose_port: 2,
+  proxy: 1
 ]
 
 [

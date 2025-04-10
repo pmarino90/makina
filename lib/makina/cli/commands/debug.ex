@@ -38,6 +38,8 @@ defmodule Makina.Cli.Commands.Debug do
           |> Makina.File.collect_makina_file_context()
 
         IO.puts(JSON.encode!(ctx))
+
+        :ok
     end
   end
 end

@@ -1,6 +1,7 @@
 defmodule Makina.DSL do
   import Makina.DSL.Utils
 
+  alias Makina.Models.ProxyConfig
   alias Makina.Models.Application
   alias Makina.Models.Server
   alias Makina.Models.Context
@@ -137,6 +138,41 @@ defmodule Makina.DSL do
     """
   end
 
+  @proxy_opts [
+    https_enabled: [
+      type: :non_empty_keyword_list,
+      keys: [
+        letsencrypt: [
+          type: :non_empty_keyword_list,
+          required: true,
+          keys: [
+            email: [type: :string, required: true]
+          ]
+        ]
+      ]
+    ]
+  ]
+
+  defmacro proxy(opts) do
+    schema = @proxy_opts
+
+    quote do
+      validation = NimbleOptions.validate(unquote(opts), unquote(schema))
+
+      case validation do
+        {:ok, opts} ->
+          @proxy_config ProxyConfig.new(opts)
+
+        {:error, error} ->
+          raise """
+            The parameters provided to `proxy` are not correct:
+
+            #{Exception.message(error)}
+          """
+      end
+    end
+  end
+
   defdelegate secret_from(opts), to: Makina.DSL.Secrets
 
   defp define_context_attributes() do
@@ -144,6 +180,7 @@ defmodule Makina.DSL do
       Module.register_attribute(__MODULE__, :scope, accumulate: true)
       Module.register_attribute(__MODULE__, :servers, accumulate: true)
       Module.register_attribute(__MODULE__, :standalone_applications, accumulate: true)
+      Module.register_attribute(__MODULE__, :proxy_config, accumulate: false)
     end
   end
 
@@ -153,6 +190,7 @@ defmodule Makina.DSL do
         Context.new(
           id: @context_id,
           servers: @servers,
+          proxy_config: @proxy_config,
           standalone_applications: @standalone_applications
         )
       end
