@@ -130,4 +130,50 @@ defmodule Makina.DSL.App do
                            )
     end
   end
+
+  @doc """
+    Exposes the app on the given domain
+    Can be invoked multiple times or with a list;
+
+  ## Usage
+  Single domain
+
+  ```elixir
+  makina "example" do
+    app name: "foo" do
+
+    publish_on_domain "example.com"
+
+    end
+  end
+  ```
+  Multiple domains
+  ```elixir
+  makina "example" do
+    app name: "foo" do
+
+    publish_on_domain ["example.com", "www.example.com"]
+
+    end
+  end
+  """
+  defmacro publish_on_domain(domain) when is_binary(domain) do
+    quote bind_quoted: [domain: domain] do
+      @current_application Application.put_domain(
+                             @current_application,
+                             domain
+                           )
+    end
+  end
+
+  defmacro publish_on_domain(domains) when is_list(domains) do
+    quote bind_quoted: [domains: domains] do
+      for d <- domains do
+        @current_application Application.put_domain(
+                               @current_application,
+                               d
+                             )
+      end
+    end
+  end
 end
