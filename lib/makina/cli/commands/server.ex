@@ -51,7 +51,7 @@ defmodule Makina.Cli.Commands.Server do
     servers = ctx.servers
 
     for server <- servers do
-      Servers.prepare_server(server)
+      Servers.prepare_server(server, ctx)
     end
 
     :ok
