@@ -38,7 +38,8 @@ defmodule Makina.Models.Application do
   defstruct __hash__: nil,
             __docker__: %{
               labels: [],
-              command: []
+              command: [],
+              networks: []
             },
             __scope__: [],
             name: nil,

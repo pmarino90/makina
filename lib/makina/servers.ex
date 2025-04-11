@@ -64,7 +64,6 @@ defmodule Makina.Servers do
       Application.new(name: "makina-proxy")
       |> Application.set_docker_image(name: "traefik", tag: "v3.3")
       |> Application.put_exposed_port(internal: 80, external: 80)
-      |> Application.put_exposed_port(internal: 8080, external: 8080)
       |> expose_https_ports(proxy_config)
       |> Application.put_volume(
         source: "/var/run/docker.sock",
@@ -84,7 +83,8 @@ defmodule Makina.Servers do
 
     Application.set_private(app, :__docker__, %{
       app.__docker__
-      | command:
+      | networks: [@docker_web_network],
+        command:
           base_command
           |> put_https_command_args(proxy_config)
     })
