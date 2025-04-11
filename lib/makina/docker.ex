@@ -19,6 +19,7 @@ defmodule Makina.Docker do
       name(app),
       labels(app),
       volumes(app),
+      network(app),
       envs(app),
       ports(app),
       image(app),
@@ -33,7 +34,7 @@ defmodule Makina.Docker do
   Prepares the `docker inspect` command for a give container
   """
   def inspect(%Server{} = server, %Application{} = app) do
-    docker(server, "inspect", [app_name(app)], fn
+    docker(server, "inspect", ["--type=container", app_name(app)], fn
       {:ok, result} ->
         info = result[:data] |> String.replace("\n", "") |> JSON.decode!()
 
@@ -110,6 +111,24 @@ defmodule Makina.Docker do
     end)
   end
 
+  defp network(%Application{domains: []} = app) do
+    docker_special_config = app.__docker__
+
+    Map.get(docker_special_config, :networks, [])
+    |> Enum.flat_map(fn n ->
+      ["--network", n]
+    end)
+  end
+
+  defp network(%Application{} = app) do
+    docker_special_config = app.__docker__
+
+    (Map.get(docker_special_config, :networks, []) ++ ["makina-web-net"])
+    |> Enum.flat_map(fn n ->
+      ["--network", n]
+    end)
+  end
+
   defp labels(%Application{} = app) do
     labels = Map.get(app.__docker__, :labels, []) ++ hash_label(app) ++ proxy_labels(app)
 
@@ -149,14 +168,14 @@ defmodule Makina.Docker do
     [
       "traefik.enable=true",
       "traefik.http.middlewares.#{app_name(app)}.compress=true",
-      "traefik.http.routers.foo.rule=Host\\(#{format_domains(domains)}\\)",
+      "traefik.http.routers.#{app_name(app)}.rule=\"#{format_domains(domains)}\"",
       "traefik.http.routers.#{app_name(app)}.tls.certresolver=letsencrypt",
-      "traefik.http.services.foo.loadBalancer.server.port=#{first_exposed_port(app)}"
+      "traefik.http.services.#{app_name(app)}.loadBalancer.server.port=#{first_exposed_port(app)}"
     ]
   end
 
   defp format_domains(domains) when is_list(domains) do
-    domains |> Enum.map_join(",", fn d -> "\\`#{d}\\`" end)
+    domains |> Enum.map_join(" || ", fn d -> "Host(\\`#{d}\\`)" end)
   end
 
   defp first_exposed_port(%Application{exposed_ports: []}) do
