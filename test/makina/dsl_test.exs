@@ -1,6 +1,7 @@
 defmodule Makina.DSLTest do
   use ExUnit.Case
 
+  alias Makina.Models.Application
   alias Makina.DSL
 
   describe "makina/1" do
@@ -66,6 +67,9 @@ defmodule Makina.DSLTest do
           standalone do
             app name: "test" do
             end
+
+            app name: "test-2" do
+            end
           end
         end
 
@@ -74,8 +78,27 @@ defmodule Makina.DSLTest do
 
       assert Map.has_key?(context, :standalone_applications)
 
-      assert List.first(context.standalone_applications)
-             |> is_struct(Makina.Models.Application)
+      [app_2, app_1] = context.standalone_applications
+
+      assert is_struct(app_1, Application)
+
+      assert app_1.__scope__ == [
+               "test",
+               :app,
+               :standalone,
+               "standalone-test-collect-apps",
+               :makina
+             ]
+
+      assert is_struct(app_2, Application)
+
+      assert app_2.__scope__ == [
+               "test-2",
+               :app,
+               :standalone,
+               "standalone-test-collect-apps",
+               :makina
+             ]
     end
   end
 

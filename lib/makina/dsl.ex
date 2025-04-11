@@ -106,6 +106,8 @@ defmodule Makina.DSL do
           @standalone_applications @current_application
           Module.delete_attribute(__MODULE__, :current_application)
 
+          unquote(pop_scope(2))
+
         {:error, error} ->
           raise """
             The parameters provided to the `app` statement are not correct:

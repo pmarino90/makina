@@ -18,4 +18,16 @@ defmodule Makina.DSL.Utils do
       @scope unquote(scope)
     end
   end
+
+  def pop_scope(amount) do
+    quote do
+      scope = Enum.drop(@scope, unquote(amount))
+
+      Module.delete_attribute(__MODULE__, :scope)
+
+      for s <- Enum.reverse(scope) do
+        @scope s
+      end
+    end
+  end
 end
