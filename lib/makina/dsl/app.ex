@@ -131,6 +131,7 @@ defmodule Makina.DSL.App do
     end
   end
 
+  @publish_on_domain_opts [from_port: [type: :pos_integer, required: true]]
   @doc """
     Exposes the app on the given domain
     Can be invoked multiple times or with a list;
@@ -152,27 +153,65 @@ defmodule Makina.DSL.App do
   makina "example" do
     app name: "foo" do
 
-    publish_on_domain ["example.com", "www.example.com"]
+    publish_on_domain ["example.com", "www.example.com"], from_port: 80
 
     end
   end
   """
-  defmacro publish_on_domain(domain) when is_binary(domain) do
-    quote bind_quoted: [domain: domain] do
-      @current_application Application.put_domain(
-                             @current_application,
-                             domain
-                           )
+  defmacro publish_on_domain(domain, opts) when is_binary(domain) do
+    schema = @publish_on_domain_opts
+
+    quote bind_quoted: [domain: domain, schema: schema, opts: opts] do
+      validation = NimbleOptions.validate(opts, schema)
+
+      case validation do
+        {:ok, opts} ->
+          @current_application Application.put_domain(
+                                 @current_application,
+                                 domain
+                               )
+
+          @current_application Application.set_load_balancing_port(
+                                 @current_application,
+                                 opts[:from_port]
+                               )
+
+        {:error, error} ->
+          raise """
+            The parameters provided to the `publish_on_domain` statement are not correct:
+
+            #{Exception.message(error)}
+          """
+      end
     end
   end
 
-  defmacro publish_on_domain(domains) when is_list(domains) do
-    quote bind_quoted: [domains: domains] do
-      for d <- domains do
-        @current_application Application.put_domain(
-                               @current_application,
-                               d
-                             )
+  defmacro publish_on_domain(domains, opts) when is_list(domains) do
+    schema = @publish_on_domain_opts
+
+    quote bind_quoted: [domains: domains, opts: opts, schema: schema] do
+      validation = NimbleOptions.validate(opts, schema)
+
+      case validation do
+        {:ok, opts} ->
+          for d <- domains do
+            @current_application Application.put_domain(
+                                   @current_application,
+                                   d
+                                 )
+          end
+
+          @current_application Application.set_load_balancing_port(
+                                 @current_application,
+                                 opts[:from_port]
+                               )
+
+        {:error, error} ->
+          raise """
+            The parameters provided to the `publish_on_domain` statement are not correct:
+
+            #{Exception.message(error)}
+          """
       end
     end
   end

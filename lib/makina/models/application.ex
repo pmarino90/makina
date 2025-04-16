@@ -32,7 +32,7 @@ defmodule Makina.Models.Application do
 
   alias Makina.Models.Internal
 
-  @hashable_keys ~w[name docker_image docker_registry env_vars volumes exposed_ports domains]a
+  @hashable_keys ~w[name docker_image docker_registry env_vars volumes exposed_ports domains load_balancing_port]a
 
   @derive {JSON.Encoder, []}
   defstruct __hash__: nil,
@@ -48,7 +48,8 @@ defmodule Makina.Models.Application do
             volumes: [],
             env_vars: [],
             exposed_ports: [],
-            domains: []
+            domains: [],
+            load_balancing_port: nil
 
   def new(opts) do
     app = struct(__MODULE__, opts)
@@ -95,6 +96,12 @@ defmodule Makina.Models.Application do
   def set_docker_registry(%__MODULE__{} = app, registry) when is_list(registry) do
     registry = registry |> Enum.into(%{})
     app = %__MODULE__{app | docker_registry: registry}
+
+    set_private(app, :__hash__, hash(app))
+  end
+
+  def set_load_balancing_port(%__MODULE__{} = app, port) do
+    app = %__MODULE__{app | load_balancing_port: port}
 
     set_private(app, :__hash__, hash(app))
   end
