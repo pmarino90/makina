@@ -20,7 +20,7 @@ defmodule Makina.Models.DockerTest do
 
       assert is_struct(cmd, Makina.Command)
 
-      assert cmd.cmd == "docker inspect foo"
+      assert cmd.cmd == "docker inspect --type=container foo"
       assert cmd.server == server
     end
   end
@@ -129,13 +129,13 @@ defmodule Makina.Models.DockerTest do
       app =
         Application.new(name: "foo")
         |> Application.set_docker_image(name: "nginx", tag: "1.16")
-        |> Application.put_exposed_port(internal: 80, external: 8080)
         |> Application.put_domain("example.com")
+        |> Application.set_load_balancing_port(80)
 
       cmd = Docker.run(server, app)
 
       assert cmd.cmd ==
-               "docker run -d --restart unless-stopped --name foo --label org.makina.app.hash=#{app.__hash__} --label traefik.enable=true --label traefik.http.middlewares.foo.compress=true --label traefik.http.routers.foo.rule=Host\\(\\`example.com\\`\\) --label traefik.http.routers.foo.tls.certresolver=letsencrypt --label traefik.http.services.foo.loadBalancer.server.port=8080 -p 8080:80 nginx:1.16"
+               "docker run -d --restart unless-stopped --name foo --label org.makina.app.hash=#{app.__hash__} --label traefik.enable=true --label traefik.http.middlewares.foo.compress=true --label traefik.http.routers.foo.rule=\"Host(\\`example.com\\`)\" --label traefik.http.routers.foo.tls.certresolver=letsencrypt --label traefik.http.services.foo.loadBalancer.server.port=80 --network makina-web-net nginx:1.16"
     end
   end
 

@@ -10,7 +10,7 @@ locals_without_parens = [
   env: 2,
   expose_port: 2,
   proxy: 1,
-  publish_on_domain: 1
+  publish_on_domain: 2
 ]
 
 [

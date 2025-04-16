@@ -110,11 +110,23 @@ defmodule Makina.Models.ApplicationTest do
       app = Application.new(params)
       init_hash = app.__hash__
 
-      assert app.env_vars == []
-
       app = app |> Application.put_domain("example.com")
 
       assert app.domains == ["example.com"]
+      assert app.__hash__ != init_hash
+    end
+  end
+
+  describe "set_load_balancing_port/2" do
+    test "sets the port used by the proxy load balancer" do
+      params = [name: "foo"]
+
+      app = Application.new(params)
+      init_hash = app.__hash__
+
+      app = app |> Application.set_load_balancing_port(8080)
+
+      assert app.load_balancing_port == 8080
       assert app.__hash__ != init_hash
     end
   end
@@ -130,7 +142,8 @@ defmodule Makina.Models.ApplicationTest do
 
       assert app.__docker__ == %{
                command: [],
-               labels: []
+               labels: [],
+               networks: []
              }
 
       app = Application.set_private(app, :__scope__, [:foo])

@@ -170,21 +170,11 @@ defmodule Makina.Docker do
       "traefik.http.middlewares.#{app_name(app)}.compress=true",
       "traefik.http.routers.#{app_name(app)}.rule=\"#{format_domains(domains)}\"",
       "traefik.http.routers.#{app_name(app)}.tls.certresolver=letsencrypt",
-      "traefik.http.services.#{app_name(app)}.loadBalancer.server.port=#{first_exposed_port(app)}"
+      "traefik.http.services.#{app_name(app)}.loadBalancer.server.port=#{app.load_balancing_port}"
     ]
   end
 
   defp format_domains(domains) when is_list(domains) do
     domains |> Enum.map_join(" || ", fn d -> "Host(\\`#{d}\\`)" end)
-  end
-
-  defp first_exposed_port(%Application{exposed_ports: []}) do
-    "8080"
-  end
-
-  defp first_exposed_port(%Application{} = app) do
-    port_pair = app.exposed_ports |> List.first()
-
-    port_pair.external
   end
 end

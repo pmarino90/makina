@@ -172,6 +172,29 @@ defmodule Makina.DSLTest do
       assert port == %{internal: 80, external: 8080}
     end
 
+    test "lets the user expose an app with domains" do
+      import Makina.DSL
+
+      term =
+        makina "app-test-specify-domain" do
+          standalone do
+            app name: "test" do
+              publish_on_domain(["example.com"], from_port: 80)
+            end
+          end
+        end
+
+      module = elem(term, 1)
+      context = module.collect_context()
+
+      app = List.first(context.standalone_applications)
+
+      assert is_list(app.domains)
+
+      assert app.domains == ["example.com"]
+      assert app.load_balancing_port == 80
+    end
+
     test "raises if app block is not invoked correctly" do
       import DSL
 
