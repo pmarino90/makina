@@ -1,31 +1,44 @@
-defmodule Makina.Cli.Commands.Deploy do
+defmodule Makina.Cli.Commands.Standalone do
   @behaviour Makina.Cli.Command
 
   import Makina.Cli.Utils
 
   alias Makina.IO
 
-  def name(), do: "deploy"
+  @sub_commands ~w[deploy]a
+
+  def name(), do: "standalone"
 
   def short_description(),
-    do: "Deploys all applications found in a Makinafile according to their definition."
+    do: "Manage standalone applications defined in the Makinafile"
 
   def help,
     do: """
     Makina
-    Deploy command
+    Standalone applications management command
 
-    Deploys all applications found in a Makinafile according to their definition.
-    Applications defined inside a `standalone` block will be deployed independently from
-    each other and a failure won't affect other deployments.
+    Manages all standalone applications found in the current Makinafile.
 
-    makina deploy [OPTIONS]
+    Usage:
+    makina standalone <SUB COMMAND> [OPTIONS]
+
+    Sub-commands:
+    deploy    Deploys all standalone applications defined in the Makinafile.
 
     Options:
     * --file - The path to a Makinafile, if not provided the command will look for it in the current folder.
     """
 
-  def exec(_arguments, options) do
+  def exec(arguments, options) do
+    extract_subcommand(arguments)
+    |> sub_command(options)
+  end
+
+  def options() do
+    [file: :string]
+  end
+
+  defp sub_command(:deploy, options) do
     ctx =
       makinafile(options)
       |> fetch_context()
@@ -48,8 +61,10 @@ defmodule Makina.Cli.Commands.Deploy do
     :ok
   end
 
-  def options() do
-    [file: :string]
+  defp extract_subcommand([sub_command | _rest]) do
+    sub_command = sub_command |> String.to_atom()
+
+    if Enum.member?(@sub_commands, sub_command), do: sub_command, else: :help
   end
 
   defp deployment_errors?(results) do
