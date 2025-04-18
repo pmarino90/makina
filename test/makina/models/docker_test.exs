@@ -1,6 +1,7 @@
 defmodule Makina.Models.DockerTest do
   use ExUnit.Case
 
+  alias Makina.Command
   alias Makina.Models.Server
   alias Makina.Models.Application
 
@@ -139,6 +140,36 @@ defmodule Makina.Models.DockerTest do
     end
   end
 
+  describe "stop/2" do
+    test "returns the command to stop a given container" do
+      app = basic_app_without_scope()
+
+      server =
+        Server.new(host: "example.com")
+        |> Server.put_private(:conn_ref, self())
+
+      cmd = Docker.stop(server, app)
+
+      assert is_struct(cmd, Command)
+
+      assert cmd.cmd == "docker stop foo"
+    end
+
+    test "returns the command to stop a given container with scopes" do
+      app = basic_app_with_scope()
+
+      server =
+        Server.new(host: "example.com")
+        |> Server.put_private(:conn_ref, self())
+
+      cmd = Docker.stop(server, app)
+
+      assert is_struct(cmd, Command)
+
+      assert cmd.cmd == "docker stop makina_app_foo"
+    end
+  end
+
   describe "login/2" do
     test "returns a command to login into a private registry" do
       server =
@@ -184,5 +215,14 @@ defmodule Makina.Models.DockerTest do
 
       assert cmd.cmd == "docker network inspect foo"
     end
+  end
+
+  defp basic_app_without_scope() do
+    Application.new(name: "foo")
+  end
+
+  defp basic_app_with_scope() do
+    Application.new(name: "foo")
+    |> Application.set_private(:__scope__, ["foo", :app, :makina])
   end
 end

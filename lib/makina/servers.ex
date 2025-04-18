@@ -122,7 +122,7 @@ defmodule Makina.Servers do
       reverse_proxy(ctx.proxy_config)
     ]
 
-    Applications.deploy_applications_on_server(server, system_applications)
+    Applications.deploy_applications(server, system_applications)
 
     server
   end
