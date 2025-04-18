@@ -85,10 +85,45 @@ defmodule Makina.Applications do
     end
   end
 
+  def update_application(%Server{} = server, %Application{} = app) do
+    if Server.connected?(server) do
+      do_update(server, app)
+    else
+      connect_and_update(server, app)
+    end
+  end
+
+  def do_update(%Server{} = server, %Application{} = app) do
+    IO.puts(" Updating \"#{app.name}\"")
+
+    # rename current app to {name}__stale
+    with {:ok, _} <- mark_app_as_stale(server, app),
+         {:ok, _} <- do_deploy(server, app),
+         {:ok, _} <- stop_stale_app(server, app) do
+      {:ok, :updated}
+    end
+  end
+
+  def connect_and_update(%Server{} = server, %Application{} = app) do
+    server = Servers.connect_to_server(server)
+    result = do_update(server, app)
+    Servers.disconnect_from_server(server)
+
+    result
+  end
+
   defp do_stop(%Server{} = server, %Application{} = app) do
     IO.puts(" Stopping \"#{app.name}\"")
 
     Docker.stop(server, app) |> SSH.execute()
+  end
+
+  defp mark_app_as_stale(%Server{} = server, %Application{} = app) do
+    Docker.rename_container(server, app, suffix: "__stale") |> SSH.execute()
+  end
+
+  defp stop_stale_app(%Server{} = server, %Application{} = app) do
+    Docker.stop(server, "#{Docker.app_name(app)}__stale") |> SSH.execute()
   end
 
   defp connect_and_stop(%Server{} = server, %Application{} = app) do
@@ -118,7 +153,7 @@ defmodule Makina.Applications do
     else
       {:ok, _container} ->
         Logger.debug("A version of #{app.name} is already running, skipping.")
-        {:ok, :skipping}
+        do_update(server, app)
 
       {:error, reason} ->
         {:error, reason}

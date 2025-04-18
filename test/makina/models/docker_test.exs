@@ -168,6 +168,18 @@ defmodule Makina.Models.DockerTest do
 
       assert cmd.cmd == "docker stop makina_app_foo"
     end
+
+    test "returns the command to stop an arbitrary container given a name" do
+      server =
+        Server.new(host: "example.com")
+        |> Server.put_private(:conn_ref, self())
+
+      cmd = Docker.stop(server, "foo_bar")
+
+      assert is_struct(cmd, Command)
+
+      assert cmd.cmd == "docker stop foo_bar"
+    end
   end
 
   describe "login/2" do
@@ -214,6 +226,22 @@ defmodule Makina.Models.DockerTest do
       assert is_struct(cmd, Makina.Command)
 
       assert cmd.cmd == "docker network inspect foo"
+    end
+  end
+
+  describe "rename_container/3" do
+    test "returns the command to rename an app's container adding a suffix" do
+      app = basic_app_without_scope()
+
+      server =
+        Server.new(host: "example.com")
+        |> Server.put_private(:conn_ref, self())
+
+      cmd = Docker.rename_container(server, app, suffix: "__stale")
+
+      assert is_struct(cmd, Command)
+
+      assert cmd.cmd == "docker rename foo foo__stale"
     end
   end
 

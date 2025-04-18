@@ -79,11 +79,23 @@ defmodule Makina.Docker do
     docker(server, "stop", [app_name(app)])
   end
 
-  defp app_name(%Application{__scope__: []} = app) do
+  def stop(%Server{} = server, name) when is_binary(name) do
+    docker(server, "stop", [name])
+  end
+
+  @rename_container_opts [suffix: [type: :string, required: true]]
+
+  def rename_container(%Server{} = server, %Application{} = app, opts) do
+    opts = NimbleOptions.validate!(opts, @rename_container_opts)
+
+    docker(server, "rename", [app_name(app), app_name(app) <> opts[:suffix]])
+  end
+
+  def app_name(%Application{__scope__: []} = app) do
     app.name
   end
 
-  defp app_name(%Application{} = app) do
+  def app_name(%Application{} = app) do
     app.__scope__ |> Enum.reverse() |> Enum.join("_")
   end
 
