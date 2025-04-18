@@ -75,6 +75,10 @@ defmodule Makina.Docker do
     docker(server, "network", ["inspect", name])
   end
 
+  def stop(%Server{} = server, %Application{} = app) do
+    docker(server, "stop", [app_name(app)])
+  end
+
   defp app_name(%Application{__scope__: []} = app) do
     app.name
   end

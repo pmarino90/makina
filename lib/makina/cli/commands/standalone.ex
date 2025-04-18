@@ -4,8 +4,9 @@ defmodule Makina.Cli.Commands.Standalone do
   import Makina.Cli.Utils
 
   alias Makina.IO
+  alias Makina.Applications
 
-  @sub_commands ~w[deploy]a
+  @sub_commands ~w[deploy stop]a
 
   def name(), do: "standalone"
 
@@ -46,7 +47,7 @@ defmodule Makina.Cli.Commands.Standalone do
     servers = ctx.servers
 
     deployment_result =
-      Makina.deploy_standalone_applications(servers, ctx.standalone_applications)
+      Applications.deploy_applications(servers, ctx.standalone_applications)
 
     case deployment_errors?(deployment_result) do
       true ->
@@ -56,6 +57,29 @@ defmodule Makina.Cli.Commands.Standalone do
 
       false ->
         IO.puts_success("All applications have been deployed!")
+    end
+
+    :ok
+  end
+
+  defp sub_command(:stop, options) do
+    ctx =
+      makinafile(options)
+      |> fetch_context()
+
+    servers = ctx.servers
+
+    deployment_result =
+      Applications.stop_applications(servers, ctx.standalone_applications)
+
+    case deployment_errors?(deployment_result) do
+      true ->
+        IO.puts_error("There were errors while stopping some applications.")
+
+        :ok
+
+      false ->
+        IO.puts_success("All applications have been stopped!")
     end
 
     :ok
