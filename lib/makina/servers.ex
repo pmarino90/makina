@@ -90,11 +90,15 @@ defmodule Makina.Servers do
     })
   end
 
+  defp expose_https_ports(app, nil) do
+    app
+  end
+
   defp expose_https_ports(app, %ProxyConfig{https_enabled: https}) when not is_nil(https) do
     Application.put_exposed_port(app, internal: 443, external: 443)
   end
 
-  defp put_https_command_args(command, %ProxyConfig{https_enabled: nil} = _config) do
+  defp put_https_command_args(command, nil) do
     command
   end
 
