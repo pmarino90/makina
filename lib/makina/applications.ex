@@ -3,6 +3,7 @@ defmodule Makina.Applications do
 
   require Logger
 
+  alias Makina.Command
   alias Makina.Servers
   alias Makina.Models.Server
   alias Makina.Models.Application
@@ -93,18 +94,34 @@ defmodule Makina.Applications do
     end
   end
 
-  def do_update(%Server{} = server, %Application{} = app) do
+  def remove_application(%Server{} = server, %Application{} = app) do
+    Docker.remove(server, app) |> execute_command()
+  end
+
+  def remove_application_by_name(%Server{} = server, name) when is_binary(name) do
+    Docker.remove(server, name) |> execute_command()
+  end
+
+  def inspect_deployed_application(%Server{} = server, %Application{} = app) do
+    Docker.inspect(server, app) |> execute_command()
+  end
+
+  defp execute_command(%Command{} = cmd) do
+    SSH.execute(cmd)
+  end
+
+  defp do_update(%Server{} = server, %Application{} = app) do
     IO.puts(" Updating \"#{app.name}\"")
 
-    # rename current app to {name}__stale
-    with {:ok, _} <- mark_app_as_stale(server, app),
+    with {:ok, _} <- remove_stale_app(server, app),
+         {:ok, _} <- mark_app_as_stale(server, app),
          {:ok, _} <- do_deploy(server, app),
          {:ok, _} <- stop_stale_app(server, app) do
       {:ok, :updated}
     end
   end
 
-  def connect_and_update(%Server{} = server, %Application{} = app) do
+  defp connect_and_update(%Server{} = server, %Application{} = app) do
     server = Servers.connect_to_server(server)
     result = do_update(server, app)
     Servers.disconnect_from_server(server)
@@ -124,6 +141,18 @@ defmodule Makina.Applications do
 
   defp stop_stale_app(%Server{} = server, %Application{} = app) do
     Docker.stop(server, "#{Docker.app_name(app)}__stale") |> SSH.execute()
+  end
+
+  defp remove_stale_app(%Server{} = server, %Application{} = app) do
+    stale_name = "#{Docker.app_name(app)}__stale"
+
+    case Docker.inspect(server, stale_name) |> execute_command() do
+      {:ok, _} ->
+        remove_application_by_name(server, stale_name)
+
+      {:error, _} ->
+        {:ok, :no_app}
+    end
   end
 
   defp connect_and_stop(%Server{} = server, %Application{} = app) do

@@ -34,7 +34,11 @@ defmodule Makina.Docker do
   Prepares the `docker inspect` command for a give container
   """
   def inspect(%Server{} = server, %Application{} = app) do
-    docker(server, "inspect", ["--type=container", app_name(app)], fn
+    Makina.Docker.inspect(server, app_name(app))
+  end
+
+  def inspect(%Server{} = server, name) when is_binary(name) do
+    docker(server, "inspect", ["--type=container", name], fn
       {:ok, result} ->
         info = result[:data] |> String.replace("\n", "") |> JSON.decode!()
 
@@ -81,6 +85,14 @@ defmodule Makina.Docker do
 
   def stop(%Server{} = server, name) when is_binary(name) do
     docker(server, "stop", [name])
+  end
+
+  def remove(%Server{} = server, %Application{} = app) do
+    docker(server, "rm", [app_name(app)])
+  end
+
+  def remove(%Server{} = server, name) when is_binary(name) do
+    docker(server, "rm", [name])
   end
 
   @rename_container_opts [suffix: [type: :string, required: true]]
