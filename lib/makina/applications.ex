@@ -113,11 +113,35 @@ defmodule Makina.Applications do
   defp do_update(%Server{} = server, %Application{} = app) do
     IO.puts(" Updating \"#{app.name}\"")
 
-    with {:ok, _} <- remove_stale_app(server, app),
+    with {:ok, :update} <- check_update_required(server, app),
+         {:ok, _} <- remove_stale_app(server, app),
          {:ok, _} <- mark_app_as_stale(server, app),
          {:ok, _} <- do_deploy(server, app),
          {:ok, _} <- stop_stale_app(server, app) do
       {:ok, :updated}
+    else
+      {:ok, :no_update} ->
+        IO.puts(" No update needed for \"#{app.name}\"")
+        {:ok, :no_update}
+
+      error ->
+        error
+    end
+  end
+
+  defp check_update_required(server, app) do
+    case inspect_deployed_application(server, app) do
+      {:ok, container} ->
+        running_hash = get_in(container, ["Config", "Labels", "org.makina.app.hash"])
+
+        cond do
+          is_nil(running_hash) -> {:error, :no_app}
+          String.to_integer(running_hash) != app.__hash__ -> {:ok, :update}
+          String.to_integer(running_hash) == app.__hash__ -> {:ok, :no_update}
+        end
+
+      {:error, _} ->
+        {:error, :no_app}
     end
   end
 
