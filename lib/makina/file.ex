@@ -28,7 +28,7 @@ defmodule Makina.File do
       Makina could not find the correct information within the provided file.
       Ensure that your definitions are contained inside a makina block like so:
 
-      makina do
+      makina, "name" do
         server host: "example.com", user: "user"
       end
 

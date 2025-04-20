@@ -24,6 +24,18 @@ defmodule Makina.Models.DockerTest do
       assert cmd.cmd == "docker inspect --type=container foo"
       assert cmd.server == server
     end
+
+    test "returns a command to inspect a container by its name" do
+      server =
+        Server.new(host: "example.com")
+        |> Server.put_private(:conn_ref, self())
+
+      cmd = Docker.inspect(server, "foo")
+
+      assert is_struct(cmd, Makina.Command)
+
+      assert cmd.cmd == "docker inspect --type=container foo"
+    end
   end
 
   describe "run/2" do
@@ -179,6 +191,34 @@ defmodule Makina.Models.DockerTest do
       assert is_struct(cmd, Command)
 
       assert cmd.cmd == "docker stop foo_bar"
+    end
+  end
+
+  describe "remove/2" do
+    test "returns the command to remove the give app" do
+      app = basic_app_without_scope()
+
+      server =
+        Server.new(host: "example.com")
+        |> Server.put_private(:conn_ref, self())
+
+      cmd = Docker.remove(server, app)
+
+      assert is_struct(cmd, Command)
+
+      assert cmd.cmd == "docker rm foo"
+    end
+
+    test "returns the command to remove a container given its name" do
+      server =
+        Server.new(host: "example.com")
+        |> Server.put_private(:conn_ref, self())
+
+      cmd = Docker.remove(server, "container_name")
+
+      assert is_struct(cmd, Command)
+
+      assert cmd.cmd == "docker rm container_name"
     end
   end
 
