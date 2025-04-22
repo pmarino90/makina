@@ -1,9 +1,10 @@
 defmodule Makina.Infrastructure.DockerTest do
   use ExUnit.Case
 
-  alias Makina.Command
   alias Makina.Models.Server
   alias Makina.Models.Application
+
+  alias Makina.Infrastructure.RemoteCommand
 
   alias Makina.Infrastructure.Docker
 
@@ -19,7 +20,7 @@ defmodule Makina.Infrastructure.DockerTest do
 
       cmd = Docker.inspect(server, app)
 
-      assert is_struct(cmd, Makina.Command)
+      assert is_struct(cmd, RemoteCommand)
 
       assert cmd.cmd == "docker inspect --type=container foo"
       assert cmd.server == server
@@ -32,7 +33,7 @@ defmodule Makina.Infrastructure.DockerTest do
 
       cmd = Docker.inspect(server, "foo")
 
-      assert is_struct(cmd, Makina.Command)
+      assert is_struct(cmd, RemoteCommand)
 
       assert cmd.cmd == "docker inspect --type=container foo"
     end
@@ -50,7 +51,7 @@ defmodule Makina.Infrastructure.DockerTest do
 
       cmd = Docker.run(server, app)
 
-      assert is_struct(cmd, Makina.Command)
+      assert is_struct(cmd, RemoteCommand)
       assert cmd.server == server
 
       assert cmd.cmd ==
@@ -162,7 +163,7 @@ defmodule Makina.Infrastructure.DockerTest do
 
       cmd = Docker.stop(server, app)
 
-      assert is_struct(cmd, Command)
+      assert is_struct(cmd, RemoteCommand)
 
       assert cmd.cmd == "docker stop foo"
     end
@@ -176,7 +177,7 @@ defmodule Makina.Infrastructure.DockerTest do
 
       cmd = Docker.stop(server, app)
 
-      assert is_struct(cmd, Command)
+      assert is_struct(cmd, RemoteCommand)
 
       assert cmd.cmd == "docker stop makina_app_foo"
     end
@@ -188,7 +189,7 @@ defmodule Makina.Infrastructure.DockerTest do
 
       cmd = Docker.stop(server, "foo_bar")
 
-      assert is_struct(cmd, Command)
+      assert is_struct(cmd, RemoteCommand)
 
       assert cmd.cmd == "docker stop foo_bar"
     end
@@ -204,7 +205,7 @@ defmodule Makina.Infrastructure.DockerTest do
 
       cmd = Docker.remove(server, app)
 
-      assert is_struct(cmd, Command)
+      assert is_struct(cmd, RemoteCommand)
 
       assert cmd.cmd == "docker rm foo"
     end
@@ -216,7 +217,7 @@ defmodule Makina.Infrastructure.DockerTest do
 
       cmd = Docker.remove(server, "container_name")
 
-      assert is_struct(cmd, Command)
+      assert is_struct(cmd, RemoteCommand)
 
       assert cmd.cmd == "docker rm container_name"
     end
@@ -235,7 +236,7 @@ defmodule Makina.Infrastructure.DockerTest do
 
       cmd = Docker.login(server, app)
 
-      assert is_struct(cmd, Makina.Command)
+      assert is_struct(cmd, RemoteCommand)
 
       assert cmd.cmd == "docker login ghcr.io -u user -p password"
     end
@@ -249,7 +250,7 @@ defmodule Makina.Infrastructure.DockerTest do
 
       cmd = Docker.create_network(server, "foo")
 
-      assert is_struct(cmd, Makina.Command)
+      assert is_struct(cmd, RemoteCommand)
 
       assert cmd.cmd == "docker network create foo"
     end
@@ -263,7 +264,7 @@ defmodule Makina.Infrastructure.DockerTest do
 
       cmd = Docker.inspect_network(server, "foo")
 
-      assert is_struct(cmd, Makina.Command)
+      assert is_struct(cmd, RemoteCommand)
 
       assert cmd.cmd == "docker network inspect foo"
     end
@@ -279,7 +280,7 @@ defmodule Makina.Infrastructure.DockerTest do
 
       cmd = Docker.rename_container(server, app, suffix: "__stale")
 
-      assert is_struct(cmd, Command)
+      assert is_struct(cmd, RemoteCommand)
 
       assert cmd.cmd == "docker rename foo foo__stale"
     end

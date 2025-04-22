@@ -1,4 +1,4 @@
-defmodule Makina.Command do
+defmodule Makina.Infrastructure.RemoteCommand do
   @doc """
   Struct that represents a command to execute on a server.
 

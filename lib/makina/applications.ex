@@ -3,13 +3,14 @@ defmodule Makina.Applications do
 
   require Logger
 
-  alias Makina.Command
-  alias Makina.Servers
-  alias Makina.Models.Server
-  alias Makina.Models.Application
+  alias Makina.Infrastructure.RemoteCommand
   alias Makina.Infrastructure.SSH
   alias Makina.Infrastructure.Docker
   alias Makina.Infrastructure.IO
+
+  alias Makina.Servers
+  alias Makina.Models.Server
+  alias Makina.Models.Application
 
   @doc """
   Deploys a list of application on a server or a list of servers
@@ -106,7 +107,7 @@ defmodule Makina.Applications do
     Docker.inspect(server, app) |> execute_command()
   end
 
-  defp execute_command(%Command{} = cmd) do
+  defp execute_command(%RemoteCommand{} = cmd) do
     SSH.execute(cmd)
   end
 

@@ -4,7 +4,7 @@ defmodule Makina.Infrastructure.Docker do
   On their own these do not do anything except returning a correctly formatted
   command that should then be executed over SSH.
   """
-  alias Makina.Command
+  alias Makina.Infrastructure.RemoteCommand
   alias Makina.Models.Server
   alias Makina.Models.Application
 
@@ -117,7 +117,7 @@ defmodule Makina.Infrastructure.Docker do
     args = args |> List.flatten() |> Enum.join(" ")
     format_response = response_formatter || fn res -> res end
 
-    %Command{
+    %RemoteCommand{
       cmd: String.trim("#{bin} #{command} " <> args),
       server: server,
       format_response: format_response

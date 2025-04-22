@@ -3,13 +3,13 @@ defmodule Makina.Infrastructure.SSH do
   Thin wrapper around Erlang's :ssh
   """
 
-  @behaviour Makina.Command.Executor
+  @behaviour Makina.Infrastructure.RemoteCommand.Executor
 
   @command_execution_timeout 5 * 60 * 1_000
 
   require Logger
 
-  alias Makina.Command
+  alias Makina.Infrastructure.RemoteCommand
 
   @connect_opts [
     port: [
@@ -71,7 +71,7 @@ defmodule Makina.Infrastructure.SSH do
   end
 
   @impl true
-  def execute(%Command{cmd: cmd, server: server} = command) do
+  def execute(%RemoteCommand{cmd: cmd, server: server} = command) do
     format_response = command.format_response || fn res -> res end
 
     cmd(server.__private__.conn_ref, cmd) |> format_response.()
