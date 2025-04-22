@@ -9,7 +9,7 @@ defmodule Makina.Applications do
   alias Makina.Models.Application
   alias Makina.Infrastructure.SSH
   alias Makina.Infrastructure.Docker
-  alias Makina.IO
+  alias Makina.Infrastructure.IO
 
   @doc """
   Deploys a list of application on a server or a list of servers

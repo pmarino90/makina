@@ -1,4 +1,4 @@
-defmodule Makina.IO do
+defmodule Makina.Infrastructure.IO do
   alias Owl.IO
 
   def puts_success(message) do
