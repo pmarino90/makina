@@ -6,7 +6,7 @@ defmodule Makina.Servers do
   alias Makina.Models.Server
   alias Makina.Models.ProxyConfig
   alias Makina.Models.Context
-  alias Makina.SSH
+  alias Makina.Infrastructure.SSH
   alias Makina.Docker
   alias Makina.IO
 
