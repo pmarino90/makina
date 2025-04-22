@@ -7,7 +7,7 @@ defmodule Makina.Applications do
   alias Makina.Servers
   alias Makina.Models.Server
   alias Makina.Models.Application
-  alias Makina.SSH
+  alias Makina.Infrastructure.SSH
   alias Makina.Docker
   alias Makina.IO
 

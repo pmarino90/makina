@@ -4,7 +4,7 @@ defmodule Makina.Cli.Commands.Server do
   import Makina.Cli.Utils
 
   require Logger
-  alias Makina.SSH
+  alias Makina.Infrastructure.SSH
   alias Makina.IO
   alias Makina.Servers
 

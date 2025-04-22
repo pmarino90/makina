@@ -1,4 +1,4 @@
-defmodule Makina.SSH do
+defmodule Makina.Infrastructure.SSH do
   @moduledoc """
   Thin wrapper around Erlang's :ssh
   """
