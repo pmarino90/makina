@@ -3,7 +3,7 @@ defmodule Makina.Cli.Commands.Standalone do
 
   import Makina.Cli.Utils
 
-  alias Makina.IO
+  alias Makina.Infrastructure.IO
   alias Makina.Applications
 
   @sub_commands ~w[deploy stop]a

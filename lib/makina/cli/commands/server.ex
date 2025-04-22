@@ -5,7 +5,7 @@ defmodule Makina.Cli.Commands.Server do
 
   require Logger
   alias Makina.Infrastructure.SSH
-  alias Makina.IO
+  alias Makina.Infrastructure.IO
   alias Makina.Servers
 
   @sub_commands ~w[test prepare]a
