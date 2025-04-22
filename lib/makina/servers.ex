@@ -7,7 +7,7 @@ defmodule Makina.Servers do
   alias Makina.Models.ProxyConfig
   alias Makina.Models.Context
   alias Makina.Infrastructure.SSH
-  alias Makina.Docker
+  alias Makina.Infrastructure.Docker
   alias Makina.IO
 
   @docker_web_network "makina-web-net"
