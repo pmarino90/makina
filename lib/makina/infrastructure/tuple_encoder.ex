@@ -1,4 +1,4 @@
-defmodule Makina.TupleEncoder do
+defmodule Makina.Infrastructure.TupleEncoder do
   alias JSON.Encoder
 
   defimpl Encoder, for: Tuple do

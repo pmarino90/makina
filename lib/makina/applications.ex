@@ -8,7 +8,7 @@ defmodule Makina.Applications do
   alias Makina.Models.Server
   alias Makina.Models.Application
   alias Makina.Infrastructure.SSH
-  alias Makina.Docker
+  alias Makina.Infrastructure.Docker
   alias Makina.IO
 
   @doc """

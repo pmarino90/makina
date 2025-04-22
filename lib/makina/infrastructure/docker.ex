@@ -1,4 +1,4 @@
-defmodule Makina.Docker do
+defmodule Makina.Infrastructure.Docker do
   @moduledoc """
   Module that contains all docker-related cli command building functions.
   On their own these do not do anything except returning a correctly formatted
@@ -34,7 +34,7 @@ defmodule Makina.Docker do
   Prepares the `docker inspect` command for a give container
   """
   def inspect(%Server{} = server, %Application{} = app) do
-    Makina.Docker.inspect(server, app_name(app))
+    __MODULE__.inspect(server, app_name(app))
   end
 
   def inspect(%Server{} = server, name) when is_binary(name) do

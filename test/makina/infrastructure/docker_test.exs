@@ -1,11 +1,11 @@
-defmodule Makina.Models.DockerTest do
+defmodule Makina.Infrastructure.DockerTest do
   use ExUnit.Case
 
   alias Makina.Command
   alias Makina.Models.Server
   alias Makina.Models.Application
 
-  alias Makina.Docker
+  alias Makina.Infrastructure.Docker
 
   describe "inspect/2" do
     test "returns a complete command to inspect a container" do
