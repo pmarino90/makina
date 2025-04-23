@@ -1,5 +1,5 @@
 defmodule Makina.FileTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   alias Makina.File
 

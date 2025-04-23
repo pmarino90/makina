@@ -1,5 +1,5 @@
 defmodule Makina.Models.ApplicationTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   alias Makina.Models.Application
 

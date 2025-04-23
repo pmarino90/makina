@@ -1,5 +1,5 @@
 defmodule Makina.DSLTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   alias Makina.Models.Application
   alias Makina.DSL

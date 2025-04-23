@@ -1,5 +1,5 @@
 defmodule Makina.Models.InternalTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   alias Makina.Models.Server
   alias Makina.Models.Internal

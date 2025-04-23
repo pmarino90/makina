@@ -1,5 +1,5 @@
 defmodule Makina.Infrastructure.DockerTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
 
   alias Makina.Models.Server
   alias Makina.Models.Application
