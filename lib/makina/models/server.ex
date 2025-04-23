@@ -35,4 +35,6 @@ defmodule Makina.Models.Server do
   def connected?(%__MODULE__{__private__: %{conn_ref: conn_ref}}) do
     Process.alive?(conn_ref)
   end
+
+  def connected?(%__MODULE__{__private__: %{}}), do: false
 end

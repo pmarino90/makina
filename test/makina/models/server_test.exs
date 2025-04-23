@@ -78,4 +78,30 @@ defmodule Makina.Models.ServerTest do
       assert server.__private__[:foo] == "bar"
     end
   end
+
+  describe "connected?/1" do
+    test "returns true if the provided server is connected" do
+      params = [host: "example.com", user: "foo"]
+
+      server =
+        Server.new(params)
+        |> Server.put_private(:conn_ref, self())
+
+      assert Server.connected?(server) == true
+    end
+
+    test "returns false if the provided server is not connected" do
+      params = [host: "example.com", user: "foo"]
+
+      assert Server.connected?(Server.new(params)) == false
+
+      server = Server.new(params) |> Server.put_private(:conn_ref, nil)
+
+      assert Server.connected?(server) == false
+
+      server = Server.new(params) |> Server.put_private(:foo, "bar")
+
+      assert Server.connected?(server) == false
+    end
+  end
 end
