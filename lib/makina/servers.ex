@@ -1,6 +1,7 @@
 defmodule Makina.Servers do
   require Logger
 
+  alias Makina.Infrastructure.RemoteCommand
   alias Makina.Applications
   alias Makina.Models.Application
   alias Makina.Models.Server
@@ -46,14 +47,14 @@ defmodule Makina.Servers do
 
   def create_docker_network(%Server{} = server) do
     if not network_exists?(server, @docker_web_network) do
-      Docker.create_network(server, @docker_web_network) |> SSH.execute()
+      Docker.create_network(server, @docker_web_network) |> execute_command()
     end
 
     server
   end
 
   defp network_exists?(server, network) do
-    case Docker.inspect_network(server, network) |> SSH.execute() do
+    case Docker.inspect_network(server, network) |> execute_command() do
       {:ok, _network} -> true
       {:error, _} -> false
     end
@@ -134,5 +135,11 @@ defmodule Makina.Servers do
   defp puts(server, message) do
     IO.puts(message)
     server
+  end
+
+  defp execute_command(%RemoteCommand{} = command) do
+    mod = Elixir.Application.get_env(:makina, :remote_command_executor, SSH)
+
+    mod.execute(command)
   end
 end

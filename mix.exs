@@ -42,7 +42,8 @@ defmodule Makina.MixProject do
       {:owl, "~> 0.12"},
       {:ucwidth, "~> 0.2"},
       {:nimble_options, "~> 1.0"},
-      {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
+      {:mox, "~> 1.0", only: :test}
     ]
   end
 end
