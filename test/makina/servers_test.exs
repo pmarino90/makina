@@ -1,16 +1,10 @@
 defmodule Makina.ServersTest do
   use ExUnit.Case, async: true
 
-  alias Makina.Infrastructure.RemoteCommand.Executor
-  alias Makina.Servers
-  alias Makina.Models.Server
-
   import Mox
 
-  setup_all %{} do
-    Mox.defmock(TestRemoteCommandExecutor, for: Executor)
-    Application.put_env(:makina, :remote_command_executor, TestRemoteCommandExecutor)
-  end
+  alias Makina.Servers
+  alias Makina.Models.Server
 
   describe "create_docker_network/1" do
     test "does not create a network if already exist" do
