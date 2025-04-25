@@ -1,4 +1,6 @@
 defmodule Makina.Cli.Commands.Server do
+  @moduledoc false
+
   @behaviour Makina.Cli.Command
 
   import Makina.Cli.Utils
@@ -6,7 +8,7 @@ defmodule Makina.Cli.Commands.Server do
   require Logger
   alias Makina.Infrastructure.SSH
   alias Makina.Infrastructure.IO
-  alias Makina.Servers
+  alias Makina.ServerInitializer
 
   @sub_commands ~w[test prepare]a
 
@@ -51,7 +53,7 @@ defmodule Makina.Cli.Commands.Server do
     servers = ctx.servers
 
     for server <- servers do
-      Servers.prepare_server(server, ctx)
+      ServerInitializer.initialize_from_context(server, ctx)
     end
 
     :ok

@@ -15,7 +15,10 @@ defmodule Makina.ServersTest do
           {:ok, %{}}
       end)
 
-      Servers.create_docker_network(Server.new(host: "example.com", user: "foo"))
+      Servers.create_docker_network(
+        Server.new(host: "example.com", user: "foo"),
+        "makina-web-net"
+      )
 
       verify!()
     end
@@ -32,7 +35,10 @@ defmodule Makina.ServersTest do
           {:ok, %{}}
       end)
 
-      Servers.create_docker_network(Server.new(host: "example.com", user: "foo"))
+      Servers.create_docker_network(
+        Server.new(host: "example.com", user: "foo"),
+        "makina-web-net"
+      )
 
       verify!()
     end
