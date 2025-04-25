@@ -13,6 +13,23 @@ defmodule Makina.Servers do
 
   @docker_web_network "makina-web-net"
 
+  @doc """
+  Executes the provided `func` by wrapping it in a remote connection
+
+  A connection to `server` is established before running `func`, the connected server
+  is provided as parameter to `func`.
+  When `func` returns server is disconnected and the result is returned.
+
+  This function reaises if a connection cannot be established.
+  """
+  def with_connection!(%Server{} = server, func) when is_function(func, 1) do
+    server = connect_to_server(server)
+    result = func.(server)
+    disconnect_from_server(server)
+
+    result
+  end
+
   def connect_to_server(%Server{} = server) do
     case SSH.connect(server.host, user: server.user, password: server.password) do
       {:ok, conn_ref} ->
@@ -127,7 +144,7 @@ defmodule Makina.Servers do
       reverse_proxy(ctx.proxy_config)
     ]
 
-    Applications.deploy_applications(server, system_applications)
+    Applications.deploy_standalone_applications([server], system_applications)
 
     server
   end
