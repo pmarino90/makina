@@ -4,7 +4,6 @@ defmodule Makina.Applications do
   require Logger
 
   alias Makina.Infrastructure.RemoteCommand
-  alias Makina.Infrastructure.SSH
   alias Makina.Infrastructure.Docker
   alias Makina.Infrastructure.IO
 
@@ -13,53 +12,49 @@ defmodule Makina.Applications do
   alias Makina.Models.Application
 
   @doc """
-  Deploys a list of application on a server or a list of servers
+  Deploys a list of application on a list of servers
 
-  If a list of servers is provided the function iterates the list and
-  connects to the server before deploying the application.
   Connection is established before triggering applications deployment
   and disconnection happens when all applications have been deployed.
   """
-  def deploy_applications(servers, applications)
+  def deploy_standalone_applications(servers, applications)
       when is_list(servers) and is_list(applications) do
     for server <- servers do
-      server = Servers.connect_to_server(server)
-      deployment_result = deploy_applications(server, applications)
-
-      Servers.disconnect_from_server(server)
-
-      deployment_result
-    end
-  end
-
-  def deploy_applications(%Server{} = server, applications)
-      when is_list(applications) do
-    for app <- applications do
-      deploy_application(server, app)
+      Servers.with_connection!(server, fn s ->
+        Enum.map(applications, &deploy_application(s, &1))
+      end)
     end
   end
 
   @doc """
-  Stops all provided applications in all servers
+  Stops all provided standalone applications in all servers
 
-  If `servers` is a list then the function iterates on them and attempt to connect
-  to the server.
+  `servers` should be a list of servers to stop applications into.
+
   Servers and applications are processed sequentially.
   """
-  def stop_applications(servers, applications) when is_list(servers) and is_list(applications) do
+  def stop_standalone_applications(servers, applications)
+      when is_list(servers) and is_list(applications) do
     for server <- servers do
-      server = Servers.connect_to_server(server)
-      deployment_result = stop_applications(server, applications)
-
-      Servers.disconnect_from_server(server)
-
-      deployment_result
+      Servers.with_connection!(server, fn s ->
+        Enum.map(applications, &stop_application(s, &1))
+      end)
     end
   end
 
-  def stop_applications(%Server{} = server, applications) when is_list(applications) do
-    for app <- applications do
-      stop_application(server, app)
+  @doc """
+  Removes all provided standalone applications in all servers
+
+  `servers` should be a list of servers to stop applications into.
+
+  Servers and applications are processed sequentially.
+  """
+  def remove_standalone_applications(servers, applications)
+      when is_list(servers) and is_list(applications) do
+    for server <- servers do
+      Servers.with_connection!(server, fn s ->
+        Enum.map(applications, &remove_application(s, &1))
+      end)
     end
   end
 
@@ -69,46 +64,82 @@ defmodule Makina.Applications do
   Note: The server has to have a connection at this point.
   """
   def deploy_application(%Server{} = server, %Application{} = app) do
-    if Server.connected?(server) do
-      do_deploy(server, app)
-    else
-      connect_and_deploy(server, app)
-    end
+    do_deploy(server, app)
   end
 
   @doc """
   Stops an application on a given server
   """
   def stop_application(%Server{} = server, %Application{} = app) do
-    if Server.connected?(server) do
-      do_stop(server, app)
-    else
-      connect_and_stop(server, app)
-    end
+    do_stop(server, app)
   end
 
+  @doc """
+  Updates a running application
+
+  The update process goes as follow:
+  * First makina checks if the remote application should be updated
+  * Stale containers for the application is removed if exist from previous update
+  * The currently running container is marked as stale
+  * New version is started
+  * Stale container is stopped
+
+  ### When an application can be updated?
+  Makina determines whether an application should be updated based on an internal hash.
+  The hash is calculated on all fields that a user can change, while private fields are
+  ignored.
+
+  When using utilities functions that are found in `Application` makina is able to
+  calculate the hash and therefore to know if the app is changed.
+  The same functions are used by the DSL Makinafile is composed of.
+
+  This is done to avoid re-deployments of up-to-date containers at the same time without
+  having some shared state somewhere. This should guarentee that if 2 users with the
+  same version of a Makinafile trigger an update the same outcome is expected.
+  """
   def update_application(%Server{} = server, %Application{} = app) do
-    if Server.connected?(server) do
-      do_update(server, app)
-    else
-      connect_and_update(server, app)
-    end
+    do_update(server, app)
   end
 
+  @doc """
+  Removes an a application from the server
+  """
   def remove_application(%Server{} = server, %Application{} = app) do
     Docker.remove(server, app) |> execute_command()
   end
 
+  @doc """
+  Same as `remove_application/2` except it accepts a container name
+  """
   def remove_application_by_name(%Server{} = server, name) when is_binary(name) do
     Docker.remove(server, name) |> execute_command()
   end
 
+  @doc """
+  Returns the running information from Docker on a remote application
+  """
   def inspect_deployed_application(%Server{} = server, %Application{} = app) do
     Docker.inspect(server, app) |> execute_command()
   end
 
-  defp execute_command(%RemoteCommand{} = cmd) do
-    SSH.execute(cmd)
+  defp mark_app_as_stale(%Server{} = server, %Application{} = app) do
+    Docker.rename_container(server, app, suffix: "__stale") |> execute_command()
+  end
+
+  defp stop_stale_app(%Server{} = server, %Application{} = app) do
+    Docker.stop(server, "#{Docker.app_name(app)}__stale") |> execute_command()
+  end
+
+  defp remove_stale_app(%Server{} = server, %Application{} = app) do
+    stale_name = "#{Docker.app_name(app)}__stale"
+
+    case Docker.inspect(server, stale_name) |> execute_command() do
+      {:ok, _} ->
+        remove_application_by_name(server, stale_name)
+
+      {:error, _} ->
+        {:ok, :no_app}
+    end
   end
 
   defp do_update(%Server{} = server, %Application{} = app) do
@@ -146,54 +177,10 @@ defmodule Makina.Applications do
     end
   end
 
-  defp connect_and_update(%Server{} = server, %Application{} = app) do
-    server = Servers.connect_to_server(server)
-    result = do_update(server, app)
-    Servers.disconnect_from_server(server)
-
-    result
-  end
-
   defp do_stop(%Server{} = server, %Application{} = app) do
     IO.puts(" Stopping \"#{app.name}\"")
 
-    Docker.stop(server, app) |> SSH.execute()
-  end
-
-  defp mark_app_as_stale(%Server{} = server, %Application{} = app) do
-    Docker.rename_container(server, app, suffix: "__stale") |> SSH.execute()
-  end
-
-  defp stop_stale_app(%Server{} = server, %Application{} = app) do
-    Docker.stop(server, "#{Docker.app_name(app)}__stale") |> SSH.execute()
-  end
-
-  defp remove_stale_app(%Server{} = server, %Application{} = app) do
-    stale_name = "#{Docker.app_name(app)}__stale"
-
-    case Docker.inspect(server, stale_name) |> execute_command() do
-      {:ok, _} ->
-        remove_application_by_name(server, stale_name)
-
-      {:error, _} ->
-        {:ok, :no_app}
-    end
-  end
-
-  defp connect_and_stop(%Server{} = server, %Application{} = app) do
-    server = Servers.connect_to_server(server)
-    result = do_stop(server, app)
-    Servers.disconnect_from_server(server)
-
-    result
-  end
-
-  defp connect_and_deploy(%Server{} = server, %Application{} = app) do
-    server = Servers.connect_to_server(server)
-    result = do_deploy(server, app)
-    Servers.disconnect_from_server(server)
-
-    result
+    Docker.stop(server, app) |> execute_command()
   end
 
   def do_deploy(%Server{} = server, %Application{} = app) do
@@ -203,7 +190,7 @@ defmodule Makina.Applications do
          {:ok, nil} <- ensure_app_not_running(server, app) do
       Logger.debug("No current instances of #{app.name} running, deploying")
 
-      Docker.run(server, app) |> SSH.execute()
+      Docker.run(server, app) |> execute_command()
     else
       {:ok, _container} ->
         Logger.debug("A version of #{app.name} is already running, skipping.")
@@ -218,14 +205,20 @@ defmodule Makina.Applications do
   end
 
   defp ensure_app_not_running(server, app) do
-    Docker.inspect(server, app) |> SSH.execute()
+    inspect_deployed_application(server, app)
   end
 
   defp maybe_login_to_registry(server, app) do
     if Application.private_docker_registry?(app) do
-      Docker.login(server, app) |> SSH.execute()
+      Docker.login(server, app) |> execute_command()
     else
       {:ok, :no_login}
     end
+  end
+
+  defp execute_command(%RemoteCommand{} = command) do
+    mod = Elixir.Application.get_env(:makina, :remote_command_executor, SSH)
+
+    mod.execute(command)
   end
 end

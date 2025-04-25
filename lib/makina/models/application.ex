@@ -86,7 +86,19 @@ defmodule Makina.Models.Application do
     set_private(app, :__hash__, hash(app))
   end
 
-  def set_docker_image(%__MODULE__{} = app, image) when is_list(image) do
+  @set_docker_image_params [
+    name: [type: :string, required: true],
+    tag: [type: :string, default: "latest"]
+  ]
+  @doc """
+  Adds a docker image as source for the application
+
+  ### Parameters
+  #{NimbleOptions.docs(@set_docker_image_params)}
+  """
+  def set_docker_image(%__MODULE__{} = app, opts) do
+    image = NimbleOptions.validate!(opts, @set_docker_image_params)
+
     image = image |> Enum.into(%{})
     app = %__MODULE__{app | docker_image: image}
 

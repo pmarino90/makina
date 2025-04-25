@@ -45,9 +45,8 @@ defmodule Makina.Cli.Commands.Standalone do
       |> fetch_context()
 
     servers = ctx.servers
-
-    selected_app = Keyword.get(options, :app, :all)
-    deployment_result = do_deploy(servers, ctx.standalone_applications, selected_app)
+    apps = filter_apps_from_options(ctx.standalone_applications, options)
+    deployment_result = do_deploy(servers, apps)
 
     case deployment_errors?(deployment_result) do
       true ->
@@ -68,9 +67,8 @@ defmodule Makina.Cli.Commands.Standalone do
       |> fetch_context()
 
     servers = ctx.servers
-
-    selected_app = Keyword.get(options, :app, :all)
-    deployment_result = do_stop(servers, ctx.standalone_applications, selected_app)
+    apps = filter_apps_from_options(ctx.standalone_applications, options)
+    deployment_result = do_stop(servers, apps)
 
     case deployment_errors?(deployment_result) do
       true ->
@@ -85,43 +83,33 @@ defmodule Makina.Cli.Commands.Standalone do
     :ok
   end
 
-  defp do_deploy(servers, apps, :all) do
-    Applications.deploy_applications(servers, apps)
+  defp do_deploy(_servers, []) do
+    raise """
+    The selected application cannot be found in the Makinafile.
+    """
   end
 
-  defp do_deploy(servers, apps, selected_app) when is_binary(selected_app) do
-    app = Enum.find(apps, fn a -> a.name == selected_app end)
-
-    case app do
-      nil ->
-        raise """
-        The app `#{selected_app}` is not defined as standalone application.
-        """
-
-      _ ->
-        for s <- servers do
-          Applications.deploy_application(s, app)
-        end
-    end
+  defp do_deploy(servers, apps) do
+    Applications.deploy_standalone_applications(servers, apps)
   end
 
-  defp do_stop(servers, apps, :all) do
-    Applications.stop_applications(servers, apps)
+  defp do_stop(_servers, []) do
+    raise """
+    The selected application cannot be found in the Makinafile.
+    """
   end
 
-  defp do_stop(servers, apps, selected_app) when is_binary(selected_app) do
-    app = Enum.find(apps, fn a -> a.name == selected_app end)
+  defp do_stop(servers, apps) when is_list(apps) do
+    Applications.stop_standalone_applications(servers, apps)
+  end
 
-    case app do
-      nil ->
-        raise """
-        The app `#{selected_app}` is not defined as standalone application.
-        """
+  defp filter_apps_from_options(apps, options) do
+    selected_app = Keyword.get(options, :app, :all)
 
-      _ ->
-        for s <- servers do
-          Applications.stop_application(s, app)
-        end
+    if selected_app == :all do
+      apps
+    else
+      Enum.filter(apps, fn a -> a.name == selected_app end)
     end
   end
 
