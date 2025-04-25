@@ -6,7 +6,7 @@ defmodule Makina.Cli.Commands.Standalone do
   alias Makina.Infrastructure.IO
   alias Makina.Applications
 
-  @sub_commands ~w[deploy stop]a
+  @sub_commands ~w[deploy stop remove]a
 
   def name(), do: "standalone"
 
@@ -83,6 +83,34 @@ defmodule Makina.Cli.Commands.Standalone do
     :ok
   end
 
+  defp sub_command(:remove, options) do
+    ctx =
+      makinafile(options)
+      |> fetch_context()
+
+    servers = ctx.servers
+    apps = filter_apps_from_options(ctx.standalone_applications, options)
+    deployment_result = do_remove(servers, apps)
+
+    case deployment_errors?(deployment_result) do
+      true ->
+        IO.puts_error("There were errors while stopping some applications.")
+
+        :ok
+
+      false ->
+        IO.puts_success("All applications have been stopped!")
+    end
+
+    :ok
+  end
+
+  defp sub_command(_, _options) do
+    IO.puts(help())
+
+    :ok
+  end
+
   defp do_deploy(_servers, []) do
     raise """
     The selected application cannot be found in the Makinafile.
@@ -101,6 +129,16 @@ defmodule Makina.Cli.Commands.Standalone do
 
   defp do_stop(servers, apps) when is_list(apps) do
     Applications.stop_standalone_applications(servers, apps)
+  end
+
+  defp do_remove(_servers, []) do
+    raise """
+    The selected application cannot be found in the Makinafile.
+    """
+  end
+
+  defp do_remove(servers, apps) when is_list(apps) do
+    Applications.remove_standalone_applications(servers, apps)
   end
 
   defp filter_apps_from_options(apps, options) do
