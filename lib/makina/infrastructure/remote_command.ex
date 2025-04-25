@@ -12,7 +12,7 @@ defmodule Makina.Infrastructure.RemoteCommand do
     quote do
       alias Makina.Infrastructure.RemoteCommand
 
-      def execute_command(%Makina.Infrastructure.RemoteCommand{} = command) do
+      def execute_command(%RemoteCommand{} = command) do
         mod = Elixir.Application.get_env(:makina, :remote_command_executor, SSH)
 
         mod.execute(command)

@@ -1,9 +1,9 @@
 defmodule Makina.Applications do
   @moduledoc false
 
+  use Makina.Infrastructure.RemoteCommand
   require Logger
 
-  alias Makina.Infrastructure.RemoteCommand
   alias Makina.Infrastructure.Docker
   alias Makina.Infrastructure.IO
 
@@ -214,11 +214,5 @@ defmodule Makina.Applications do
     else
       {:ok, :no_login}
     end
-  end
-
-  defp execute_command(%RemoteCommand{} = command) do
-    mod = Elixir.Application.get_env(:makina, :remote_command_executor, SSH)
-
-    mod.execute(command)
   end
 end
