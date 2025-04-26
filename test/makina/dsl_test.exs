@@ -1,7 +1,6 @@
 defmodule Makina.DSLTest do
   use ExUnit.Case, async: true
 
-  alias Makina.Models.Application
   alias Makina.DSL
 
   describe "makina/1" do
@@ -42,83 +41,21 @@ defmodule Makina.DSLTest do
     end
   end
 
-  describe "standalone/1" do
-    test "returns an empty list of applications when the block is empty" do
-      import DSL
-
-      term =
-        makina "standalone-test" do
-          standalone do
-          end
-        end
-
-      module = elem(term, 1)
-      context = module.collect_context()
-
-      assert Map.has_key?(context, :standalone_applications)
-      assert context.standalone_applications == []
-    end
-
-    test "collects apps defined inside the block" do
-      import DSL
-
-      term =
-        makina "standalone-test-collect-apps" do
-          standalone do
-            app name: "test" do
-            end
-
-            app name: "test-2" do
-            end
-          end
-        end
-
-      module = elem(term, 1)
-      context = module.collect_context()
-
-      assert Map.has_key?(context, :standalone_applications)
-
-      [app_2, app_1] = context.standalone_applications
-
-      assert is_struct(app_1, Application)
-
-      assert app_1.__scope__ == [
-               "test",
-               :app,
-               :standalone,
-               "standalone-test-collect-apps",
-               :makina
-             ]
-
-      assert is_struct(app_2, Application)
-
-      assert app_2.__scope__ == [
-               "test-2",
-               :app,
-               :standalone,
-               "standalone-test-collect-apps",
-               :makina
-             ]
-    end
-  end
-
   describe "app/2" do
     test "allow setting docker image config" do
       import DSL
 
       term =
         makina "app-test-allow-docker-image" do
-          standalone do
-            app name: "test" do
-              from_docker_image name: "name", tag: "tag"
-            end
+          app name: "test" do
+            from_docker_image name: "name", tag: "tag"
           end
         end
 
       module = elem(term, 1)
       context = module.collect_context()
 
-      app = List.first(context.standalone_applications)
+      app = List.first(context.applications)
 
       assert app.docker_image[:name] == "name"
       assert app.docker_image[:tag] == "tag"
@@ -129,17 +66,15 @@ defmodule Makina.DSLTest do
 
       term =
         makina "app-test-specify-module" do
-          standalone do
-            app name: "test" do
-              volume "foo", "/app/data"
-            end
+          app name: "test" do
+            volume "foo", "/app/data"
           end
         end
 
       module = elem(term, 1)
       context = module.collect_context()
 
-      app = List.first(context.standalone_applications)
+      app = List.first(context.applications)
 
       assert is_list(app.volumes)
 
@@ -153,17 +88,15 @@ defmodule Makina.DSLTest do
 
       term =
         makina "app-test-specify-port" do
-          standalone do
-            app name: "test" do
-              expose_port 8080, 80
-            end
+          app name: "test" do
+            expose_port 8080, 80
           end
         end
 
       module = elem(term, 1)
       context = module.collect_context()
 
-      app = List.first(context.standalone_applications)
+      app = List.first(context.applications)
 
       assert is_list(app.exposed_ports)
 
@@ -177,17 +110,15 @@ defmodule Makina.DSLTest do
 
       term =
         makina "app-test-specify-domain" do
-          standalone do
-            app name: "test" do
-              publish_on_domain(["example.com"], from_port: 80)
-            end
+          app name: "test" do
+            publish_on_domain(["example.com"], from_port: 80)
           end
         end
 
       module = elem(term, 1)
       context = module.collect_context()
 
-      app = List.first(context.standalone_applications)
+      app = List.first(context.applications)
 
       assert is_list(app.domains)
 
@@ -200,17 +131,13 @@ defmodule Makina.DSLTest do
 
       catch_error(
         makina "error-test-app" do
-          standalone do
-            app("test")
-          end
+          app("test")
         end
       )
 
       catch_error(
         makina "error-test-app-2" do
-          standalone do
-            app "test" do
-            end
+          app "test" do
           end
         end
       )

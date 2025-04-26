@@ -17,7 +17,7 @@ defmodule Makina.Applications do
   Connection is established before triggering applications deployment
   and disconnection happens when all applications have been deployed.
   """
-  def deploy_standalone_applications(servers, applications)
+  def deploy_applications(servers, applications)
       when is_list(servers) and is_list(applications) do
     for server <- servers do
       Servers.with_connection!(server, fn s ->
@@ -27,13 +27,13 @@ defmodule Makina.Applications do
   end
 
   @doc """
-  Stops all provided standalone applications in all servers
+  Stops all provided applications in all servers
 
   `servers` should be a list of servers to stop applications into.
 
   Servers and applications are processed sequentially.
   """
-  def stop_standalone_applications(servers, applications)
+  def stop_applications(servers, applications)
       when is_list(servers) and is_list(applications) do
     for server <- servers do
       Servers.with_connection!(server, fn s ->
@@ -43,13 +43,13 @@ defmodule Makina.Applications do
   end
 
   @doc """
-  Removes all provided standalone applications in all servers
+  Removes all provided applications in all servers
 
   `servers` should be a list of servers to stop applications into.
 
   Servers and applications are processed sequentially.
   """
-  def remove_standalone_applications(servers, applications)
+  def remove_applications(servers, applications)
       when is_list(servers) and is_list(applications) do
     for server <- servers do
       Servers.with_connection!(server, fn s ->

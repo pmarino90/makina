@@ -9,7 +9,7 @@ defmodule Makina.Cli do
       init: Commands.Init,
       server: Commands.Server,
       debug: Commands.Debug,
-      standalone: Commands.Standalone
+      app: Commands.App
     }
   end
 

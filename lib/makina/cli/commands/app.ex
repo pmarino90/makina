@@ -1,4 +1,4 @@
-defmodule Makina.Cli.Commands.Standalone do
+defmodule Makina.Cli.Commands.App do
   @behaviour Makina.Cli.Command
 
   import Makina.Cli.Utils
@@ -8,26 +8,29 @@ defmodule Makina.Cli.Commands.Standalone do
 
   @sub_commands ~w[deploy stop remove]a
 
-  def name(), do: "standalone"
+  def name(), do: "app"
 
   def short_description(),
-    do: "Manage standalone applications defined in the Makinafile"
+    do: "Manage applications defined in the Makinafile"
 
   def help,
     do: """
     Makina
-    Standalone applications management command
+    Applications management command
 
-    Manages all standalone applications found in the current Makinafile.
+    Manages all applications found in the current Makinafile.
 
     Usage:
-    makina standalone <SUB COMMAND> [OPTIONS]
+    makina app <SUB COMMAND> [OPTIONS]
 
     Sub-commands:
-    deploy    Deploys all standalone applications defined in the Makinafile.
+    deploy    Deploys all applications defined in the Makinafile.
+    stop      Stops all applications.
+    remove    Removes containers of applications from servers.
 
     Options:
-    * --file - The path to a Makinafile, if not provided the command will look for it in the current folder.
+    * --app   Specifies which app to apply the command to.
+    * --file  The path to a Makinafile, if not provided the command will look for it in the current folder.
     """
 
   def exec(arguments, options) do
@@ -45,7 +48,7 @@ defmodule Makina.Cli.Commands.Standalone do
       |> fetch_context()
 
     servers = ctx.servers
-    apps = filter_apps_from_options(ctx.standalone_applications, options)
+    apps = filter_apps_from_options(ctx.applications, options)
     deployment_result = do_deploy(servers, apps)
 
     case deployment_errors?(deployment_result) do
@@ -67,7 +70,7 @@ defmodule Makina.Cli.Commands.Standalone do
       |> fetch_context()
 
     servers = ctx.servers
-    apps = filter_apps_from_options(ctx.standalone_applications, options)
+    apps = filter_apps_from_options(ctx.applications, options)
     deployment_result = do_stop(servers, apps)
 
     case deployment_errors?(deployment_result) do
@@ -89,7 +92,7 @@ defmodule Makina.Cli.Commands.Standalone do
       |> fetch_context()
 
     servers = ctx.servers
-    apps = filter_apps_from_options(ctx.standalone_applications, options)
+    apps = filter_apps_from_options(ctx.applications, options)
     deployment_result = do_remove(servers, apps)
 
     case deployment_errors?(deployment_result) do
@@ -118,7 +121,7 @@ defmodule Makina.Cli.Commands.Standalone do
   end
 
   defp do_deploy(servers, apps) do
-    Applications.deploy_standalone_applications(servers, apps)
+    Applications.deploy_applications(servers, apps)
   end
 
   defp do_stop(_servers, []) do
@@ -128,7 +131,7 @@ defmodule Makina.Cli.Commands.Standalone do
   end
 
   defp do_stop(servers, apps) when is_list(apps) do
-    Applications.stop_standalone_applications(servers, apps)
+    Applications.stop_applications(servers, apps)
   end
 
   defp do_remove(_servers, []) do
@@ -138,7 +141,7 @@ defmodule Makina.Cli.Commands.Standalone do
   end
 
   defp do_remove(servers, apps) when is_list(apps) do
-    Applications.remove_standalone_applications(servers, apps)
+    Applications.remove_applications(servers, apps)
   end
 
   defp filter_apps_from_options(apps, options) do

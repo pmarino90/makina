@@ -60,28 +60,11 @@ defmodule Makina.DSL do
     end
   end
 
-  @doc """
-  Defines a block of applications that are standalone
-
-  Applications defined inside this block are deployed, or removed, in the remote server
-  independently from others, this means that dependencies cannot be defined between these.
-
-  Can be useful if you want to deploy a standalone application that doesn't have other moving pieces.
-
-  For cases where the application might require other services (for example a webapp + a database) then `stack` is the correct option.
-  """
-  defmacro standalone(do: block) do
-    quote do
-      unquote(set_scope(:standalone))
-      unquote(block)
-    end
-  end
-
   @app_opts [name: [type: :string, required: true]]
 
   @doc """
   Defines an application
-  Within this block you can configure the application that you want to deploy, can be used within a `standalone` block or `stack` block.
+  Within this block you can configure the application that you want to deploy.
 
   Depending on the context some configurations might not be available
   """
@@ -103,7 +86,7 @@ defmodule Makina.DSL do
 
           unquote(block)
 
-          @standalone_applications @current_application
+          @applications @current_application
           Module.delete_attribute(__MODULE__, :current_application)
 
           unquote(pop_scope(2))
@@ -181,7 +164,7 @@ defmodule Makina.DSL do
     quote do
       Module.register_attribute(__MODULE__, :scope, accumulate: true)
       Module.register_attribute(__MODULE__, :servers, accumulate: true)
-      Module.register_attribute(__MODULE__, :standalone_applications, accumulate: true)
+      Module.register_attribute(__MODULE__, :applications, accumulate: true)
       Module.register_attribute(__MODULE__, :proxy_config, accumulate: false)
     end
   end
@@ -193,7 +176,7 @@ defmodule Makina.DSL do
           id: @context_id,
           servers: @servers,
           proxy_config: @proxy_config,
-          standalone_applications: @standalone_applications
+          applications: @applications
         )
       end
     end

@@ -31,7 +31,7 @@ defmodule Makina.ServerInitializer do
       reverse_proxy(ctx.proxy_config)
     ]
 
-    Applications.deploy_standalone_applications([server], system_applications)
+    Applications.deploy_applications([server], system_applications)
 
     server
   end

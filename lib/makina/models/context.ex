@@ -7,12 +7,12 @@ defmodule Makina.Models.Context do
   alias Makina.Models.ProxyConfig
 
   @derive JSON.Encoder
-  defstruct id: nil, servers: [], standalone_applications: [], proxy_config: nil
+  defstruct id: nil, servers: [], applications: [], proxy_config: nil
 
   @type t() :: %Context{
           id: nonempty_binary(),
           servers: list(),
-          standalone_applications: list(),
+          applications: list(),
           proxy_config: ProxyConfig.t()
         }
 

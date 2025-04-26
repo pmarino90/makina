@@ -1,6 +1,7 @@
 defmodule Makina.FileTest do
   use ExUnit.Case, async: true
 
+  alias Makina.Models.Context
   alias Makina.File
 
   describe "read_makina_file!/1" do
@@ -50,7 +51,7 @@ defmodule Makina.FileTest do
 
       context = File.evaluate_makina_file(file) |> File.collect_makina_file_context()
 
-      assert is_map(context)
+      assert is_struct(context, Context)
     end
   end
 end

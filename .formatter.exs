@@ -2,7 +2,6 @@
 
 locals_without_parens = [
   server: 1,
-  standalone: 1,
   app: 2,
   from_docker_image: 1,
   docker_registry: 1,
