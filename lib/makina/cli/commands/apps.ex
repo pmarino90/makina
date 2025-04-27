@@ -1,4 +1,4 @@
-defmodule Makina.Cli.Commands.App do
+defmodule Makina.Cli.Commands.Apps do
   @behaviour Makina.Cli.Command
 
   import Makina.Cli.Utils
@@ -8,7 +8,7 @@ defmodule Makina.Cli.Commands.App do
 
   @sub_commands ~w[deploy stop remove]a
 
-  def name(), do: "app"
+  def name(), do: "apps"
 
   def short_description(),
     do: "Manage applications defined in the Makinafile"
@@ -21,12 +21,12 @@ defmodule Makina.Cli.Commands.App do
     Manages all applications found in the current Makinafile.
 
     Usage:
-    makina app <SUB COMMAND> [OPTIONS]
+    makina apps <SUB COMMAND> [OPTIONS]
 
     Sub-commands:
     deploy    Deploys all applications defined in the Makinafile.
     stop      Stops all applications.
-    remove    Removes containers of applications from servers.
+    remove    Removes apps from servers.
 
     Options:
     * --app   Specifies which app to apply the command to.

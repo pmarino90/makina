@@ -4,7 +4,7 @@ defmodule Makina.MixProject do
   def project do
     [
       app: :makina,
-      version: "0.1.20",
+      version: "0.1.22",
       elixir: "~> 1.18",
       start_permanent: Mix.env() == :prod,
       deps: deps(),

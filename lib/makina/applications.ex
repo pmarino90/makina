@@ -134,11 +134,14 @@ defmodule Makina.Applications do
     stale_name = "#{Docker.app_name(app)}__stale"
 
     case Docker.inspect(server, stale_name) |> execute_command() do
+      {:ok, nil} ->
+        {:ok, :no_app}
+
       {:ok, _} ->
         remove_application_by_name(server, stale_name)
 
-      {:error, _} ->
-        {:ok, :no_app}
+      error ->
+        error
     end
   end
 
