@@ -27,15 +27,7 @@ defmodule Makina.Servers do
   end
 
   def connect_to_server(%Server{} = server) do
-    case SSH.connect(server.host, user: server.user, password: server.password) do
-      {:ok, conn_ref} ->
-        Server.put_private(server, :conn_ref, conn_ref)
-
-      _err ->
-        raise """
-        Could not connect to "#{server.host}".
-        """
-    end
+    execute_command(%RemoteCommand{cmd: :connect_to_server, server: server})
   end
 
   def disconnect_from_server(%Server{} = server) do
