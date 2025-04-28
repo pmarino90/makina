@@ -32,7 +32,7 @@ defmodule Makina.Models.Application do
 
   alias Makina.Models.Internal
 
-  @hashable_keys ~w[name docker_image docker_registry env_vars volumes exposed_ports domains load_balancing_port]a
+  @hashable_keys ~w[name docker_image docker_registry dockerfile env_vars volumes exposed_ports domains load_balancing_port]a
 
   @derive {JSON.Encoder, []}
   defstruct __hash__: nil,
@@ -44,6 +44,7 @@ defmodule Makina.Models.Application do
             __scope__: [],
             name: nil,
             docker_image: nil,
+            dockerfile: nil,
             docker_registry: nil,
             volumes: [],
             env_vars: [],
@@ -96,6 +97,15 @@ defmodule Makina.Models.Application do
   ### Parameters
   #{NimbleOptions.docs(@set_docker_image_params)}
   """
+  def set_docker_image(%__MODULE__{dockerfile: df}, _params) when not is_nil(df) do
+    raise """
+    You tried to set a docker image while a Dockerfile is already define as source for
+    the application.
+
+    Please remove one of the 2.
+    """
+  end
+
   def set_docker_image(%__MODULE__{} = app, opts) do
     image = NimbleOptions.validate!(opts, @set_docker_image_params)
 
@@ -108,6 +118,37 @@ defmodule Makina.Models.Application do
   def set_docker_registry(%__MODULE__{} = app, registry) when is_list(registry) do
     registry = registry |> Enum.into(%{})
     app = %__MODULE__{app | docker_registry: registry}
+
+    set_private(app, :__hash__, hash(app))
+  end
+
+  @set_dockerfile_params [
+    name: [type: :string, required: true],
+    context: [type: :string, default: "."],
+    tag: [type: :string, required: true]
+  ]
+  @doc """
+  Adds a dockerfile as source for the application
+
+  ### Parameters
+  #{NimbleOptions.docs(@set_docker_image_params)}
+  """
+  def set_dockerfile(%__MODULE__{docker_image: di}, _params) when not is_nil(di) do
+    raise """
+    You tried to set a dockerfile while an image is already define as source for the
+    application.
+
+    Please remove one of the 2.
+    """
+  end
+
+  def set_dockerfile(%__MODULE__{} = app, params) when is_list(params) do
+    params =
+      params
+      |> NimbleOptions.validate!(@set_dockerfile_params)
+      |> Enum.into(%{})
+
+    app = %__MODULE__{app | dockerfile: params}
 
     set_private(app, :__hash__, hash(app))
   end
@@ -132,7 +173,11 @@ defmodule Makina.Models.Application do
 
   defp hash(%__MODULE__{} = app) do
     keys = @hashable_keys |> Enum.sort()
-    fields = keys |> Enum.map(&Map.get(app, &1))
+
+    fields =
+      keys
+      |> Enum.map(&Map.get(app, &1))
+      |> Enum.filter(fn f -> not is_nil(f) end)
 
     Internal.hash(fields)
   end

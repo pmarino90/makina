@@ -46,6 +46,46 @@ defmodule Makina.Models.ApplicationTest do
       assert app.docker_image == %{name: "foo", tag: "latest"}
       assert app.__hash__ != init_hash
     end
+
+    test "setting docker_image when a dockerfile is present raises an error" do
+      params = [name: "foo"]
+
+      app = Application.new(params)
+
+      app =
+        app
+        |> Application.set_dockerfile(name: "Dockerfile", tag: "foo")
+
+      assert catch_error(Application.set_docker_image(app, name: "foo", tag: "latest"))
+    end
+  end
+
+  describe "set_dockerfile/2" do
+    test "sets dockerfile info" do
+      params = [name: "foo"]
+
+      app = Application.new(params)
+      init_hash = app.__hash__
+
+      assert app.dockerfile == nil
+
+      app = app |> Application.set_dockerfile(name: "Dockerfile", context: ".", tag: "latest")
+
+      assert app.dockerfile == %{name: "Dockerfile", tag: "latest", context: "."}
+      assert app.__hash__ != init_hash
+    end
+
+    test "setting dockerfile when a docker image is present raises an error" do
+      params = [name: "foo"]
+
+      app = Application.new(params)
+
+      app =
+        app
+        |> Application.set_docker_image(name: "foo", tag: "latest")
+
+      assert catch_error(Application.set_dockerfile(app, name: "Dockerfile", tag: "foo"))
+    end
   end
 
   describe "set_docker_registry/2" do

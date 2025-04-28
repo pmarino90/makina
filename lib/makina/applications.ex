@@ -196,7 +196,7 @@ defmodule Makina.Applications do
       Docker.run(server, app) |> execute_command()
     else
       {:ok, _container} ->
-        Logger.debug("A version of #{app.name} is already running, skipping.")
+        Logger.debug("A version of #{app.name} is already running, trying to update it.")
         do_update(server, app)
 
       {:error, reason} ->
