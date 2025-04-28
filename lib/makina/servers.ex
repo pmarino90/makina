@@ -25,10 +25,12 @@ defmodule Makina.Servers do
     result
   end
 
+  @spec connect_to_server(server :: Server.t()) :: Server.connected_server()
   def connect_to_server(%Server{} = server) do
     execute_command(%RemoteCommand{cmd: :connect_to_server, server: server})
   end
 
+  @spec disconnect_from_server(server :: Server.t()) :: :ok | {:error, term()}
   def disconnect_from_server(%Server{} = server) do
     execute_command(%RemoteCommand{cmd: :disconnect_from_server, server: server})
   end

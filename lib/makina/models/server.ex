@@ -2,6 +2,24 @@ defmodule Makina.Models.Server do
   @derive {JSON.Encoder, except: [:password]}
   defstruct host: "", config: %{}, port: 22, user: "", password: nil, __private__: %{}
 
+  @type t() :: %__MODULE__{
+          host: String.t(),
+          config: map(),
+          port: integer(),
+          user: String.t(),
+          password: String.t(),
+          __private__: map()
+        }
+
+  @type connected_server() :: %__MODULE__{
+          host: String.t(),
+          config: map(),
+          port: integer(),
+          user: String.t(),
+          password: String.t(),
+          __private__: %{conn_ref: pid()}
+        }
+
   def new(opts) do
     struct(__MODULE__, opts)
   end

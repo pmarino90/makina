@@ -17,9 +17,7 @@ defmodule Makina.ServersTest do
         %RemoteCommand{cmd: :connect_to_server} = command ->
           assert command.server == server
 
-          connected_server = Server.put_private(command.server, :conn_ref, test_pid)
-
-          {:ok, connected_server}
+          Server.put_private(command.server, :conn_ref, test_pid)
       end)
 
       Servers.connect_to_server(server)
