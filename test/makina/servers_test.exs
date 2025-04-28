@@ -28,6 +28,25 @@ defmodule Makina.ServersTest do
     end
   end
 
+  describe "disconnect_from_server/1" do
+    test "execute a RemoteCommand to disconnect from a server" do
+      server =
+        Server.new(host: "foo.com", user: "bar", password: "password")
+        |> Server.put_private(:conn_ref, self())
+
+      expect(TestRemoteCommandExecutor, :execute, fn
+        %RemoteCommand{cmd: :disconnect_from_server} = command ->
+          assert command.server == server
+
+          :ok
+      end)
+
+      Servers.disconnect_from_server(server)
+
+      verify!()
+    end
+  end
+
   describe "create_docker_network/1" do
     test "does not create a network if already exist" do
       expect(TestRemoteCommandExecutor, :execute, fn

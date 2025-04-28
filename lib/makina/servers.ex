@@ -1,12 +1,11 @@
 defmodule Makina.Servers do
   @moduledoc false
 
-  require Logger
   use Makina.Infrastructure.RemoteCommand
 
-  alias Makina.Infrastructure.SSH
-  alias Makina.Infrastructure.Docker
+  require Logger
 
+  alias Makina.Infrastructure.Docker
   alias Makina.Models.Server
 
   @doc """
@@ -31,9 +30,7 @@ defmodule Makina.Servers do
   end
 
   def disconnect_from_server(%Server{} = server) do
-    conn_ref = server.__private__.conn_ref
-
-    SSH.disconnect(conn_ref)
+    execute_command(%RemoteCommand{cmd: :disconnect_from_server, server: server})
   end
 
   @doc """

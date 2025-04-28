@@ -21,6 +21,12 @@ defmodule Makina.SSHCommandExecutor do
     end
   end
 
+  def execute(%RemoteCommand{cmd: :disconnect_from_server, server: server}) do
+    conn_ref = server.__private__.conn_ref
+
+    SSH.disconnect(conn_ref)
+  end
+
   def execute(%RemoteCommand{cmd: cmd, server: server} = command) do
     format_response = command.format_response || fn res -> res end
 
