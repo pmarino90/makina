@@ -171,6 +171,28 @@ defmodule Makina.Models.ApplicationTest do
     end
   end
 
+  describe "set_privileged/2" do
+    test "defaults to false unless set" do
+      params = [name: "foo"]
+
+      app = Application.new(params)
+
+      assert app.privileged? == false
+    end
+
+    test "sets if the applications should run as priviledged" do
+      params = [name: "foo"]
+
+      app = Application.new(params)
+      init_hash = app.__hash__
+
+      app = app |> Application.set_privileged(true)
+
+      assert app.privileged? == true
+      assert app.__hash__ != init_hash
+    end
+  end
+
   describe "set_private/3" do
     test "sets private fields" do
       params = [name: "foo"]

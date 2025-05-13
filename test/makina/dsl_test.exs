@@ -61,6 +61,24 @@ defmodule Makina.DSLTest do
       assert app.docker_image[:tag] == "tag"
     end
 
+    test "allow configuring a container as priviledged" do
+      import DSL
+
+      term =
+        makina "app-test-allow-docker-privileged" do
+          app name: "test" do
+            privileged? true
+          end
+        end
+
+      module = elem(term, 1)
+      context = module.collect_context()
+
+      app = List.first(context.applications)
+
+      assert app.privileged? == true
+    end
+
     test "allow volumes to be specified" do
       import DSL
 

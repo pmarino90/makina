@@ -25,14 +25,14 @@ defmodule Makina.Models.Application do
   are subject to changes and should never be relied on.
   These are:
   * `:__hash__` which is the hash of all properties (except the private ones)
-  * `:__docker__` specific internal configurations used for docker that are not (yet)
+  * `:__docker__` specific internal configurations used for docker that are not (yet) public
   * `:__scope__` collects nesting levels in the makina file in order to reliably distinguish apps
   exposed to the DSL.
   """
 
   alias Makina.Models.Internal
 
-  @hashable_keys ~w[name docker_image docker_registry dockerfile env_vars volumes exposed_ports domains load_balancing_port]a
+  @hashable_keys ~w[name docker_image docker_registry dockerfile env_vars volumes exposed_ports domains load_balancing_port privileged?]a
 
   @derive {JSON.Encoder, []}
   defstruct __hash__: nil,
@@ -50,7 +50,8 @@ defmodule Makina.Models.Application do
             env_vars: [],
             exposed_ports: [],
             domains: [],
-            load_balancing_port: nil
+            load_balancing_port: nil,
+            privileged?: false
 
   def new(opts) do
     app = struct(__MODULE__, opts)
@@ -167,8 +168,14 @@ defmodule Makina.Models.Application do
     not (is_nil(docker_registry.user) and is_nil(docker_registry.password))
   end
 
-  def set_private(%__MODULE{} = app, key, value) do
+  def set_private(%__MODULE__{} = app, key, value) do
     app |> Map.put(key, value)
+  end
+
+  def set_privileged(%__MODULE__{} = app, flag) do
+    app = %__MODULE__{app | privileged?: flag}
+
+    set_private(app, :__hash__, hash(app))
   end
 
   defp hash(%__MODULE__{} = app) do

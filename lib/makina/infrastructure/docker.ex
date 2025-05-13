@@ -14,6 +14,7 @@ defmodule Makina.Infrastructure.Docker do
   def run(%Server{} = server, %Application{} = app) do
     docker(server, "run", [
       "-d",
+      privileged?(app),
       "--restart",
       "unless-stopped",
       name(app),
@@ -130,6 +131,14 @@ defmodule Makina.Infrastructure.Docker do
 
   defp name(%Application{} = app) do
     ["--name", app_name(app)]
+  end
+
+  defp privileged?(%Application{privileged?: true}) do
+    ["--privileged"]
+  end
+
+  defp privileged?(%Application{privileged?: false}) do
+    []
   end
 
   defp volumes(%Application{} = app) do

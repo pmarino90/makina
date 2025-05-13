@@ -151,6 +151,22 @@ defmodule Makina.Infrastructure.DockerTest do
       assert cmd.cmd ==
                "docker run -d --restart unless-stopped --name foo --label org.makina.app.hash=#{app.__hash__} --label traefik.enable=true --label traefik.http.middlewares.foo.compress=true --label traefik.http.routers.foo.rule=\"Host(\\`example.com\\`)\" --label traefik.http.routers.foo.tls.certresolver=letsencrypt --label traefik.http.services.foo.loadBalancer.server.port=80 --network makina-web-net nginx:1.16"
     end
+
+    test "sets container as priviledged if needed" do
+      server =
+        Server.new(host: "example.com")
+        |> Server.put_private(:conn_ref, self())
+
+      app =
+        Application.new(name: "foo")
+        |> Application.set_docker_image(name: "nginx", tag: "1.16")
+        |> Application.set_privileged(true)
+
+      cmd = Docker.run(server, app)
+
+      assert cmd.cmd ==
+               "docker run -d --privileged --restart unless-stopped --name foo --label org.makina.app.hash=#{app.__hash__} nginx:1.16"
+    end
   end
 
   describe "stop/2" do

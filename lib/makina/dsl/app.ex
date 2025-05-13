@@ -215,4 +215,13 @@ defmodule Makina.DSL.App do
       end
     end
   end
+
+  defmacro privileged?(flag) when is_boolean(flag) do
+    quote do
+      @current_application Application.set_privileged(
+                             @current_application,
+                             unquote(flag)
+                           )
+    end
+  end
 end
